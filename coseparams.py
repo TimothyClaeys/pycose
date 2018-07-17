@@ -1,0 +1,71 @@
+class CoseParams(dict):
+    _header_keys = \
+        {
+            'alg': 1,
+            'crit': 2,
+            'content_type': 3,
+            'kid': 4,
+            'iv': 5,
+            'partial_iv': 6,
+            'counter_signature': 7
+        }
+
+    _header_values = \
+        {
+            1:
+                {
+                    "direct": -6,
+                    "ES256": -7,
+                    "ES384": -35,
+                    "ES512": -36,
+                    "HS256/64": 4,
+                    "HS256": 5,
+                    "HS384": 6,
+                    "HS512": 7,
+                    "EdDSA": -8,
+                    "AES-MAC128/64": 14,
+                    "AES-MAC256/64": 15,
+                    "AES-MAC128/128": 25,
+                    "AES-MAC256/128": 26,
+                    "A128GCM": 1,
+                    "A192GCM": 2,
+                    "A256GCM": 3
+                }
+        }
+
+    def __init__(self):
+        super(CoseParams, self).__init__()
+
+    def __getitem__(self, label):
+        if label in self._header_keys:
+            label = self._header_keys[label]
+            value = super(CoseParams, self).__getitem__(label)
+            try:
+                value = ([k for k, v in self._header_values[label].items() if v == value][0])
+            except KeyError:
+                pass
+        else:
+            value = super(CoseParams, self).__getitem__(label)
+        return value
+
+    def __setitem__(self, label, value):
+        if label in self._header_keys:
+            label = self._header_keys[label]
+            try:
+                value = self._header_values[label][value]
+            except KeyError:
+                pass
+        if isinstance(value, str):
+            value = bytes(value, 'utf-8')
+
+        super(CoseParams, self).__setitem__(label, value)
+
+    def __delitem__(self, label):
+        if label in self._header_keys:
+            label = self._header_keys[label]
+        super(CoseParams, self).__delitem__(label)
+
+    def __contains__(self, label):
+        if label in self._header_keys:
+            label = self._header_keys[label]
+        return super(CoseParams, self).__contains__(label)
