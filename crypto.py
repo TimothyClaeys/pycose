@@ -10,8 +10,9 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import hmac
 
-import ecdsa.curves
-import ecdsa.keys
+from pyecdsa.src.ecdsa import ecdsa
+from pyecdsa.src.ecdsa import curves
+from pyecdsa.src.ecdsa import keys
 
 hashes_for_ecc = \
     {
@@ -31,8 +32,8 @@ hmacs = \
 
 ec_curves = \
     {
-        'P-256': ecdsa.curves.NIST256p,
-        'P-384' : ecdsa.curves.NIST384p
+        'P-256': curves.NIST256p,
+        'P-384' : curves.NIST384p
     }
 
 
@@ -91,7 +92,7 @@ def derive_priv_key(d, curve, hashfunc):
     d = base64urldecode(d)
     d = binascii.hexlify(d)
     d = int(d,16)
-    return ecdsa.keys.SigningKey.from_secret_exponent(d, curve, hashfunc)
+    return keys.SigningKey.from_secret_exponent(d, curve, hashfunc)
 
 
 def derive_pub_key(x, y, curve, hashfunc):
@@ -109,8 +110,8 @@ def derive_pub_key(x, y, curve, hashfunc):
     y = binascii.hexlify(y)
     x = int(x,16)
     y = int(y, 16)
-    point = ecdsa.ellipticcurve.Point(ecdsa.curves.NIST256p, x, y)
-    return ecdsa.keys.VerifyingKey.from_public_point(point, ecdsa.curves.NIST256p, hashfunc=sha256)
+    point = ecdsa.ellipticcurve.Point(curves.NIST256p, x, y)
+    return keys.VerifyingKey.from_public_point(point, curves.NIST256p, hashfunc=sha256)
 
 
 def generate_crypto_keys(algorithm='ES256', curve='P-256'):
