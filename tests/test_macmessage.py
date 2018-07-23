@@ -38,16 +38,16 @@ class CoseMACTests(unittest.TestCase):
 
     recipient_find_params = \
         {
-            'alg_in_p' : ['alg', 'HS256', 'PROTECTED', "HS256"],
+            'alg_in_p': ['alg', 'HS256', 'PROTECTED', "HS256"],
             'alg_in_u': ['alg', 'HS256', 'UNPROTECTED', "HS256"],
-            'kid_in_p' : ['kid', 31868, 'PROTECTED', 31868],
+            'kid_in_p': ['kid', 31868, 'PROTECTED', 31868],
             'kid_in_u': ['kid', 31868, 'PROTECTED', 31868],
             'kid_str_in_p': ['kid', 'sleutel_id', 'PROTECTED', b'sleutel_id'],
             'kid_str_in_u': ['kid', 'sleutel_id', 'UNPROTECTED', b'sleutel_id'],
             'iv_in_p': ['iv', unhexlify("a8c984a984b498489d489e68498f6847"), 'PROTECTED',
                         unhexlify("a8c984a984b498489d489e68498f6847")],
             'iv_in_u': ['iv', unhexlify("a8c984a984b498489d489e68498f6847"), 'UNPROTECTED',
-                     unhexlify("a8c984a984b498489d489e68498f6847")]
+                        unhexlify("a8c984a984b498489d489e68498f6847")]
         }
 
     def test_recipient_params(self):
@@ -64,7 +64,7 @@ class CoseMACTests(unittest.TestCase):
         for name_test, (a, b, c, d) in self.recipient_find_params.items():
             with self.subTest(name=name_test):
                 mac_msg = MacMessage()
-                mac_msg.add_to_recipients(1, a,b,c)
+                mac_msg.add_to_recipients(1, a, b, c)
                 self.assertEqual(mac_msg.find_in_recipients(a), d, name_test)
 
     cbor_1 = "D8618540A1010554546869732069732074686520636F6E74656E742E582060CFE7D9C733A758E198FF758A381E43B3CAF986" \
@@ -82,7 +82,7 @@ class CoseMACTests(unittest.TestCase):
 
     test_cose_mac1_map = \
         {
-            'msg1': [{}, {'alg': 'HS256'}, external, 'This is the content.', {},{"alg":"direct", "kid":"our-secret"},
+            'msg1': [{}, {'alg': 'HS256'}, external, 'This is the content.', {}, {"alg": "direct", "kid": "our-secret"},
                      unhexlify(key_1), unhexlify(cbor_1)],
             'msg2': [{'alg': 'HS256'}, {}, '', 'This is the content.', {}, {"alg": "direct", "kid": "our-secret"},
                      unhexlify(key_2), unhexlify(cbor_2)],
@@ -111,7 +111,7 @@ class CoseMACTests(unittest.TestCase):
                 mac_msg.external_aad = x
                 mac_msg.payload = c
                 for k3 in d:
-                    mac_msg.add_to_recipients(1, k3, d[k3],'PROTECTED')
+                    mac_msg.add_to_recipients(1, k3, d[k3], 'PROTECTED')
                 for k4 in e:
                     mac_msg.add_to_recipients(1, k4, e[k4], 'UNPROTECTED')
                 mac_msg.key = f
@@ -133,6 +133,7 @@ class CoseMACTests(unittest.TestCase):
                     alg = cose_msg.find_in_recipients('alg')
 
                 print(cose_msg.verify_auth_tag(alg))
+
 
 if __name__ == "__main__":
     unittest.main()

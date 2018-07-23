@@ -1,7 +1,6 @@
 import unittest
-from binascii import unhexlify, hexlify
+from binascii import unhexlify
 
-from cosemessage import CoseMessage
 from sign1message import Sign1Message
 
 
@@ -36,19 +35,18 @@ class CoseSign1Tests(unittest.TestCase):
                      {5: b'\xa8\xc9\x84\xa9\x84\xb4\x98H\x9dH\x9ehI\x8fhG'}]
         }
 
-
     header_find_params = \
         {
-            'alg_in_p' : ['alg', 'HS256', 'PROTECTED', "HS256"],
+            'alg_in_p': ['alg', 'HS256', 'PROTECTED', "HS256"],
             'alg_in_u': ['alg', 'HS256', 'UNPROTECTED', "HS256"],
-            'kid_in_p' : ['kid', 31868, 'PROTECTED', 31868],
+            'kid_in_p': ['kid', 31868, 'PROTECTED', 31868],
             'kid_in_u': ['kid', 31868, 'PROTECTED', 31868],
             'kid_str_in_p': ['kid', 'sleutel_id', 'PROTECTED', b'sleutel_id'],
             'kid_str_in_u': ['kid', 'sleutel_id', 'UNPROTECTED', b'sleutel_id'],
             'iv_in_p': ['iv', unhexlify("a8c984a984b498489d489e68498f6847"), 'PROTECTED',
                         unhexlify("a8c984a984b498489d489e68498f6847")],
             'iv_in_u': ['iv', unhexlify("a8c984a984b498489d489e68498f6847"), 'UNPROTECTED',
-                     unhexlify("a8c984a984b498489d489e68498f6847")]
+                        unhexlify("a8c984a984b498489d489e68498f6847")]
         }
 
     ex = unhexlify("11aa22bb33cc44dd55006699")
@@ -61,18 +59,16 @@ class CoseSign1Tests(unittest.TestCase):
              "B1F665D10769FF455EA9A2E0ADAB5DE63838DB257F0949C41E13330E110EBA7B912F34E1546FB1366A2568FAA91EC3E6C8D42F" \
              "4A67A0EDF731D88C9AEAD52258B2E2C4740EF614F02E9D91E9B7B59622A3C"
 
-
     test_cose_sign11_map = \
         {
-            'msg1' : [{'alg': 'ES256'},{"kid":"11"}, ex,'This is the content.', key_1, unhexlify(cbor_1)]
+            'msg1': [{'alg': 'ES256'}, {"kid": "11"}, ex, 'This is the content.', key_1, unhexlify(cbor_1)]
         }
-
 
     def test_header_encoding(self):
         for name_test, (a, b, c, d) in self.header_params.items():
             with self.subTest(name=name_test):
                 sign1_msg = Sign1Message()
-                sign1_msg.add_to_headers(a,b,c)
+                sign1_msg.add_to_headers(a, b, c)
                 if c == 'PROTECTED':
                     self.assertEqual(sign1_msg.protected_header, d, name_test)
                 if c == 'UNPROTECTED':
@@ -82,9 +78,8 @@ class CoseSign1Tests(unittest.TestCase):
         for name_test, (a, b, c, d) in self.header_find_params.items():
             with self.subTest(name=name_test):
                 sign1_msg = Sign1Message()
-                sign1_msg.add_to_headers(a,b,c)
+                sign1_msg.add_to_headers(a, b, c)
                 self.assertEqual(sign1_msg.find_in_headers(a), d, name_test)
-
 
     def test_cose_sign1_creation(self):
         for name_test, (a, b, x, c, d, e) in self.test_cose_sign11_map.items():
@@ -102,6 +97,5 @@ class CoseSign1Tests(unittest.TestCase):
                 self.assertEqual(sign1_msg.encode(), e)
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     unittest.main()
-
