@@ -14,9 +14,8 @@ import copy
 
 import cbor
 
-import cosemessage
-import maccommon
-from coseparams import CoseParams
+from pycose import cosemessage, maccommon
+from pycose.coseparams import CoseParams
 
 
 @cosemessage.CoseMessage.record_cbor_tag(97)

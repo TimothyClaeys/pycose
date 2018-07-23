@@ -1,12 +1,6 @@
-import binascii
-import unittest
-
 import cbor
-import crypto
 
-import attribute
-import cosemessage
-import signcommon
+from pycose import crypto, cosemessage, signcommon
 
 
 @cosemessage.CoseMessage.record_cbor_tag(18)
@@ -79,4 +73,5 @@ class Sign1Message(signcommon.SignCommon):
         Encodes the message into a CBOR array with the appropriate cbor tag attached
         :return: COSE message
         """
-        return cbor.dumps(cbor.Tag(self.cbor_tag, [self.protected_header, self.unprotected_header, self.payload, self.signature]))
+        return cbor.dumps(
+            cbor.Tag(self.cbor_tag, [self.protected_header, self.unprotected_header, self.payload, self.signature]))

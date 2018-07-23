@@ -1,7 +1,6 @@
 import base64
 import binascii
 import hashlib
-import unittest
 from hashlib import sha256
 from os import urandom
 
@@ -10,8 +9,8 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import hmac
 
-from pyecdsa.src.ecdsa import ecdsa
 from pyecdsa.src.ecdsa import curves
+from pyecdsa.src.ecdsa import ecdsa
 from pyecdsa.src.ecdsa import keys
 
 hashes_for_ecc = \
@@ -29,11 +28,10 @@ hmacs = \
         'HS512': hashes.SHA512
     }
 
-
 ec_curves = \
     {
         'P-256': curves.NIST256p,
-        'P-384' : curves.NIST384p
+        'P-384': curves.NIST384p
     }
 
 
@@ -91,7 +89,7 @@ def ec_verify_wrapper(key, to_be_signed, signature, algorithm='ES256', curve='P2
 def derive_priv_key(d, curve, hashfunc):
     d = base64urldecode(d)
     d = binascii.hexlify(d)
-    d = int(d,16)
+    d = int(d, 16)
     return keys.SigningKey.from_secret_exponent(d, curve, hashfunc)
 
 
@@ -108,7 +106,7 @@ def derive_pub_key(x, y, curve, hashfunc):
     x = binascii.hexlify(x)
     y = base64urldecode(y)
     y = binascii.hexlify(y)
-    x = int(x,16)
+    x = int(x, 16)
     y = int(y, 16)
     point = ecdsa.ellipticcurve.Point(curves.NIST256p, x, y)
     return keys.VerifyingKey.from_public_point(point, curves.NIST256p, hashfunc=sha256)

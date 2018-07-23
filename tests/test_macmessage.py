@@ -1,8 +1,8 @@
 import unittest
 from binascii import unhexlify
 
-from cosemessage import CoseMessage
-from macmessage import MacMessage
+from pycose.cosemessage import CoseMessage
+from pycose.macmessage import MacMessage
 
 
 class CoseMACTests(unittest.TestCase):

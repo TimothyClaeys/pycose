@@ -1,10 +1,6 @@
 import abc
 
-import cbor
-
-import cosemessage
-import crypto
-from coseparams import CoseParams
+from pycose import cosemessage, crypto
 
 
 class SignCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
@@ -34,7 +30,7 @@ class SignCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
     def verify_signature(self, alg, curve='P-256', signer=None):
         raise NotImplementedError("Cannot instantiate abstract SignCommon class")
 
-    def compute_signature(self, alg='ES256',  curve='P-256'):
+    def compute_signature(self, alg='ES256', curve='P-256'):
         """
         pass key, byte-string-to-mac and algorithm found in the header buckets to the hmac wrapper
         :return: tag

@@ -1,7 +1,7 @@
 import unittest
 from binascii import unhexlify
 
-import crypto
+from pycose import crypto
 
 
 class CryptoTests(unittest.TestCase):
