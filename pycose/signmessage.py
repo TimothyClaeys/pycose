@@ -8,16 +8,12 @@
 #
 
 
-import binascii
 import copy
-import unittest
 
 import cbor
 
-import cosemessage
-import crypto
-import signcommon
-from coseparams import CoseParams
+from pycose import cosemessage, crypto, signcommon
+from pycose.coseparams import CoseParams
 
 
 @cosemessage.CoseMessage.record_cbor_tag(98)
@@ -134,7 +130,7 @@ class SignMessage(signcommon.SignCommon):
         :return: True or raises an exception
         """
         to_sign = self._sig_structure
-        return crypto.ec_verify_wrapper(self.key, to_sign , self._signers[signer][2], alg, curve)
+        return crypto.ec_verify_wrapper(self.key, to_sign, self._signers[signer][2], alg, curve)
 
     def encode(self):
         """
@@ -186,4 +182,3 @@ class SignMessage(signcommon.SignCommon):
                 found = self._signers[sig][1][label]
 
         return found
-

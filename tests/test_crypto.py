@@ -1,7 +1,7 @@
 import unittest
 from binascii import unhexlify
 
-import crypto
+from pycose import crypto
 
 
 class CryptoTests(unittest.TestCase):
@@ -17,8 +17,8 @@ class CryptoTests(unittest.TestCase):
 
     signatures_map = \
         {
-            'ecdsa256' : [key_1, unhexlify(to_sign_1), 'ES256', 'P-256', unhexlify(sig_1)],
-            #'ecdsa384': [key_2, unhexlify(to_sign_2), 'ES384', 'P-384', unhexlify(sig_2)]
+            'ecdsa256': [key_1, unhexlify(to_sign_1), 'ES256', 'P-256', unhexlify(sig_1)],
+            # 'ecdsa384': [key_2, unhexlify(to_sign_2), 'ES384', 'P-384', unhexlify(sig_2)]
         }
 
     def test_signature_schemes(self):
@@ -33,7 +33,5 @@ class CryptoTests(unittest.TestCase):
         self.assertTrue(crypto.ec_verify_wrapper(key, data, signature))
 
 
-
-
-if __name__=="__main__":
+if __name__ == "__main__":
     unittest.main()

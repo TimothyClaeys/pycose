@@ -1,8 +1,8 @@
 import unittest
 from binascii import unhexlify
 
-from cosemessage import CoseMessage
-from signmessage import SignMessage
+from pycose.cosemessage import CoseMessage
+from pycose.signmessage import SignMessage
 
 
 class CoseSignTests(unittest.TestCase):

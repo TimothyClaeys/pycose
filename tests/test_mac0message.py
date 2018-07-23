@@ -1,8 +1,8 @@
 import unittest
 from binascii import unhexlify
 
-from cosemessage import CoseMessage
-from mac0message import Mac0Message
+from pycose.cosemessage import CoseMessage
+from pycose.mac0message import Mac0Message
 
 
 class CoseMAC0Tests(unittest.TestCase):
@@ -10,10 +10,10 @@ class CoseMAC0Tests(unittest.TestCase):
 
     header_params = \
         {
-            'hash256/64_p' :['alg', 'HS256/64', 'PROTECTED', b'\xa1\x01\x04'],
-            'hash256_p' :['alg', 'HS256', 'PROTECTED', b'\xa1\x01\x05'],
-            'hash384_p' :['alg', 'HS384', 'PROTECTED', b'\xa1\x01\x06'],
-            'hash512_p' :['alg', 'HS512', 'PROTECTED', b'\xa1\x01\x07'],
+            'hash256/64_p': ['alg', 'HS256/64', 'PROTECTED', b'\xa1\x01\x04'],
+            'hash256_p': ['alg', 'HS256', 'PROTECTED', b'\xa1\x01\x05'],
+            'hash384_p': ['alg', 'HS384', 'PROTECTED', b'\xa1\x01\x06'],
+            'hash512_p': ['alg', 'HS512', 'PROTECTED', b'\xa1\x01\x07'],
             'hash256/64_u': ['alg', 'HS256/64', 'UNPROTECTED', {1: 4}],
             'hash256_u': ['alg', 'HS256', 'UNPROTECTED', {1: 5}],
             'hash384_u': ['alg', 'HS384', 'UNPROTECTED', {1: 6}],
@@ -38,17 +38,16 @@ class CoseMAC0Tests(unittest.TestCase):
 
     header_find_params = \
         {
-            'alg_in_p' : ['alg', 'HS256', 'PROTECTED', "HS256"],
+            'alg_in_p': ['alg', 'HS256', 'PROTECTED', "HS256"],
             'alg_in_u': ['alg', 'HS256', 'UNPROTECTED', "HS256"],
-            'kid_in_p' : ['kid', 31868, 'PROTECTED', 31868],
+            'kid_in_p': ['kid', 31868, 'PROTECTED', 31868],
             'kid_in_u': ['kid', 31868, 'PROTECTED', 31868],
             'kid_str_in_p': ['kid', 'sleutel_id', 'PROTECTED', b'sleutel_id'],
             'kid_str_in_u': ['kid', 'sleutel_id', 'UNPROTECTED', b'sleutel_id'],
             'iv_in_p': ['iv', unhexlify("a8c984a984b498489d489e68498f6847"), 'PROTECTED',
                         unhexlify("a8c984a984b498489d489e68498f6847")],
             'iv_in_u': ['iv', unhexlify("a8c984a984b498489d489e68498f6847"), 'UNPROTECTED',
-                     unhexlify("a8c984a984b498489d489e68498f6847")]
-
+                        unhexlify("a8c984a984b498489d489e68498f6847")]
 
         }
 
@@ -75,26 +74,26 @@ class CoseMAC0Tests(unittest.TestCase):
 
     test_cose_mac1_map = \
         {
-            'msg1' : [{'alg': 'HS256'},{},'','This is the content.', unhexlify(key_1), unhexlify(cbor_1)],
-            'msg2' : [{'alg': 'HS384'},{},'','This is the content.', unhexlify(key_2), unhexlify(cbor_2)],
-            'msg3': [{'alg': 'HS512'}, {},'', 'This is the content.', unhexlify(key_3), unhexlify(cbor_3)],
-            'msg4': [{'alg': 'HS256/64'}, {},'', 'This is the content.', unhexlify(key_4), unhexlify(cbor_4)],
+            'msg1': [{'alg': 'HS256'}, {}, '', 'This is the content.', unhexlify(key_1), unhexlify(cbor_1)],
+            'msg2': [{'alg': 'HS384'}, {}, '', 'This is the content.', unhexlify(key_2), unhexlify(cbor_2)],
+            'msg3': [{'alg': 'HS512'}, {}, '', 'This is the content.', unhexlify(key_3), unhexlify(cbor_3)],
+            'msg4': [{'alg': 'HS256/64'}, {}, '', 'This is the content.', unhexlify(key_4), unhexlify(cbor_4)],
             'msg5': [{}, {'alg': 'HS256'}, ex, 'This is the content.', unhexlify(key_5), unhexlify(cbor_5)]
         }
 
     test_cose_mac2_map = \
         {
-            'rcv1' : [{'alg': 'HS256'},{},'','This is the content.', unhexlify(key_1), unhexlify(cbor_1)],
-            'rcv2' : [{'alg': 'HS384'},{},'','This is the content.', unhexlify(key_2), unhexlify(cbor_2)],
-            'rcv3': [{'alg': 'HS512'}, {},'', 'This is the content.', unhexlify(key_3), unhexlify(cbor_3)],
-            'rcv4': [{'alg': 'HS256/64'}, {},'', 'This is the content.', unhexlify(key_4), unhexlify(cbor_4)]
+            'rcv1': [{'alg': 'HS256'}, {}, '', 'This is the content.', unhexlify(key_1), unhexlify(cbor_1)],
+            'rcv2': [{'alg': 'HS384'}, {}, '', 'This is the content.', unhexlify(key_2), unhexlify(cbor_2)],
+            'rcv3': [{'alg': 'HS512'}, {}, '', 'This is the content.', unhexlify(key_3), unhexlify(cbor_3)],
+            'rcv4': [{'alg': 'HS256/64'}, {}, '', 'This is the content.', unhexlify(key_4), unhexlify(cbor_4)]
         }
 
     def test_header_encoding(self):
         for name_test, (a, b, c, d) in self.header_params.items():
             with self.subTest(name=name_test):
                 mac0_msg = Mac0Message()
-                mac0_msg.add_to_headers(a,b,c)
+                mac0_msg.add_to_headers(a, b, c)
                 if c == 'PROTECTED':
                     self.assertEqual(mac0_msg.protected_header, d, name_test)
                 if c == 'UNPROTECTED':
@@ -104,7 +103,7 @@ class CoseMAC0Tests(unittest.TestCase):
         for name_test, (a, b, c, d) in self.header_find_params.items():
             with self.subTest(name=name_test):
                 mac0_msg = Mac0Message()
-                mac0_msg.add_to_headers(a,b,c)
+                mac0_msg.add_to_headers(a, b, c)
                 self.assertEqual(mac0_msg.find_in_headers(a), d, name_test)
 
     def test_cose_mac1_creation(self):
@@ -129,6 +128,7 @@ class CoseMAC0Tests(unittest.TestCase):
                 cose_msg.key = d
                 alg = cose_msg.find_in_headers('alg')
                 print(cose_msg.verify_auth_tag(alg))
+
 
 if __name__ == "__main__":
     unittest.main()

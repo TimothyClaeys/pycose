@@ -2,8 +2,7 @@ import abc
 
 import cbor
 
-import cosemessage
-import crypto
+from pycose import cosemessage, crypto
 
 
 class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):

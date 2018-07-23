@@ -11,8 +11,7 @@ import binascii
 
 import cbor
 
-import cosemessage
-import maccommon
+from pycose import cosemessage, maccommon
 
 
 @cosemessage.CoseMessage.record_cbor_tag(17)

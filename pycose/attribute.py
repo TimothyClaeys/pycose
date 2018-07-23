@@ -1,6 +1,6 @@
 import copy
 
-from coseparams import CoseParams
+from pycose.coseparams import CoseParams
 
 import cbor
 
