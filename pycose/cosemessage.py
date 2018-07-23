@@ -2,7 +2,7 @@ import abc
 
 import cbor
 
-import pycose.attribute
+from pycose import attribute
 
 
 class CoseMessage(attribute.Attribute, metaclass=abc.ABCMeta):
