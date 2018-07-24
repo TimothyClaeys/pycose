@@ -13,7 +13,7 @@ import copy
 import cbor
 
 from pycose import cosemessage, crypto, signcommon
-from pycose.coseparams import CoseParams
+from pycose.coseattrs import CoseAttrs
 
 
 @cosemessage.CoseMessage.record_cbor_tag(98)
@@ -22,7 +22,7 @@ class SignMessage(signcommon.SignCommon):
     cbor_tag = 98
 
     def __init__(self, protected_header=None, unprotected_header=None,
-                 payload=None, signers=CoseParams(), key=None):
+                 payload=None, signers=CoseAttrs(), key=None):
         super(SignMessage, self).__init__(protected_header, unprotected_header, payload)
         self._key = key
         self._signers = copy.deepcopy(signers)
@@ -55,7 +55,7 @@ class SignMessage(signcommon.SignCommon):
     def signers(self, new_value):
         new_value = copy.deepcopy(new_value)
         if new_value is not None and len(new_value) != 0:
-            self._signers = CoseParams()
+            self._signers = CoseAttrs()
             key = 1
             for sig in new_value:
                 self._signers[key] = sig
@@ -65,26 +65,26 @@ class SignMessage(signcommon.SignCommon):
 
             for sig in self._signers:
                 if len(self._signers[sig][0]) != 0:
-                    protected_signature = CoseParams()
+                    protected_signature = CoseAttrs()
                     new_value = cbor.loads(self._signers[sig][0])
                     for key, value in new_value.items():
                         protected_signature[key] = value
 
                     self._signers[sig][0] = copy.deepcopy(protected_signature)
                 else:
-                    self._signers[sig][0] = CoseParams()
+                    self._signers[sig][0] = CoseAttrs()
 
             for sig in self._signers:
                 if len(self._signers[sig][1]) != 0:
-                    unprotected_signature = CoseParams()
+                    unprotected_signature = CoseAttrs()
                     for key, value in self._signers[sig][1].items():
                         unprotected_signature[key] = value
 
                     self._signers[sig][1] = copy.deepcopy(unprotected_signature)
                 else:
-                    self._signers[sig][1] = CoseParams()
+                    self._signers[sig][1] = CoseAttrs()
         else:
-            self._signers = CoseParams()
+            self._signers = CoseAttrs()
 
     @property
     def _sig_structure(self):
@@ -152,7 +152,7 @@ class SignMessage(signcommon.SignCommon):
 
         else:
             # make new recipient
-            signature = [CoseParams(), CoseParams(), b'']
+            signature = [CoseAttrs(), CoseAttrs(), b'']
             # add the attribute
             if where == "PROTECTED":
                 signature[0][label] = value
@@ -167,7 +167,7 @@ class SignMessage(signcommon.SignCommon):
             self._signers[signer][2] = signature
         else:
             # make new container
-            container = [CoseParams(), CoseParams(), b'']
+            container = [CoseAttrs(), CoseAttrs(), b'']
             # add the attribute
             container[2] = signature
             self._signers[signer] = container
