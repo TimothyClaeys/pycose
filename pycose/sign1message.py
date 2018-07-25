@@ -1,6 +1,9 @@
+import copy
+
 import cbor
 
 from pycose import crypto, cosemessage, signcommon
+from pycose.coseattrs import CoseAttrs
 
 
 @cosemessage.CoseMessage.record_cbor_tag(18)
@@ -8,8 +11,11 @@ class Sign1Message(signcommon.SignCommon):
     context = "Signature1"
     cbor_tag = 18
 
-    def __init__(self, protected_header=None, unprotected_header=None, payload=None, signature=None, key=None):
-        super(Sign1Message, self).__init__(protected_header, unprotected_header, payload)
+    def __init__(self, p_header=CoseAttrs(), u_header=CoseAttrs(), payload=None, signature=None, key=None):
+        super(Sign1Message, self).__init__(
+            copy.deepcopy(p_header),
+            copy.deepcopy(u_header),
+            payload)
         self._key = key
         self._signature = signature
 
@@ -42,7 +48,7 @@ class Sign1Message(signcommon.SignCommon):
         if len(self.protected_header) == 0:
             sig_structure.append(bytes())
         else:
-            sig_structure.append(self.protected_header)
+            sig_structure.append(self.encoded_protected_header)
 
         if self.external_aad is None:
             sig_structure.append(bytes())
@@ -74,4 +80,4 @@ class Sign1Message(signcommon.SignCommon):
         :return: COSE message
         """
         return cbor.dumps(
-            cbor.Tag(self.cbor_tag, [self.protected_header, self.unprotected_header, self.payload, self.signature]))
+            cbor.Tag(self.cbor_tag, [self.encoded_protected_header, self.unprotected_header, self.payload, self.signature]))

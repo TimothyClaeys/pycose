@@ -3,6 +3,7 @@ import abc
 import cbor
 
 from pycose import cosemessage, crypto
+from pycose.coseattrs import CoseAttrs
 
 
 class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
@@ -16,7 +17,7 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
             msg.recipients = None
         return msg
 
-    def __init__(self, protected_header=None, unprotected_header=None, payload=None, auth_tag=None):
+    def __init__(self, protected_header=CoseAttrs(), unprotected_header=CoseAttrs(), payload=None, auth_tag=None):
         super(MacCommon, self).__init__(protected_header, unprotected_header, payload)
         self._auth_tag = auth_tag
 
@@ -32,10 +33,7 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
 
     @property
     def _mac_structure(self):
-        """
-        create the mac_structure that needs to be MAC'ed
-        :return: to_be_maced
-        """
+        """Create the mac_structure that needs to be MAC'ed"""
         mac_structure = list()
         mac_structure.append(self.context)
 
@@ -43,7 +41,7 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
         if len(self.protected_header) == 0:
             mac_structure.append(bytes())
         else:
-            mac_structure.append(self.protected_header)
+            mac_structure.append(self.encoded_protected_header)
 
         if self.external_aad is None:
             mac_structure.append(bytes())

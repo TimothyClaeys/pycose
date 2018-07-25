@@ -3,6 +3,7 @@ from binascii import unhexlify
 
 from pycose.cosemessage import CoseMessage
 from pycose.macmessage import MacMessage
+from pycose.coseattrs import CoseAttrs
 
 
 class CoseMACTests(unittest.TestCase):
@@ -102,12 +103,10 @@ class CoseMACTests(unittest.TestCase):
 
     def test_cose_mac1_creation(self):
         for name_test, (a, b, x, c, d, e, f, g) in self.test_cose_mac1_map.items():
+            mac_msg = MacMessage()
             with self.subTest(name=name_test):
-                mac_msg = MacMessage()
-                for k1 in a:
-                    mac_msg.add_to_headers(k1, a[k1], 'PROTECTED')
-                for k2 in b:
-                    mac_msg.add_to_headers(k2, b[k2], 'UNPROTECTED')
+                mac_msg.protected_header = a
+                mac_msg.unprotected_header = b
                 mac_msg.external_aad = x
                 mac_msg.payload = c
                 for k3 in d:

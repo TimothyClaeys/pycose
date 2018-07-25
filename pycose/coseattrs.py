@@ -1,4 +1,4 @@
-class CoseParams(dict):
+class CoseAttrs(dict):
     _header_keys = \
         {
             'alg': 1,
@@ -34,18 +34,18 @@ class CoseParams(dict):
         }
 
     def __init__(self):
-        super(CoseParams, self).__init__()
+        super(CoseAttrs, self).__init__()
 
     def __getitem__(self, label):
         if label in self._header_keys:
             label = self._header_keys[label]
-            value = super(CoseParams, self).__getitem__(label)
+            value = super(CoseAttrs, self).__getitem__(label)
             try:
                 value = ([k for k, v in self._header_values[label].items() if v == value][0])
             except KeyError:
                 pass
         else:
-            value = super(CoseParams, self).__getitem__(label)
+            value = super(CoseAttrs, self).__getitem__(label)
         return value
 
     def __setitem__(self, label, value):
@@ -58,14 +58,14 @@ class CoseParams(dict):
         if isinstance(value, str):
             value = bytes(value, 'utf-8')
 
-        super(CoseParams, self).__setitem__(label, value)
+        super(CoseAttrs, self).__setitem__(label, value)
 
     def __delitem__(self, label):
         if label in self._header_keys:
             label = self._header_keys[label]
-        super(CoseParams, self).__delitem__(label)
+        super(CoseAttrs, self).__delitem__(label)
 
     def __contains__(self, label):
         if label in self._header_keys:
             label = self._header_keys[label]
-        return super(CoseParams, self).__contains__(label)
+        return super(CoseAttrs, self).__contains__(label)
