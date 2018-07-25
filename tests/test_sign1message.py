@@ -70,7 +70,7 @@ class CoseSign1Tests(unittest.TestCase):
                 sign1_msg = Sign1Message()
                 sign1_msg.add_to_headers(a, b, c)
                 if c == 'PROTECTED':
-                    self.assertEqual(sign1_msg.protected_header, d, name_test)
+                    self.assertEqual(sign1_msg.encoded_protected_header, d, name_test)
                 if c == 'UNPROTECTED':
                     self.assertEqual(sign1_msg.unprotected_header, d, name_test)
 

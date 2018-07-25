@@ -21,9 +21,11 @@ class SignMessage(signcommon.SignCommon):
     context = "Signature"
     cbor_tag = 98
 
-    def __init__(self, protected_header=None, unprotected_header=None,
-                 payload=None, signers=CoseAttrs(), key=None):
-        super(SignMessage, self).__init__(protected_header, unprotected_header, payload)
+    def __init__(self, p_header=CoseAttrs(), u_header=CoseAttrs(), payload=None, signers=CoseAttrs(), key=None):
+        super(SignMessage, self).__init__(
+            copy.deepcopy(p_header),
+            copy.deepcopy(u_header),
+            payload)
         self._key = key
         self._signers = copy.deepcopy(signers)
 
@@ -96,10 +98,10 @@ class SignMessage(signcommon.SignCommon):
         sig_structure.append(self.context)
 
         # add empty_or_serialized_map
-        if len(self.protected_header) == 0:
+        if len(self.encoded_protected_header) == 0:
             sig_structure.append(bytes())
         else:
-            sig_structure.append(self.protected_header)
+            sig_structure.append(self.encoded_protected_header)
 
         # add empty_or_serialized_map
         for signature in self.signers:
@@ -138,7 +140,7 @@ class SignMessage(signcommon.SignCommon):
         :return: COSE message
         """
         return cbor.dumps(cbor.Tag(
-            self.cbor_tag, [self.protected_header, self.unprotected_header, self.payload, self.signers]))
+            self.cbor_tag, [self.encoded_protected_header, self.unprotected_header, self.payload, self.signers]))
 
     # ------- Everything above is shared with sign1message ------- #
 

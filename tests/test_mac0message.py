@@ -91,11 +91,11 @@ class CoseMAC0Tests(unittest.TestCase):
 
     def test_header_encoding(self):
         for name_test, (a, b, c, d) in self.header_params.items():
+            mac0_msg = Mac0Message()
             with self.subTest(name=name_test):
-                mac0_msg = Mac0Message()
                 mac0_msg.add_to_headers(a, b, c)
                 if c == 'PROTECTED':
-                    self.assertEqual(mac0_msg.protected_header, d, name_test)
+                    self.assertEqual(mac0_msg.encoded_protected_header, d, name_test)
                 if c == 'UNPROTECTED':
                     self.assertEqual(mac0_msg.unprotected_header, d, name_test)
 
@@ -110,10 +110,8 @@ class CoseMAC0Tests(unittest.TestCase):
         for name_test, (a, b, x, c, d, e) in self.test_cose_mac1_map.items():
             with self.subTest(name=name_test):
                 mac0_msg = Mac0Message()
-                for k1 in a:
-                    mac0_msg.add_to_headers(k1, a[k1], 'PROTECTED')
-                for k2 in b:
-                    mac0_msg.add_to_headers(k2, b[k2], 'UNPROTECTED')
+                mac0_msg.protected_header = a
+                mac0_msg.unprotected_header = b
                 mac0_msg.external_aad = x
                 mac0_msg.payload = c
                 mac0_msg.key = d

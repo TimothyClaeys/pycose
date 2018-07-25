@@ -8,10 +8,12 @@
 #
 
 import binascii
+import copy
 
 import cbor
 
 from pycose import cosemessage, maccommon
+from pycose.coseattrs import CoseAttrs
 
 
 @cosemessage.CoseMessage.record_cbor_tag(17)
@@ -19,15 +21,12 @@ class Mac0Message(maccommon.MacCommon):
     context = "MAC0"
     cbor_tag = 17
 
-    def __init__(self, protected_header=None, unprotected_header=None, payload=None, key=None):
-        """
-        :param protected_header: dictionary containing the protected header attributes, will be encoded as serialized
-        map or empty byte string
-        :param unprotected_header: dictionary containing the protected header attributes, encoded as cbor map
-        :param payload: byte string
-        :param key: MAC0 key is implicitly known in the MAC0 structure
-        """
-        super(Mac0Message, self).__init__(protected_header, unprotected_header, payload)
+    def __init__(self, p_header=CoseAttrs(), u_header=CoseAttrs(), payload=None, key=None):
+        super(Mac0Message, self).__init__(
+            copy.deepcopy(p_header),
+            copy.deepcopy(u_header),
+            payload
+        )
         self._key = key
 
     @property
@@ -47,6 +46,8 @@ class Mac0Message(maccommon.MacCommon):
         :return: COSE message
         """
         if len(binascii.hexlify(self.auth_tag)) in [16, 32, 64, 96, 128]:
-            return cbor.dumps(cbor.Tag(self.cbor_tag,[self.protected_header, self.unprotected_header, self.payload, self.auth_tag]))
+            return cbor.dumps(cbor.Tag(self.cbor_tag,
+                                       [self.encoded_protected_header, self.unprotected_header, self.payload,
+                                        self.auth_tag]))
         else:
             raise ValueError("Tag has invalid size")

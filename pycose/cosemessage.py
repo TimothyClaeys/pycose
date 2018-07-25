@@ -1,7 +1,7 @@
 import abc
+import copy
 
 import cbor
-import copy
 
 from pycose.coseattrs import CoseAttrs
 
@@ -12,6 +12,7 @@ class CoseMessage(metaclass=abc.ABCMeta):
     @classmethod
     def record_cbor_tag(cls, cbor_tag):
         """Decorator to record all the CBOR tags dynamically"""
+
         def decorator(the_class):
             if not issubclass(the_class, CoseMessage):
                 raise ValueError("Can only decorate subclass of CoseMessage")
@@ -44,8 +45,15 @@ class CoseMessage(metaclass=abc.ABCMeta):
         protected_header = CoseAttrs()
         unprotected_header = CoseAttrs()
 
-        decoded_protected_header = cbor.loads(cose_obj.pop(0))
-        decoded_unprotected_header = cose_obj.pop(0)
+        try:
+            decoded_protected_header = cbor.loads(cose_obj.pop(0))
+        except ValueError:
+            decoded_protected_header = {}
+
+        try:
+            decoded_unprotected_header = cose_obj.pop(0)
+        except ValueError:
+            decoded_unprotected_header = {}
 
         for key in decoded_protected_header:
             protected_header[key] = decoded_protected_header[key]
@@ -72,8 +80,6 @@ class CoseMessage(metaclass=abc.ABCMeta):
     @protected_header.setter
     def protected_header(self, new_value):
         """Sets the protected header value. Takes a dictionary object and copies its values in a CoseAttrs object."""
-        new_value = copy.deepcopy(new_value)
-        self._protected_header = CoseAttrs()
         for key in new_value:
             self._protected_header[key] = new_value[key]
 
@@ -88,13 +94,9 @@ class CoseMessage(metaclass=abc.ABCMeta):
     @unprotected_header.setter
     def unprotected_header(self, new_value):
         """Sets the unprotected header value."""
-        if new_value is not None and len(new_value) != 0:
-            new_value = copy.deepcopy(new_value)
-            self._unprotected_header = CoseAttrs()
-            for key, value in new_value.items():
-                self._unprotected_header[key] = value
-        else:
-            self._unprotected_header = CoseAttrs()
+        for key in new_value:
+            self._unprotected_header[key] = new_value[key]
+
 
     @property
     def external_aad(self):
@@ -114,10 +116,10 @@ class CoseMessage(metaclass=abc.ABCMeta):
 
     def add_to_headers(self, label, value, where):
         if where == "PROTECTED":
-            self._protected_header[label] = value
+            self.protected_header[label] = value
 
         if where == "UNPROTECTED":
-            self._unprotected_header[label] = value
+            self.unprotected_header[label] = value
 
     def remove_from_headers(self, label):
         if not isinstance(label, str) and not isinstance(label, int):
@@ -139,12 +141,7 @@ class CoseMessage(metaclass=abc.ABCMeta):
 
     @property
     def payload(self):
-        if isinstance(self._payload, str):
-            return bytes(self._payload, 'utf-8')
-        elif isinstance(self._payload, bytes):
-            return self._payload
-        else:
-            raise TypeError("Payload doesn't have the correct encoding")
+        return self._payload
 
     @payload.setter
     def payload(self, new_value):

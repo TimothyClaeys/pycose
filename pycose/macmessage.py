@@ -23,16 +23,12 @@ class MacMessage(maccommon.MacCommon):
     context = "MAC"
     cbor_tag = 97
 
-    def __init__(self, protected_header=CoseAttrs(), unprotected_header=CoseAttrs(), payload=None, key=None,
-                 recipients=CoseAttrs()):
-        """
-        :param protected_header: dictionary containing the protected header attributes, will be encoded as serialized
-        map or empty byte string
-        :param unprotected_header: dictionary containing the protected header attributes, encoded as cbor map
-        :param payload: byte string
-        :param key: MAC0 key is implicitly known in the MAC0 structure
-        """
-        super(MacMessage, self).__init__(protected_header, unprotected_header, payload)
+    def __init__(self, p_header=CoseAttrs(), u_header=CoseAttrs(), payload=None, key=None, recipients=CoseAttrs()):
+        super(MacMessage, self).__init__(
+            copy.deepcopy(p_header),
+            copy.deepcopy(u_header),
+            payload
+        )
         self._key = key
         self._recipients = copy.deepcopy(recipients)
 

@@ -10,7 +10,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import hmac
 
 from pyecdsa.src.ecdsa import curves
-from pyecdsa.src.ecdsa import ecdsa
+from pyecdsa.src.ecdsa import ellipticcurve
 from pyecdsa.src.ecdsa import keys
 
 hashes_for_ecc = \
@@ -108,13 +108,13 @@ def derive_pub_key(x, y, curve, hashfunc):
     y = binascii.hexlify(y)
     x = int(x, 16)
     y = int(y, 16)
-    point = ecdsa.ellipticcurve.Point(curves.NIST256p, x, y)
+    point = ellipticcurve.Point(curves.NIST256p, x, y)
     return keys.VerifyingKey.from_public_point(point, curves.NIST256p, hashfunc=sha256)
 
 
 def generate_crypto_keys(algorithm='ES256', curve='P-256'):
     if algorithm in ['ES256', 'ES384', 'ES512']:
-        return ecdsa.SigningKey.generate(ec_curves[curve], hashfunc=hashes_for_ecc[algorithm])
+        return keys.SigningKey.generate(ec_curves[curve], hashfunc=hashes_for_ecc[algorithm])
     if algorithm in ['HS256/64', 'HS256', 'HS384', 'HS512']:
         seed = get_randomness(64)
         key = hashes.Hash(hmacs[algorithm](), backend=default_backend())
