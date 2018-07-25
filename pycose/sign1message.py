@@ -3,7 +3,7 @@ import copy
 import cbor
 
 from pycose import crypto, cosemessage, signcommon
-from pycose.coseattrs import CoseAttrs
+from pycose.attributes import CoseAttrs
 
 
 @cosemessage.CoseMessage.record_cbor_tag(18)
@@ -11,7 +11,7 @@ class Sign1Message(signcommon.SignCommon):
     context = "Signature1"
     cbor_tag = 18
 
-    def __init__(self, p_header=CoseAttrs(), u_header=CoseAttrs(), payload=None, signature=None, key=None):
+    def __init__(self, p_header=CoseAttrs(), u_header=CoseAttrs(), payload=b'', signature=b'', key=b''):
         super(Sign1Message, self).__init__(
             copy.deepcopy(p_header),
             copy.deepcopy(u_header),

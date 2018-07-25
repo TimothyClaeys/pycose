@@ -1,6 +1,6 @@
 import unittest
 
-from pycose.coseattrs import CoseAttrs
+from pycose.attributes import CoseAttrs
 
 
 class CoseAttrsTest(unittest.TestCase):

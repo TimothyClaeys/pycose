@@ -6,7 +6,7 @@ from pycose.mac0message import Mac0Message
 
 
 class CoseMAC0Tests(unittest.TestCase):
-    """tests for cose_mac0 message types"""
+    """Tests for cose_mac0 message types."""
 
     header_params = \
         {
@@ -72,7 +72,7 @@ class CoseMAC0Tests(unittest.TestCase):
     ex = unhexlify("ff00ee11dd22cc33bb44aa559966")
     key_5 = "849B57219DAE48DE646D07DBB533566E976686457C1491BE3A76DCEA6C427188"
 
-    test_cose_mac1_map = \
+    test_cose_mac1_creation_params = \
         {
             'msg1': [{'alg': 'HS256'}, {}, '', 'This is the content.', unhexlify(key_1), unhexlify(cbor_1)],
             'msg2': [{'alg': 'HS384'}, {}, '', 'This is the content.', unhexlify(key_2), unhexlify(cbor_2)],
@@ -107,7 +107,7 @@ class CoseMAC0Tests(unittest.TestCase):
                 self.assertEqual(mac0_msg.find_in_headers(a), d, name_test)
 
     def test_cose_mac1_creation(self):
-        for name_test, (a, b, x, c, d, e) in self.test_cose_mac1_map.items():
+        for name_test, (a, b, x, c, d, e) in self.test_cose_mac1_creation_params.items():
             with self.subTest(name=name_test):
                 mac0_msg = Mac0Message()
                 mac0_msg.protected_header = a

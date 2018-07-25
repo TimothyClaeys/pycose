@@ -9,6 +9,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import hmac
 
+from pycose.exceptions import *
 from pyecdsa.src.ecdsa import curves
 from pyecdsa.src.ecdsa import ellipticcurve
 from pyecdsa.src.ecdsa import keys
@@ -43,7 +44,11 @@ def hmac_wrapper(key, to_be_maced, algorithm):
     :param algorithm: chosen hmac, supports hmac with sha256, sha384 and sha512
     :return: returns the digest calculated with the chosen hmac function
     """
-    hash_primitive = hmacs[algorithm]
+    try:
+        hash_primitive = hmacs[algorithm]
+    except KeyError as e:
+        raise CoseUnsupportedHMAC("This cipher is not supported by the COSE specification: {}".format(e))
+
     h = hmac.HMAC(key, hash_primitive(), backend=default_backend())
     h.update(to_be_maced)
     digest = h.finalize()
@@ -56,16 +61,24 @@ def hmac_wrapper(key, to_be_maced, algorithm):
 
 def hmac_verify_wrapper(key, tag, to_be_maced, algorithm):
     if algorithm != 'HS256/64':
-        hash_primitive = hmacs[algorithm]
+        try:
+            hash_primitive = hmacs[algorithm]
+        except KeyError as e:
+            raise CoseUnsupportedHMAC("This cipher is not supported by the COSE specification: {}".format(e))
+
         h = hmac.HMAC(key, hash_primitive(), backend=default_backend())
         h.update(to_be_maced)
         h.verify(tag)
     elif algorithm == 'HS256/64':
-        hash_primitive = hmacs[algorithm]
+        try:
+            hash_primitive = hmacs[algorithm]
+        except KeyError as e:
+            raise CoseUnsupportedHMAC("This cipher is not supported by the COSE specification: {}".format(e))
+
         h = hmac.HMAC(key, hash_primitive(), backend=default_backend())
         h.update(to_be_maced)
         if h.finalize()[:8] != tag:
-            raise InvalidSignature("The authentication tags do not match")
+            raise CoseInvalidTag("The authentication tags do not match")
     return True
 
 

@@ -15,7 +15,7 @@ import copy
 import cbor
 
 from pycose import cosemessage, maccommon
-from pycose.coseattrs import CoseAttrs
+from pycose.attributes import CoseAttrs
 
 
 @cosemessage.CoseMessage.record_cbor_tag(97)
@@ -30,7 +30,7 @@ class MacMessage(maccommon.MacCommon):
             payload
         )
         self._key = key
-        self._recipients = copy.deepcopy(recipients)
+        self._recipients = self._convert_to_coseattrs(copy.deepcopy(recipients))
 
     @property
     def key(self):

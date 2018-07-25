@@ -3,7 +3,7 @@ from binascii import unhexlify
 
 from pycose.cosemessage import CoseMessage
 from pycose.macmessage import MacMessage
-from pycose.coseattrs import CoseAttrs
+from pycose.attributes import CoseAttrs
 
 
 class CoseMACTests(unittest.TestCase):
@@ -83,11 +83,14 @@ class CoseMACTests(unittest.TestCase):
 
     test_cose_mac1_map = \
         {
+            # name test : p_header, u_header, ex_aed, payload,
             'msg1': [{}, {'alg': 'HS256'}, external, 'This is the content.', {}, {"alg": "direct", "kid": "our-secret"},
                      unhexlify(key_1), unhexlify(cbor_1)],
             'msg2': [{'alg': 'HS256'}, {}, '', 'This is the content.', {}, {"alg": "direct", "kid": "our-secret"},
                      unhexlify(key_2), unhexlify(cbor_2)],
             'msg3': [{'alg': 'HS384'}, {}, '', 'This is the content.', {}, {"alg": "direct", "kid": "sec-48"},
+                     unhexlify(key_3), unhexlify(cbor_3)],
+            'msg4': [{'alg': 'HS384'}, {}, '', 'This is the content.', {}, {"alg": "direct", "kid": "sec-48"},
                      unhexlify(key_3), unhexlify(cbor_3)],
 
         }
@@ -97,6 +100,8 @@ class CoseMACTests(unittest.TestCase):
             'msg1': [{'alg': 'HS256'}, {}, '', 'This is the content.', {}, {"alg": "direct", "kid": "our-secret"},
                      unhexlify(key_2), unhexlify(cbor_2)],
             'msg2': [{'alg': 'HS384'}, {}, '', 'This is the content.', {}, {"alg": "direct", "kid": "sec-48"},
+                     unhexlify(key_3), unhexlify(cbor_3)],
+            'msg3': [{'alg': 'HS384'}, {}, '', 'This is the content.', {}, {"alg": "direct", "kid": "sec-48"},
                      unhexlify(key_3), unhexlify(cbor_3)],
 
         }

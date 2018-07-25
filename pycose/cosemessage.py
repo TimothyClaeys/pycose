@@ -3,10 +3,14 @@ import copy
 
 import cbor
 
-from pycose.coseattrs import CoseAttrs
+from pycose.attributes import CoseAttrs
 
 
 class CoseMessage(metaclass=abc.ABCMeta):
+    """
+    Parent class of all COSE message types.
+    """
+
     cose_msg_id = {}
 
     @classmethod
@@ -55,20 +59,20 @@ class CoseMessage(metaclass=abc.ABCMeta):
         except ValueError:
             decoded_unprotected_header = {}
 
-        for key in decoded_protected_header:
-            protected_header[key] = decoded_protected_header[key]
+        for k1 in decoded_protected_header:
+            protected_header[k1] = decoded_protected_header[k1]
 
-        for key in decoded_unprotected_header:
-            unprotected_header[key] = decoded_unprotected_header[key]
+        for k2 in decoded_unprotected_header:
+            unprotected_header[k2] = decoded_unprotected_header[k2]
 
         payload = cose_obj.pop(0)
 
         return cls(protected_header, unprotected_header, payload)
 
-    def __init__(self, protected_header=CoseAttrs(), unprotected_header=CoseAttrs(), payload=None, external_aad=b''):
-        self._protected_header = protected_header
+    def __init__(self, p_header=CoseAttrs(), u_header=CoseAttrs(), payload=b'', external_aad=b''):
+        self._protected_header = self._convert_to_coseattrs(p_header)
         self._encoded_protected_header = self._encode_protected_header()
-        self._unprotected_header = unprotected_header
+        self._unprotected_header = self._convert_to_coseattrs(u_header)
         self._payload = payload
         self._external_aad = external_aad
 
@@ -80,23 +84,26 @@ class CoseMessage(metaclass=abc.ABCMeta):
     @protected_header.setter
     def protected_header(self, new_value):
         """Sets the protected header value. Takes a dictionary object and copies its values in a CoseAttrs object."""
+        new_value = copy.deepcopy(new_value)
         for key in new_value:
             self._protected_header[key] = new_value[key]
 
     @property
     def encoded_protected_header(self):
+        """Returns the protected header as a cbor encoded serialized map."""
         return self._encode_protected_header()
 
     @property
     def unprotected_header(self):
+        """Returns the unprotected header as a dictionary."""
         return self._unprotected_header
 
     @unprotected_header.setter
     def unprotected_header(self, new_value):
         """Sets the unprotected header value."""
+        new_value = copy.deepcopy(new_value)
         for key in new_value:
             self._unprotected_header[key] = new_value[key]
-
 
     @property
     def external_aad(self):
@@ -163,6 +170,19 @@ class CoseMessage(metaclass=abc.ABCMeta):
             to_be_returned = cbor.dumps(self._protected_header)
 
         return to_be_returned
+
+    @staticmethod
+    def _convert_to_coseattrs(dictionary):
+        if isinstance(dictionary, dict):
+            new_coseattrs = CoseAttrs()
+            for key in dictionary:
+                new_coseattrs[key] = dictionary[key]
+            return new_coseattrs
+        elif isinstance(dictionary, CoseAttrs):
+            return dictionary
+        else:
+            raise ValueError("Can only accept objects of the type dict or CoseAttrs.")
+
 
     @abc.abstractmethod
     def encode(self):

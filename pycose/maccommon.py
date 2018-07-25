@@ -3,7 +3,7 @@ import abc
 import cbor
 
 from pycose import cosemessage, crypto
-from pycose.coseattrs import CoseAttrs
+from pycose.attributes import CoseAttrs
 
 
 class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):

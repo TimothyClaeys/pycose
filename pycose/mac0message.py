@@ -13,7 +13,7 @@ import copy
 import cbor
 
 from pycose import cosemessage, maccommon
-from pycose.coseattrs import CoseAttrs
+from pycose.attributes import CoseAttrs
 
 
 @cosemessage.CoseMessage.record_cbor_tag(17)

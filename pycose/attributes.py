@@ -1,4 +1,9 @@
 class CoseAttrs(dict):
+    """
+    Class that describes all the COSE attributes. It's a modified dictionary for easy lookup and translation of the
+    human readable values
+    """
+
     _header_keys = \
         {
             'alg': 1,

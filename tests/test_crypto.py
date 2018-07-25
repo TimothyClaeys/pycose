@@ -2,7 +2,7 @@ import unittest
 from binascii import unhexlify
 
 from pycose import crypto
-
+from pycose.exceptions import *
 
 class CryptoTests(unittest.TestCase):
     """tests for the crypto functions"""
@@ -31,6 +31,12 @@ class CryptoTests(unittest.TestCase):
         data = "This message will be signed.".encode('utf-8')
         signature = crypto.ec_sign_wrapper(key, data)
         self.assertTrue(crypto.ec_verify_wrapper(key, data, signature))
+
+    def test_unsupported_ciphers(self):
+        key = unhexlify("849B57219DAE48DE646D07DBB533566E976686457C1491BE3A76DCEA6C427188")
+        test_string = b"ThisIsATestString"
+        with self.assertRaises(CoseUnsupportedHMAC):
+            crypto.hmac_wrapper(key, test_string, "HS257")
 
 
 if __name__ == "__main__":
