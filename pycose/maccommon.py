@@ -44,12 +44,12 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
     def verify_auth_tag(self, alg):
         """Verifies the authentication tag of a received message."""
         to_digest = self._mac_structure
-        return crypto.hmac_verify_wrapper(self.key, self.auth_tag, to_digest, alg)
+        return crypto.verify_tag_wrapper(self.key, self.auth_tag, to_digest, alg)
 
     def compute_auth_tag(self, alg):
         """Wrapper function to access the cruptographic primitives."""
         to_digest = self._mac_structure
-        self.auth_tag = crypto.hmac_wrapper(self.key, to_digest, alg)
+        self.auth_tag = crypto.calc_tag_wrapper(self.key, to_digest, alg)
 
     @abc.abstractmethod
     def encode(self):

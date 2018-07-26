@@ -4,10 +4,11 @@ import hashlib
 from hashlib import sha256
 from os import urandom
 
-from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import cmac
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import hmac
+from cryptography.hazmat.primitives.ciphers import algorithms
 
 from pycose.exceptions import *
 from pyecdsa.src.ecdsa import curves
@@ -29,6 +30,14 @@ hmacs = \
         'HS512': hashes.SHA512
     }
 
+cmacs = \
+    {
+        'AES-MAC-256/64': algorithms.AES,
+        'AES-MAC-256': algorithms.AES,
+        'AES-MAC-128/64': algorithms.AES,
+        'AES-MAC-128': algorithms.AES
+    }
+
 ec_curves = \
     {
         'P-256': curves.NIST256p,
@@ -36,7 +45,7 @@ ec_curves = \
     }
 
 
-def hmac_wrapper(key, to_be_maced, algorithm):
+def calc_tag_wrapper(key, to_be_maced, algorithm):
     """
     Wrapper function for the supported hmac in COSE
     :param key: key for computation of the hmac
@@ -44,27 +53,39 @@ def hmac_wrapper(key, to_be_maced, algorithm):
     :param algorithm: chosen hmac, supports hmac with sha256, sha384 and sha512
     :return: returns the digest calculated with the chosen hmac function
     """
+
     try:
-        hash_primitive = hmacs[algorithm]
-    except KeyError as e:
-        raise CoseUnsupportedHMAC("This cipher is not supported by the COSE specification: {}".format(e))
+        primitive = cmacs[algorithm]
+        c = cmac.CMAC(primitive(key), backend=default_backend())
+        c.update(to_be_maced)
+        digest = c.finalize()
 
-    h = hmac.HMAC(key, hash_primitive(), backend=default_backend())
-    h.update(to_be_maced)
-    digest = h.finalize()
+        if algorithm == 'AES-MAC-256/64':
+            # truncate the result to the first 64 bits
+            digest = digest[:8]
+    except KeyError:
+        try:
+            primitive = hmacs[algorithm]
+            h = hmac.HMAC(key, primitive(), backend=default_backend())
+            h.update(to_be_maced)
+            digest = h.finalize()
 
-    if algorithm == 'HS256/64':
-        # truncate the result to the first 64 bits
-        digest = digest[:8]
+            if algorithm == 'HS256/64':
+                # truncate the result to the first 64 bits
+                digest = digest[:8]
+
+        except KeyError as e:
+            raise CoseUnsupportedMAC("This cipher is not supported by the COSE specification: {}".format(e))
+
     return digest
 
 
-def hmac_verify_wrapper(key, tag, to_be_maced, algorithm):
+def verify_tag_wrapper(key, tag, to_be_maced, algorithm):
     if algorithm != 'HS256/64':
         try:
             hash_primitive = hmacs[algorithm]
         except KeyError as e:
-            raise CoseUnsupportedHMAC("This cipher is not supported by the COSE specification: {}".format(e))
+            raise CoseUnsupportedMAC("This cipher is not supported by the COSE specification: {}".format(e))
 
         h = hmac.HMAC(key, hash_primitive(), backend=default_backend())
         h.update(to_be_maced)
@@ -73,7 +94,7 @@ def hmac_verify_wrapper(key, tag, to_be_maced, algorithm):
         try:
             hash_primitive = hmacs[algorithm]
         except KeyError as e:
-            raise CoseUnsupportedHMAC("This cipher is not supported by the COSE specification: {}".format(e))
+            raise CoseUnsupportedMAC("This cipher is not supported by the COSE specification: {}".format(e))
 
         h = hmac.HMAC(key, hash_primitive(), backend=default_backend())
         h.update(to_be_maced)
@@ -90,7 +111,7 @@ def ec_sign_wrapper(key, to_be_signed, algorithm='ES256', curve='P-256'):
     return signer.sign_deterministic(to_be_signed, hashfunc=hashes_for_ecc[algorithm])
 
 
-def ec_verify_wrapper(key, to_be_signed, signature, algorithm='ES256', curve='P256'):
+def ec_verify_wrapper(key, to_be_signed, signature, algorithm='ES256', curve='P-256'):
     if isinstance(key, str):
         signer = derive_priv_key(key, ec_curves[curve], hashfunc=hashes_for_ecc[algorithm])
     else:

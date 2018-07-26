@@ -4,6 +4,7 @@ from binascii import unhexlify
 from pycose import crypto
 from pycose.exceptions import *
 
+
 class CryptoTests(unittest.TestCase):
     """tests for the crypto functions"""
 
@@ -35,8 +36,34 @@ class CryptoTests(unittest.TestCase):
     def test_unsupported_ciphers(self):
         key = unhexlify("849B57219DAE48DE646D07DBB533566E976686457C1491BE3A76DCEA6C427188")
         test_string = b"ThisIsATestString"
-        with self.assertRaises(CoseUnsupportedHMAC):
-            crypto.hmac_wrapper(key, test_string, "HS257")
+        with self.assertRaises(CoseUnsupportedMAC):
+            crypto.calc_tag_wrapper(key, test_string, "HS257")
+
+    mac_params = \
+        {
+            'HS256_1':
+                (
+                    'HS256',  # algorithm
+                    unhexlify("84634D414343A101054054546869732069732074686520636F6E74656E742E"),  # to_be_maced
+                    unhexlify("1C86606741D3C5C7683BD8767B5A6E6D7DDA6735C76DF3E885546E4BDCA838AB"),  # key
+                    unhexlify("81A03448ACD3D305376EAA11FB3FE416A955BE2CBE7EC96F012C994BC3F16A41")  # solution
+                ),
+            'HS256_2':
+                (
+                    'HS256',    # algorithm
+                    unhexlify("84634D414343A101054054546869732069732074686520636F6E74656E742E"),  # to_be_maced
+                    unhexlify("2B7459201E5046E33FDB514C5E14A1B01D9893F8936335F821FCB1AFF450B226"),  # key
+                    unhexlify("BF48235E809B5C42E995F2B7D5FA13620E7ED834E337F6AA43DF161E49E9323E")  # solution
+
+                )
+
+        }
+
+    def test_mac_schemes(self):
+        for name_alg, (alg, to_be_maced, key, solution) in self.mac_params.items():
+            with self.subTest(name=name_alg):
+                digest = crypto.calc_tag_wrapper(key, to_be_maced, alg)
+                self.assertEqual(digest, solution)
 
 
 if __name__ == "__main__":

@@ -6,6 +6,7 @@ from pycose.recipient import CoseRecipient
 
 
 # Examples based of https://github.com/cose-wg/Examples/tree/master/mac-tests
+# and https://github.com/cose-wg/Examples/RFC8512
 class CoseMACCreationTest(unittest.TestCase):
     cbor_1 = "D8618540A1010554546869732069732074686520636F6E74656E742E582060CFE7D9C733A758E198FF758A381E43B3CAF986" \
              "7AEBAEF224CA8F11FFD3AC7A818340A20125044A6F75722D73656372657440"
