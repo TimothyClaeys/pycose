@@ -1,12 +1,23 @@
 --- 
+language: python
+
 install: 
   - "pip install -r requirements.txt"
-language: python
+
+# Handle git submodules yourself
+git:
+  submodules: false
+# Use sed to replace the SSH URL with the public URL, then initialize submodules
+before_install:
+  - sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
+  - git submodule update --init --recursive
+
 python: 
   - "3.3"
   - "3.4"
   - "3.5"
   - "3.6"
   - "3.7"
+
 script: 
   - "python test_crypto.py"
