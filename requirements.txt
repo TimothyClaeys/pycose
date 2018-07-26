@@ -3,6 +3,6 @@ cbor==1.0.0
 cffi==1.11.5
 cryptography==2.3
 idna==2.7
--e git+git@github.com:TimothyClaeys/COSE-PYTHON.git@c458f753da5ad9c54f56be24bd9dce2594900838#egg=pycose
+-e https://git@github.com:TimothyClaeys/COSE-PYTHON.git@c458f753da5ad9c54f56be24bd9dce2594900838#egg=pycose
 pycparser==2.18
 six==1.11.0
