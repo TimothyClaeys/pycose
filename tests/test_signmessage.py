@@ -38,16 +38,16 @@ class CoseSignTests(unittest.TestCase):
 
     signature_struct_find_params = \
         {
-            'alg_in_p' : ['alg', 'HS256', 'PROTECTED', "HS256"],
+            'alg_in_p': ['alg', 'HS256', 'PROTECTED', "HS256"],
             'alg_in_u': ['alg', 'HS256', 'UNPROTECTED', "HS256"],
-            'kid_in_p' : ['kid', 31868, 'PROTECTED', 31868],
+            'kid_in_p': ['kid', 31868, 'PROTECTED', 31868],
             'kid_in_u': ['kid', 31868, 'PROTECTED', 31868],
             'kid_str_in_p': ['kid', 'sleutel_id', 'PROTECTED', b'sleutel_id'],
             'kid_str_in_u': ['kid', 'sleutel_id', 'UNPROTECTED', b'sleutel_id'],
             'iv_in_p': ['iv', unhexlify("a8c984a984b498489d489e68498f6847"), 'PROTECTED',
                         unhexlify("a8c984a984b498489d489e68498f6847")],
             'iv_in_u': ['iv', unhexlify("a8c984a984b498489d489e68498f6847"), 'UNPROTECTED',
-                     unhexlify("a8c984a984b498489d489e68498f6847")]
+                        unhexlify("a8c984a984b498489d489e68498f6847")]
         }
 
     cbor_1 = "D8628440A054546869732069732074686520636F6E74656E742E818343A10126A1044231315840CBB8DAD9BEAFB890E1A4141" \
@@ -57,7 +57,7 @@ class CoseSignTests(unittest.TestCase):
 
     test_cose_sign_map = \
         {
-            'msg1': [{}, {}, external, 'This is the content.', {"alg":"ES256"}, {"kid":"11"},
+            'msg1': [{}, {}, external, 'This is the content.', {"alg": "ES256"}, {"kid": "11"},
                      key_1, unhexlify(cbor_1)],
         }
 
@@ -67,7 +67,7 @@ class CoseSignTests(unittest.TestCase):
 
     test_cose_sign2_map = \
         {
-            'msg1': [{}, {},'', 'This is the content.', {"alg":"ES256"}, {"kid":"11"},
+            'msg1': [{}, {}, '', 'This is the content.', {"alg": "ES256"}, {"kid": "11"},
                      key_2, unhexlify(cbor_2)],
         }
 
@@ -99,7 +99,7 @@ class CoseSignTests(unittest.TestCase):
                 sign_msg.external_aad = x
                 sign_msg.payload = c
                 for k3 in d:
-                    sign_msg.add_to_signers(1, k3, d[k3],'PROTECTED')
+                    sign_msg.add_to_signers(1, k3, d[k3], 'PROTECTED')
                 for k4 in e:
                     sign_msg.add_to_signers(1, k4, e[k4], 'UNPROTECTED')
                 sign_msg.key = f

@@ -1,14 +1,62 @@
 import unittest
 from binascii import unhexlify
 
-from pycose.cosemessage import CoseMessage
 from pycose.macmessage import MacMessage
-from pycose.attributes import CoseAttrs
+from pycose.recipient import CoseRecipient
 
 
-class CoseMACTests(unittest.TestCase):
-    """tests for cose_mac message types"""
+# Examples based of https://github.com/cose-wg/Examples/tree/master/mac-tests
+class CoseMACCreationTest(unittest.TestCase):
+    cbor_1 = "D8618540A1010554546869732069732074686520636F6E74656E742E582060CFE7D9C733A758E198FF758A381E43B3CAF986" \
+             "7AEBAEF224CA8F11FFD3AC7A818340A20125044A6F75722D73656372657440"
+    key_1 = "849B57219DAE48DE646D07DBB533566E976686457C1491BE3A76DCEA6C427188"
 
+    cbor_2 = "D8618543A10105A054546869732069732074686520636F6E74656E742E58202BDCC89F058216B8A208DDC6D8B54AA91F48BD6" \
+             "3484986565105C9AD5A6682F6818340A20125044A6F75722D73656372657440"
+    key_2 = "849B57219DAE48DE646D07DBB533566E976686457C1491BE3A76DCEA6C427188"
+
+    cbor_3 = "D8618543A10106A054546869732069732074686520636F6E74656E742E5830B3097F70009A11507409598A83E15BBBBF" \
+             "1982DCE28E5AB6D5A6AFF6897BD24BB8B7479622C9401B24090D458206D587818340A2012504467365632D343840"
+    key_3 = "849B57219DAE48DE646D07DBB533566E976686457C1491BE3A76DCEA6C42718800112233778899AA2122232425262728"
+
+    test_cose_mac_creation_params = \
+        {
+            # name test : p_header, u_header, ex_aed, payload, p_rcpt, u_rcpt, key, solution
+            'msg1': [{}, {'alg': 'HS256'}, unhexlify("11aa22bb33cc44dd55006699"), 'This is the content.', {},
+                     {"alg": "direct", "kid": b'our-secret'},
+                     unhexlify(key_1), unhexlify(cbor_1)],
+            'msg2': [{'alg': 'HS256'}, {}, '', 'This is the content.', {}, {"alg": "direct", "kid": "our-secret"},
+                     unhexlify(key_2), unhexlify(cbor_2)],
+            'msg3': [{'alg': 'HS384'}, {}, '', 'This is the content.', {}, {"alg": "direct", "kid": "sec-48"},
+                     unhexlify(key_3), unhexlify(cbor_3)],
+        }
+
+    # Create an empty MacMessage and then populate it through the use of the setters
+    def test_cose_mac_creation(self):
+        for name_test, (p, u, x, pld, r_p, r_u, key, solution) in self.test_cose_mac_creation_params.items():
+            mac_msg = MacMessage()
+            with self.subTest(name=name_test):
+                mac_msg.protected_header = p
+                mac_msg.unprotected_header = u
+                mac_msg.external_aad = x
+                mac_msg.payload = pld
+                rcp = CoseRecipient()
+                rcp.protected_header = r_p
+                rcp.unprotected_header = r_u
+                mac_msg.recipients = rcp
+                mac_msg.key = key
+                try:
+                    alg = mac_msg.find_in_headers('alg')
+                except KeyError:
+                    alg = mac_msg.find_in_recipients('alg')
+                mac_msg.compute_auth_tag(alg)
+                self.assertEqual(mac_msg.encode(), solution)
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+    """
     recipients_params = \
         {
             'hash256/64_p': ['alg', 'HS256/64', 'PROTECTED', b'\xa1\x01\x04'],
@@ -50,7 +98,7 @@ class CoseMACTests(unittest.TestCase):
             'iv_in_u': ['iv', unhexlify("a8c984a984b498489d489e68498f6847"), 'UNPROTECTED',
                         unhexlify("a8c984a984b498489d489e68498f6847")]
         }
-
+    
     def test_recipient_params(self):
         for name_test, (a, b, c, d) in self.recipients_params.items():
             with self.subTest(name=name_test):
@@ -67,64 +115,19 @@ class CoseMACTests(unittest.TestCase):
                 mac_msg = MacMessage()
                 mac_msg.add_to_recipients(1, a, b, c)
                 self.assertEqual(mac_msg.find_in_recipients(a), d, name_test)
-
-    cbor_1 = "D8618540A1010554546869732069732074686520636F6E74656E742E582060CFE7D9C733A758E198FF758A381E43B3CAF986" \
-             "7AEBAEF224CA8F11FFD3AC7A818340A20125044A6F75722D73656372657440"
-    key_1 = "849B57219DAE48DE646D07DBB533566E976686457C1491BE3A76DCEA6C427188"
-    external = unhexlify("11aa22bb33cc44dd55006699")
-
-    cbor_2 = "D8618543A10105A054546869732069732074686520636F6E74656E742E58202BDCC89F058216B8A208DDC6D8B54AA91F48BD6" \
-             "3484986565105C9AD5A6682F6818340A20125044A6F75722D73656372657440"
-    key_2 = "849B57219DAE48DE646D07DBB533566E976686457C1491BE3A76DCEA6C427188"
-
-    cbor_3 = "D8618543A10106A054546869732069732074686520636F6E74656E742E5830B3097F70009A11507409598A83E15BBBBF" \
-             "1982DCE28E5AB6D5A6AFF6897BD24BB8B7479622C9401B24090D458206D587818340A2012504467365632D343840"
-    key_3 = "849B57219DAE48DE646D07DBB533566E976686457C1491BE3A76DCEA6C42718800112233778899AA2122232425262728"
-
-    test_cose_mac1_map = \
-        {
-            # name test : p_header, u_header, ex_aed, payload,
-            'msg1': [{}, {'alg': 'HS256'}, external, 'This is the content.', {}, {"alg": "direct", "kid": "our-secret"},
-                     unhexlify(key_1), unhexlify(cbor_1)],
-            'msg2': [{'alg': 'HS256'}, {}, '', 'This is the content.', {}, {"alg": "direct", "kid": "our-secret"},
-                     unhexlify(key_2), unhexlify(cbor_2)],
-            'msg3': [{'alg': 'HS384'}, {}, '', 'This is the content.', {}, {"alg": "direct", "kid": "sec-48"},
-                     unhexlify(key_3), unhexlify(cbor_3)],
-            'msg4': [{'alg': 'HS384'}, {}, '', 'This is the content.', {}, {"alg": "direct", "kid": "sec-48"},
-                     unhexlify(key_3), unhexlify(cbor_3)],
-
-        }
-
+    """
+    """
     test_cose_mac2_map = \
         {
-            'msg1': [{'alg': 'HS256'}, {}, '', 'This is the content.', {}, {"alg": "direct", "kid": "our-secret"},
+            'msg1': [{'alg': 'HS256'}, {}, '', 'This is the content.', {}, {"alg": "direct"}, {"kid": "our-secret"},
                      unhexlify(key_2), unhexlify(cbor_2)],
-            'msg2': [{'alg': 'HS384'}, {}, '', 'This is the content.', {}, {"alg": "direct", "kid": "sec-48"},
+            'msg2': [{'alg': 'HS384'}, {}, '', 'This is the content.', {}, {"alg": "direct"}, {"kid": "sec-48"},
                      unhexlify(key_3), unhexlify(cbor_3)],
-            'msg3': [{'alg': 'HS384'}, {}, '', 'This is the content.', {}, {"alg": "direct", "kid": "sec-48"},
+            'msg3': [{'alg': 'HS384'}, {}, '', 'This is the content.', {}, {"alg": "direct"}, {"kid": "sec-48"},
                      unhexlify(key_3), unhexlify(cbor_3)],
 
         }
 
-    def test_cose_mac1_creation(self):
-        for name_test, (a, b, x, c, d, e, f, g) in self.test_cose_mac1_map.items():
-            mac_msg = MacMessage()
-            with self.subTest(name=name_test):
-                mac_msg.protected_header = a
-                mac_msg.unprotected_header = b
-                mac_msg.external_aad = x
-                mac_msg.payload = c
-                for k3 in d:
-                    mac_msg.add_to_recipients(1, k3, d[k3], 'PROTECTED')
-                for k4 in e:
-                    mac_msg.add_to_recipients(1, k4, e[k4], 'UNPROTECTED')
-                mac_msg.key = f
-                try:
-                    alg = mac_msg.find_in_headers('alg')
-                except KeyError as err:
-                    alg = mac_msg.find_in_recipients('alg')
-                mac_msg.compute_auth_tag(alg)
-                self.assertEqual(mac_msg.encode(), g)
 
     def test_received_mac0_msg(self):
         for name_test, (a, b, x, c, d, e, f, g) in self.test_cose_mac2_map.items():
@@ -137,7 +140,4 @@ class CoseMACTests(unittest.TestCase):
                     alg = cose_msg.find_in_recipients('alg')
 
                 print(cose_msg.verify_auth_tag(alg))
-
-
-if __name__ == "__main__":
-    unittest.main()
+"""

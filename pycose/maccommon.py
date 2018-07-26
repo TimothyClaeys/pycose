@@ -13,27 +13,51 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
         msg.auth_tag = cose_obj.pop(0)
         try:
             msg.recipients = cose_obj.pop(0)
-        except IndexError:
+        except (IndexError, ValueError):
             msg.recipients = None
         return msg
 
-    def __init__(self, protected_header=CoseAttrs(), unprotected_header=CoseAttrs(), payload=None, auth_tag=None):
-        super(MacCommon, self).__init__(protected_header, unprotected_header, payload)
+    def __init__(self, p_header=CoseAttrs(), u_header=CoseAttrs(), payload=None, auth_tag=None, key=None):
+        super(MacCommon, self).__init__(p_header, u_header, payload)
         self._auth_tag = auth_tag
+        self._key = key
 
     @property
-    @abc.abstractmethod
     def key(self):
-        NotImplementedError("Cannot not instantiate abstract class MacCommon")
+        return self._key
 
     @key.setter
-    @abc.abstractmethod
     def key(self, new_value):
-        NotImplementedError("Cannot not instantiate abstract class MacCommon")
+        if isinstance(new_value, bytes):
+            self._key = new_value
+        else:
+            raise ValueError("Key must be of type bytes")
+
+    @property
+    def auth_tag(self):
+        return self._auth_tag
+
+    @auth_tag.setter
+    def auth_tag(self, new_value):
+        self._auth_tag = new_value
+
+    def verify_auth_tag(self, alg):
+        """Verifies the authentication tag of a received message."""
+        to_digest = self._mac_structure
+        return crypto.hmac_verify_wrapper(self.key, self.auth_tag, to_digest, alg)
+
+    def compute_auth_tag(self, alg):
+        """Wrapper function to access the cruptographic primitives."""
+        to_digest = self._mac_structure
+        self.auth_tag = crypto.hmac_wrapper(self.key, to_digest, alg)
+
+    @abc.abstractmethod
+    def encode(self):
+        raise NotImplementedError("Cannot instantiate abstract class MacCommon")
 
     @property
     def _mac_structure(self):
-        """Create the mac_structure that needs to be MAC'ed"""
+        """Create the mac_structure that needs to be MAC'ed."""
         mac_structure = list()
         mac_structure.append(self.context)
 
@@ -58,27 +82,3 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
 
         to_be_maced = cbor.dumps(mac_structure)
         return to_be_maced
-
-    @property
-    def auth_tag(self):
-        return self._auth_tag
-
-    @auth_tag.setter
-    def auth_tag(self, new_value):
-        self._auth_tag = new_value
-
-    def verify_auth_tag(self, alg):
-        """
-        Verifies the authentication tag of a received message
-        :return: True or raises an exception
-        """
-        to_digest = self._mac_structure
-        return crypto.hmac_verify_wrapper(self.key, self.auth_tag, to_digest, alg)
-
-    def compute_auth_tag(self, alg):
-        """
-        pass key, byte-string-to-mac and algorithm found in the header buckets to the hmac wrapper
-        :return: tag
-        """
-        to_digest = self._mac_structure
-        self.auth_tag = crypto.hmac_wrapper(self.key, to_digest, alg)
