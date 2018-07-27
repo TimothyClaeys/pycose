@@ -3,7 +3,7 @@ language: python
 
 install: 
   - "pip install -r requirements.txt"
-
+  - "git clone https://github.com/TimothyClaeys/COSE-PYTHON.git"
 python: 
   - "3.6"
 
