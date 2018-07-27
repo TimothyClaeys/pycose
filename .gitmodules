@@ -1,3 +1,0 @@
-[submodule "pyecdsa"]
-	path = pyecdsa
-	url = https://warner@github.com/warner/python-ecdsa.git
