@@ -1,4 +1,5 @@
-# COSE-PYTHON
+# COSE-PYTHON [![Build Status](https://travis-ci.org/TimothyClaeys/COSE-PYTHON.svg?branch=master)](https://travis-ci.org/TimothyClaeys/COSE-PYTHON)
+
 This project is a Python implementation of the IETF CBOR Encoded Message Syntax (COSE). COSE has reached RFC status and is now available at RFC 8152.
 
 In addition to the core document the following have also become RFCs:
