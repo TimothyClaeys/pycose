@@ -2,14 +2,9 @@
 language: python
 
 install: 
-  - "pip install -r requirements.txt"
+  - echo "no dependencies to install"
 
 
 python: 
-  - "3.3"
-  - "3.4"
-  - "3.5"
   - "3.6"
 
-script: 
-  - "python test_crypto.py"
