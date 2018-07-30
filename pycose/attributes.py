@@ -8,7 +8,7 @@ class CoseAttrs(dict):
         {
             'alg': 1,
             'crit': 2,
-            'content_type': 3,
+            'ctyp': 3,
             'kid': 4,
             'iv': 5,
             'partial_iv': 6,
