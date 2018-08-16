@@ -47,7 +47,7 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
         return crypto.verify_tag_wrapper(self.key, self.auth_tag, to_digest, alg)
 
     def compute_auth_tag(self, alg):
-        """Wrapper function to access the cruptographic primitives."""
+        """Wrapper function to access the cryptographic primitives."""
         to_digest = self._mac_structure
         self.auth_tag = crypto.calc_tag_wrapper(self.key, to_digest, alg)
 
