@@ -6,3 +6,13 @@ class CoseUnsupportedMAC(Exception):
 class CoseInvalidTag(Exception):
     def __init__(self, *args, **kwargs):
         Exception.__init__(self, *args, **kwargs)
+
+
+class CoseUnknownAttributeName(Exception):
+    def __init__(self, *args, **kwargs):
+        Exception.__init__(self, *args, **kwargs)
+
+
+class CoseUnknownAttributeValue(Exception):
+    def __init__(self, *args, **kwargs):
+        Exception.__init__(self, *args, **kwargs)
