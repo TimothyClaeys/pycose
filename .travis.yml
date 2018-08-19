@@ -17,6 +17,7 @@ python:
   - "3.5"
   - "3.4"
 
-script: 
-  - "python tests/test_crypto.py"
-  - "python tests/test_mac0message.py"
+script:
+  - "cd tests/"
+  - "python test_crypto.py"
+  - "python test_mac0message.py"
