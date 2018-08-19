@@ -1,7 +1,7 @@
 class CoseAttrs(dict):
     """
     Class that describes all the COSE attributes. It's a modified dictionary for easy lookup and translation of the
-    human readable values
+    human readable values.
     """
 
     _header_keys = \
@@ -60,8 +60,6 @@ class CoseAttrs(dict):
                 value = self._header_values[label][value]
             except KeyError:
                 pass
-        if isinstance(value, str):
-            value = bytes(value, 'utf-8')
 
         super(CoseAttrs, self).__setitem__(label, value)
 

@@ -4,6 +4,7 @@ import cbor
 
 from pycose.attributes import CoseAttrs
 from pycose.basicstructure import BasicCoseStructure
+from pycose.exceptions import CoseUnknownAttributeName, CoseUnknownAttributeValue
 
 
 class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
@@ -33,6 +34,8 @@ class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
             cose_obj = cbor.loads(received).value
         except AttributeError:
             raise AttributeError("Message was not tagged")
+        except ValueError:
+            raise ValueError("Decode accepts only bytes as input.")
 
         if isinstance(cose_obj, list):
             try:
@@ -46,8 +49,8 @@ class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
     @classmethod
     def from_cose_obj(cls, cose_obj):
         """Returns an initialized COSE message object."""
-        protected_header = CoseAttrs()
-        unprotected_header = CoseAttrs()
+        protected_header = dict()
+        unprotected_header = dict()
 
         try:
             decoded_protected_header = cbor.loads(cose_obj.pop(0))
@@ -60,10 +63,32 @@ class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
             decoded_unprotected_header = {}
 
         for k1 in decoded_protected_header:
-            protected_header[k1] = decoded_protected_header[k1]
+            try:
+                attr_name = [k for k, v in CoseAttrs._header_keys.items() if v == k1][0]
+            except KeyError:
+                raise CoseUnknownAttributeName()
+
+            try:
+                attr_val = \
+                    [k for k, v in CoseAttrs._header_values[k1].items() if int(v) == decoded_protected_header[k1]][0]
+            except KeyError:
+                raise CoseUnknownAttributeValue()
+
+            protected_header[attr_name] = attr_val
 
         for k2 in decoded_unprotected_header:
-            unprotected_header[k2] = decoded_unprotected_header[k2]
+            try:
+                attr_name = [k for k, v in CoseAttrs._header_keys.items() if v == k2][0]
+            except KeyError:
+                raise CoseUnknownAttributeName()
+
+            try:
+                attr_val = \
+                    [k for k, v in CoseAttrs._header_values[k2].items() if int(v) == decoded_unprotected_header[k2]][0]
+            except KeyError:
+                raise CoseUnknownAttributeValue()
+
+            unprotected_header[attr_name] = attr_val
 
         payload = cose_obj.pop(0)
 

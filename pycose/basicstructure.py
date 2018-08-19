@@ -7,57 +7,66 @@ from pycose.attributes import CoseAttrs
 
 class BasicCoseStructure:
     """Description of the basic COSE information buckets."""
-    def __init__(self, p_header=CoseAttrs(), u_header=CoseAttrs):
-        self._protected_header = self._convert_to_coseattrs(p_header)
-        self._encoded_protected_header = self._encode_protected_header()
-        self._unprotected_header = self._convert_to_coseattrs(u_header)
+
+    def __init__(self, p_header=CoseAttrs(), u_header=CoseAttrs()):
+        self._protected_header = p_header
+        self._encoded_protected_header = self.__encode_protected_header()
+        self._unprotected_header = u_header
+        self._encoded_unprotected_header = self.__encode_unprotected_header()
 
     @property
     def protected_header(self):
-        """Returns the protected header"""
+        """Returns the protected header."""
         return self._protected_header
 
     @protected_header.setter
     def protected_header(self, new_value):
-        """Sets the protected header value. Takes a dictionary object and copies its values in a CoseAttrs object."""
-        new_value = deepcopy(new_value)
-        for key in new_value:
-            self._protected_header[key] = new_value[key]
+        """Sets the protected header value. """
+        if isinstance(new_value, dict) or isinstance(new_value, CoseAttrs):
+            self._protected_header = deepcopy(new_value)
+        else:
+            raise TypeError("The buckets can only be set with Python dictionaries or CoseAttributes.")
 
     @property
     def encoded_protected_header(self):
-        """Returns the protected header as a cbor encoded serialized map."""
-        return self._encode_protected_header()
+        """Returns the protected header as a CBOR encoded serialized map."""
+        return self.__encode_protected_header()
 
     @property
     def unprotected_header(self):
-        """Returns the unprotected header as a dictionary."""
+        """Returns the unprotected header as a Python dictionary."""
         return self._unprotected_header
 
     @unprotected_header.setter
     def unprotected_header(self, new_value):
         """Sets the unprotected header value."""
-        new_value = deepcopy(new_value)
-        for key in new_value:
-            self._unprotected_header[key] = new_value[key]
-
-    def add_to_headers(self, label, value, where):
-        if where == "PROTECTED":
-            self.protected_header[label] = value
-
-        if where == "UNPROTECTED":
-            self.unprotected_header[label] = value
-
-    def remove_from_headers(self, label):
-        if not isinstance(label, str) and not isinstance(label, int):
-            raise ValueError("label must be a string or an integer")
-
-        if label in self._protected_header:
-            del self._protected_header[label]
-        elif label in self._unprotected_header:
-            del self._unprotected_header[label]
+        if isinstance(new_value, dict) or isinstance(new_value, CoseAttrs):
+            self._unprotected_header = deepcopy(new_value)
         else:
-            raise KeyError("Attribute not in headers " + str(label))
+            raise TypeError("The buckets can only be set with dictionaries or CoseAttributes.")
+
+    @property
+    def encoded_unprotected_header(self):
+        """Returns the protected header as a cbor encoded serialized map."""
+        return self.__encode_unprotected_header()
+
+    def add_to_headers(self, dct, where):
+        if where == "PROTECTED":
+            for key in dct:
+                self._protected_header[key] = dct[key]
+        if where == "UNPROTECTED":
+            for key in dct:
+                self._unprotected_header[key] = dct[key]
+
+    def remove_from_headers(self, dct, where):
+        if where == "PROTECTED":
+            for key in dct:
+                if key in self._protected_header and self._protected_header[key] == dct[key]:
+                    del self._protected_header[key]
+        if where == "UNPROTECTED":
+            for key in dct:
+                if key in self._unprotected_header and self._unprotected_header[key] == dct[key]:
+                    del self._unprotected_header[key]
 
     def find_in_headers(self, label):
         if label in self._protected_header:
@@ -67,17 +76,28 @@ class BasicCoseStructure:
         else:
             raise KeyError("Attribute not in headers " + str(label))
 
-    def _encode_protected_header(self):
+    # PRIVATE METHODS #
+
+    def __encode_protected_header(self):
         """Encode the protected header. No action need to be taken for the unprotected header."""
         if len(self._protected_header) == 0:
             to_be_returned = bytes()
         else:
-            to_be_returned = cbor.dumps(self._protected_header)
+            to_be_returned = cbor.dumps(self.__convert_to_coseattrs(self._protected_header))
+
+        return to_be_returned
+
+    def __encode_unprotected_header(self):
+        """Encode the protected header. No action need to be taken for the unprotected header."""
+        if len(self._unprotected_header) == 0:
+            to_be_returned = {}
+        else:
+            to_be_returned = self.__convert_to_coseattrs(self._unprotected_header)
 
         return to_be_returned
 
     @staticmethod
-    def _convert_to_coseattrs(dictionary):
+    def __convert_to_coseattrs(dictionary):
         if isinstance(dictionary, dict):
             new_coseattrs = CoseAttrs()
             for key in dictionary:
@@ -86,4 +106,4 @@ class BasicCoseStructure:
         elif isinstance(dictionary, CoseAttrs):
             return dictionary
         else:
-            raise ValueError("Can only accept objects of the type dict or CoseAttrs.")
+            raise TypeError("Can only accept objects of the type dict or CoseAttrs.")

@@ -27,7 +27,7 @@ class SignMessage(signcommon.SignCommon):
             copy.deepcopy(u_header),
             payload)
         self._key = key
-        self._signers = self._convert_to_coseattrs(copy.deepcopy(signers))
+        self._signers = self.__convert_to_coseattrs(copy.deepcopy(signers))
 
     @property
     def key(self):
