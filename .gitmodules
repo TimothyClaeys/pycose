@@ -2,5 +2,5 @@
 	path = pyecdsa
 	url = https://github.com/warner/python-ecdsa.git
 [submodule "testcases"]
-	path = testcases
+	path = tests/testcases
 	url = https://github.com/cose-wg/Examples.git
