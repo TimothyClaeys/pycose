@@ -31,7 +31,7 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
         if isinstance(new_value, bytes):
             self._key = new_value
         else:
-            raise ValueError("Key must be of type bytes")
+            raise ValueError("Key must be of type bytes.")
 
     @property
     def auth_tag(self):
