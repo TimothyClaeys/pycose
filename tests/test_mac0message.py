@@ -1,3 +1,4 @@
+import os
 import unittest
 from binascii import unhexlify, hexlify
 
@@ -5,13 +6,14 @@ from pycose import crypto
 from pycose.cosemessage import CoseMessage
 from pycose.mac0message import Mac0Message
 from tests.testutilities import TestUtilities
+from tests import TEST_ROOT
 
 
 class CoseMAC0Encoder(unittest.TestCase):
 
     def test_encoding(self):
         util = TestUtilities()
-        for test in util.get_next_test("../testcases/mac0-tests"):
+        for test in util.get_next_test(os.path.join(TEST_ROOT, 'testcases', 'mac0-tests')):
             test_name = test['title']
             test_input = test['input']
             test_intermediates = test['intermediates']
@@ -88,7 +90,7 @@ class CoseMAC0Encoder(unittest.TestCase):
 class CoseMAC0Decoder(unittest.TestCase):
     def test_encoding(self):
         util = TestUtilities()
-        for test in util.get_next_test("../testcases/mac0-tests"):
+        for test in util.get_next_test(os.path.join(TEST_ROOT, 'testcases', 'mac0-tests')):
             test_name = test['title']
             test_input = test['input']
             test_intermediates = test['intermediates']
