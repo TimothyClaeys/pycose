@@ -10,7 +10,7 @@ setup(
         'cbor',
     ],
 
-	author='Timothy Claeys',
-	author_email='timothy.claeys@imag.fr',
-	license='BSD-3',
+    author='Timothy Claeys',
+    author_email='timothy.claeys@imag.fr',
+    license='BSD-3',
 )

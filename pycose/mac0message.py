@@ -30,6 +30,15 @@ class Mac0Message(maccommon.MacCommon):
             key=key
         )
 
+    def __repr__(self):
+        repr = cbor.loads(cbor.dumps(cbor.Tag(self.cbor_tag,
+                                              [self.encoded_protected_header, self.encoded_unprotected_header,
+                                               self.payload, self.auth_tag])))
+        t = repr.tag
+        v = [binascii.hexlify(element) if isinstance(element, bytes) else element for element in repr.value]
+
+        return str((t, v))
+
     def encode(self):
         """Encodes the message into a CBOR array with the correct CBOR tag."""
 
@@ -37,5 +46,5 @@ class Mac0Message(maccommon.MacCommon):
             raise CoseInvalidTag()
 
         return cbor.dumps(cbor.Tag(self.cbor_tag,
-                                   [self.encoded_protected_header, self.unprotected_header, self.payload,
+                                   [self.encoded_protected_header, self.encoded_unprotected_header, self.payload,
                                     self.auth_tag]))

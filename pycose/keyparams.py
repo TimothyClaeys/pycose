@@ -4,13 +4,13 @@ class KeyParams(dict):
             'kty': 1,  # This parameter is used to identify the family of keys for this structure.
             'alg': 3,  # This parameter is used to restrict the algorithm that is used with the key.
             'kid': 2,  # This parameter is used to give an identifier for a key. It's not constructed.
-            'key_ops': 4,  # This parameter is defined to restrict the set of operationsthat a key is to be used for.
+            'key_ops': 4,  # This parameter is defined to restrict the set of operations that a key is to be used for.
             'Base IV': 5  # This parameter is defined to carry the base portion of an IV.
         }
 
     _keymap_values = \
         {
-            1: {"EC2 P-256": 1, "EC 2 P-384": 2, "EC2" "P-512": 3},
+            1: {"EC2 P-256": 1, "EC2 P-384": 2, "EC2" "P-512": 3},
             3: {
                 "direct": -6,
                 "ES256": -7,

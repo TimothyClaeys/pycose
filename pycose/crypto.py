@@ -121,7 +121,7 @@ def ec_verify_wrapper(key, to_be_signed, signature, algorithm='ES256', curve='P-
 
 
 def derive_priv_key(d, curve, hashfunc):
-    d = base64urldecode(d)
+    d = base64decode(d)
     d = binascii.hexlify(d)
     d = int(d, 16)
     return keys.SigningKey.from_secret_exponent(d, curve, hashfunc)
@@ -136,9 +136,9 @@ def derive_pub_key(x, y, curve, hashfunc):
     :param hashfunc: Which hash function used for hashing the data before signing
     :return: A public key
     """
-    x = base64urldecode(x)
+    x = base64decode(x)
     x = binascii.hexlify(x)
-    y = base64urldecode(y)
+    y = base64decode(y)
     y = binascii.hexlify(y)
     x = int(x, 16)
     y = int(y, 16)
@@ -160,7 +160,7 @@ def get_randomness(bytecount):
     return urandom(bytecount)
 
 
-def base64urldecode(to_decode):
+def base64decode(to_decode):
     to_decode = to_decode.replace('-', '+')
     to_decode = to_decode.replace('_', '/')
 
