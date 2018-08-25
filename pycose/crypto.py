@@ -8,7 +8,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import cmac
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import hmac
-from cryptography.hazmat.primitives.ciphers import algorithms
+from cryptography.hazmat.primitives.ciphers import algorithms, aead
 
 from pycose.exceptions import *
 from pyecdsa.src.ecdsa import curves
@@ -38,11 +38,48 @@ cmacs = \
         'AES-MAC-128': algorithms.AES
     }
 
+aeads = \
+    {
+        'A128GCM': aead.AESGCM,
+        'A192GCM': aead.AESGCM,
+        'A256GCM': aead.AESGCM,
+        'AES-CCM-16-64-128': aead.AESCCM,
+        'AES-CCM-16-64-256': aead.AESCCM,
+        'AES-CCM-64-64-128': aead.AESCCM,
+        'AES-CCM-64-64-256': aead.AESCCM,
+        'AES-CCM-16-128-128': aead.AESCCM,
+        'AES-CCM-16-128-256': aead.AESCCM,
+        'AES-CCM-64-128-256': aead.AESCCM,
+        'AES-CCM-64-128-128': aead.AESCCM,
+    }
+
 ec_curves = \
     {
         'P-256': curves.NIST256p,
         'P-384': curves.NIST384p
     }
+
+
+def aead_encrypt(key, aad, plaintext, algorithm, nonce):
+    try:
+        primitive = aeads[algorithm]
+        aesgcm = primitive(key)
+        ciphertext = aesgcm.encrypt(nonce, plaintext, aad)
+    except KeyError as err:
+        raise CoseUnsupportedEnc("This cipher is not supported by the COSE specification: {}".format(err))
+
+    return ciphertext
+
+
+def aead_decrypt(key, aad, ciphertext, algorithm, nonce):
+    try:
+        primitive = aeads[algorithm]
+        aesgcm = primitive(key)
+        plaintext = aesgcm.decrypt(nonce, ciphertext, aad)
+    except KeyError as err:
+        raise CoseUnsupportedEnc("This cipher is not supported by the COSE specification: {}".format(err))
+
+    return plaintext
 
 
 def calc_tag_wrapper(key, to_be_maced, algorithm):

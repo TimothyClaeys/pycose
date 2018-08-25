@@ -43,7 +43,7 @@ class Mac0Message(maccommon.MacCommon):
         """Encodes the message into a CBOR array with the correct CBOR tag."""
 
         if len(binascii.hexlify(self.auth_tag)) not in [16, 32, 64, 96, 128]:
-            raise CoseInvalidTag()
+            raise CoseInvalidTag("The length of the COSE auth tag must be in [16, 32, 64, 96, 128]")
 
         return cbor.dumps(cbor.Tag(self.cbor_tag,
                                    [self.encoded_protected_header, self.encoded_unprotected_header, self.payload,

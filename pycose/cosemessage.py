@@ -72,7 +72,8 @@ class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
                 attr_val = \
                     [k for k, v in CoseAttrs._header_values[k1].items() if int(v) == decoded_protected_header[k1]][0]
             except KeyError:
-                raise CoseUnknownAttributeValue()
+                # we don't throw an exception here because some keys are not mapped on stored header values, e.g. iv
+                attr_val = decoded_protected_header[k1]
 
             protected_header[attr_name] = attr_val
 
@@ -86,7 +87,8 @@ class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
                 attr_val = \
                     [k for k, v in CoseAttrs._header_values[k2].items() if int(v) == decoded_unprotected_header[k2]][0]
             except KeyError:
-                raise CoseUnknownAttributeValue()
+                # we don't throw an exception here because some keys are not mapped on stored header values, e.g. iv
+                attr_val = decoded_unprotected_header[k2]
 
             unprotected_header[attr_name] = attr_val
 
@@ -109,27 +111,22 @@ class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
 
     @payload.setter
     def payload(self, new_value):
-        if new_value is not None:
-            if isinstance(new_value, bytes):
-                self._payload = new_value
-            elif isinstance(new_value, str):
-                self._payload = bytes(new_value, 'utf-8')
-            else:
-                raise TypeError("Payload must be of type bytes or string")
+        if isinstance(new_value, bytes):
+            self._payload = new_value
+        elif isinstance(new_value, str):
+            self._payload = new_value.encode('utf-8')
         else:
-            self._payload = bytes()
+            raise TypeError("Payload must be of type bytes or string")
+
 
     @external_aad.setter
     def external_aad(self, new_external_aad):
-        if new_external_aad is None or len(new_external_aad) == 0:
-            self._external_aad = bytes()
+        if isinstance(new_external_aad, str):
+            self._external_aad = cbor.loads(new_external_aad)
+        elif isinstance(new_external_aad, bytes):
+            self._external_aad = new_external_aad
         else:
-            if isinstance(new_external_aad, str):
-                self._external_aad = cbor.loads(new_external_aad)
-            elif isinstance(new_external_aad, bytes):
-                self._external_aad = new_external_aad
-            else:
-                raise TypeError("Input must be of type str or bytes")
+            raise TypeError("Input must be of type str or bytes")
 
     @abc.abstractmethod
     def encode(self):

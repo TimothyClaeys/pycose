@@ -54,9 +54,11 @@ class BasicCoseStructure:
         if where == "PROTECTED":
             for key in dct:
                 self._protected_header[key] = dct[key]
+            self._encoded_protected_header = self.__encode_protected_header()
         if where == "UNPROTECTED":
             for key in dct:
                 self._unprotected_header[key] = dct[key]
+            self._encoded_unprotected_header = self.__encode_protected_header()
 
     def remove_from_headers(self, dct, where):
         if where == "PROTECTED":
@@ -68,13 +70,11 @@ class BasicCoseStructure:
                 if key in self._unprotected_header and self._unprotected_header[key] == dct[key]:
                     del self._unprotected_header[key]
 
-    def find_in_headers(self, label):
-        if label in self._protected_header:
+    def find_in_headers(self, header, label):
+        if label in header:
             return self._protected_header[label]
-        elif label in self._unprotected_header:
-            return self._unprotected_header[label]
         else:
-            raise KeyError("Attribute not in headers " + str(label))
+            return None
 
     # PRIVATE METHODS #
 

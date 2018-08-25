@@ -17,9 +17,9 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
             msg.recipients = None
         return msg
 
-    def __init__(self, p_header=CoseAttrs(), u_header=CoseAttrs(), payload=None, auth_tag=None, key=None):
+    def __init__(self, p_header=CoseAttrs(), u_header=CoseAttrs(), payload=None, key=None):
         super(MacCommon, self).__init__(p_header, u_header, payload)
-        self._auth_tag = auth_tag
+        self._auth_tag = None
         self._key = key
 
     @property
@@ -39,7 +39,10 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
 
     @auth_tag.setter
     def auth_tag(self, new_value):
-        self._auth_tag = new_value
+        if not isinstance(new_value, bytes):
+            raise TypeError("Auth tag must be of type bytes")
+        else:
+            self._auth_tag = new_value
 
     def verify_auth_tag(self, alg):
         """Verifies the authentication tag of a received message."""
