@@ -16,3 +16,11 @@ class CoseRecipient(BasicCoseStructure):
     @property
     def ciphertext(self):
         return self._ciphertext
+
+    @property
+    def rcpt_key(self):
+        return self._rcpt_key
+
+    @rcpt_key.setter
+    def rcpt_key(self, key):
+        self._rcpt_key = key
