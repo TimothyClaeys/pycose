@@ -16,7 +16,7 @@ import cbor
 
 from pycose import cosemessage, maccommon
 from pycose.attributes import CoseAttrs
-from pycose.recipient import CoseRecipient
+from pycose.recipient import CoseMacRecipient
 
 
 @cosemessage.CoseMessage.record_cbor_tag(97)
@@ -33,10 +33,9 @@ class MacMessage(maccommon.MacCommon):
         )
 
         for rcpt in recipients:
-            if not isinstance(rcpt, CoseRecipient):
+            if not isinstance(rcpt, CoseMacRecipient):
                 raise ValueError()
         self._recipients = deepcopy(recipients)
-
         self._encoded_recipients = self.__encode_recipients()
 
     @property
@@ -47,7 +46,7 @@ class MacMessage(maccommon.MacCommon):
     @recipients.setter
     def recipients(self, new_value):
         for rcpt in new_value:
-            if not isinstance(rcpt, CoseRecipient):
+            if not isinstance(rcpt, CoseMacRecipient):
                 raise ValueError()
         self._recipients = deepcopy(new_value)
 
@@ -60,7 +59,7 @@ class MacMessage(maccommon.MacCommon):
         recipient.add_to_header(label, value, where)
 
     def add_to_recpients(self, rcpt):
-        if not isinstance(rcpt, CoseRecipient):
+        if not isinstance(rcpt, CoseMacRecipient):
             raise ValueError()
         else:
             self._recipients.append(rcpt)
@@ -80,5 +79,5 @@ class MacMessage(maccommon.MacCommon):
     def __encode_recipients(self):
         recipient_list = []
         for rcpt in self._recipients:
-            recipient_list.append([rcpt.encoded_protected_header, rcpt.encoded_unprotected_header, rcpt.ciphertext])
+            recipient_list.append([rcpt.encoded_protected_header, rcpt.encoded_unprotected_header, rcpt.payload])
         return recipient_list
