@@ -35,11 +35,9 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
 
     def decrypt(self, alg, nonce):
         self.payload = crypto.aead_encrypt(self.key, self._enc_structure, self.payload, alg, nonce)
-        self.is_encrypted = False
 
     def encrypt(self, alg, nonce=urandom(12)):
         self.payload = crypto.aead_encrypt(self.key, self._enc_structure, self.payload, alg, nonce)
-        self.is_encrypted = True
 
     def encode(self):
         raise NotImplementedError("Cannot instantiate abstract class EncCommon")
