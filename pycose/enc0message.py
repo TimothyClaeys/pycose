@@ -29,9 +29,6 @@ class Enc0Message(enccommon.EncCommon):
         self.is_encrypted = False
 
     def encode(self):
-        if not self.is_encrypted:
-            raise ValueError("Payload not encrypted!")
-
         return cbor.dumps(cbor.Tag(self.cbor_tag,
                             [self.encoded_protected_header, self.encoded_unprotected_header, self.payload]))
 
