@@ -29,7 +29,7 @@ Additionally, sed on the message type, message fields can be added:
 - mac/signature: this field contains a message authentication code or a signature
 - recipients/signers: this field either contains information for the individual recipients if the message has multiple receivers (e.g. key identifier information) or it contains information about the different signers of the message.
 
-![](Images/cose_message.pdf?raw=true)
+![](Images/cose_message.png?raw=true)
 
 ## How to install
 
