@@ -16,18 +16,18 @@ CBOR Encoded Message Syntax (COSE) is a data format for concise representation o
 - MAC0: An authenticated COSE message that has one recipient.
 - MAC: An authenticated COSE message that can have multiple recipients (the message can be authenticated under different keys for different receivers).
 - Sign0: A signed COSE message with one signer.
-- Sign: A COSE message that has been signed by multiple signers
+- Sign: A COSE message that has been signed by multiple signers.
 
 A basic COSE messages consists of 3 main parts:
 
-- protected header: this message field contains information that needs to be protected. This information is taken into account during the encryption, calculation of the MAC or the signature.
-- unprotected header: the information contained in the unprotected header is not protected by the cryptographic algorithms
-- payload: contains the payload of the message (protected by the cryptographic algorithms)
+- protected header: This message field contains information that needs to be protected. This information is taken into account during the encryption, calculation of the MAC or the signature.
+- unprotected header: The information contained in the unprotected header is not protected by the cryptographic algorithms.
+- payload: Contains the payload of the message (protected by the cryptographic algorithms).
 
-Additionally, sed on the message type, message fields can be added:
+Additionally, based on the message type, message fields can be added:
 
-- mac/signature: this field contains a message authentication code or a signature
-- recipients/signers: this field either contains information for the individual recipients if the message has multiple receivers (e.g. key identifier information) or it contains information about the different signers of the message.
+- mac/signature: This field contains a message authentication code or a signature.
+- recipients/signers: This field either contains information for the individual recipients if the message has multiple receivers (e.g. key identifier information) or it contains information about the different signers of the message.
 
 ![](Images/cose_message.png?raw=true)
 
