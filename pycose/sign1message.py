@@ -72,7 +72,7 @@ class Sign1Message(signcommon.SignCommon):
         :return: True or raises an exception
         """
         to_sign = self._sig_structure
-        return crypto.ec_verify_wrapper(self.key, self.signature, to_sign, alg, curve)
+        return crypto.ec_verify_wrapper(self.key, to_sign, self.signature, alg, curve)
 
     def encode(self):
         """
