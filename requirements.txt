@@ -6,3 +6,4 @@ idna==2.7
 -e git+https://github.com/TimothyClaeys/COSE-PYTHON.git#egg=pycose
 pycparser==2.18
 six==1.11.0
+ecdsa>=0.13

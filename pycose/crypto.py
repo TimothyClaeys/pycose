@@ -9,11 +9,11 @@ from cryptography.hazmat.primitives import cmac
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import hmac
 from cryptography.hazmat.primitives.ciphers import algorithms, aead
+from ecdsa import curves
+from ecdsa import ellipticcurve
+from ecdsa import keys
 
 from pycose.exceptions import *
-from pyecdsa.src.ecdsa import curves
-from pyecdsa.src.ecdsa import ellipticcurve
-from pyecdsa.src.ecdsa import keys
 
 hashes_for_ecc = \
     {

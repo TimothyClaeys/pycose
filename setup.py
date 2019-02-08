@@ -8,6 +8,7 @@ setup(
     install_requires=[
         'cryptography',
         'cbor',
+        'ecdsa',
     ],
 
     author='Timothy Claeys',
