@@ -1,13 +1,14 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='pycose',
     version='0.1',
-    py_modules=['pycose'],
+    packages=find_packages(exclude=['tests']),
     python_requires='>=3.3',
     install_requires=[
         'cryptography',
         'cbor',
+        'ecdsa',
     ],
 
     author='Timothy Claeys',
