@@ -153,7 +153,10 @@ def ec_verify_wrapper(key, to_be_signed, signature, algorithm='ES256', curve='P-
         signer = derive_priv_key(key, ec_curves[curve], hashfunc=hashes_for_ecc[algorithm])
     else:
         signer = key
-    verifier = signer.get_verifying_key()
+    try:
+        verifier = signer.get_verifying_key()
+    except AttributeError:
+        verifier = signer
     return verifier.verify(signature, to_be_signed, hashfunc=hashes_for_ecc[algorithm])
 
 
