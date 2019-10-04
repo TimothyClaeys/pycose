@@ -54,7 +54,7 @@ class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
 
         try:
             decoded_protected_header = cbor.loads(cose_obj.pop(0))
-        except ValueError:
+        except (ValueError, EOFError):
             decoded_protected_header = {}
 
         try:
