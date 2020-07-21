@@ -12,6 +12,6 @@ setup(
     ],
 
     author='Timothy Claeys',
-    author_email='timothy.claeys@imag.fr',
+    author_email='timothy.claeys@gmail.com',
     license='BSD-3',
 )
