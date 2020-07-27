@@ -1,96 +1,64 @@
 import os
-import unittest
-from binascii import unhexlify, hexlify
+from binascii import unhexlify
 
-from pycose import crypto
-from pycose.cosemessage import CoseMessage
+import pytest
+
+from pycose import CoseMessage
+from pycose.attributes import CoseHeaderParam
 from pycose.enc0message import Enc0Message
-from tests import TEST_ROOT
-from tests.testutilities import TestUtilities
+from tests.conftest import aes_ccm_examples, aes_gcm_examples, encrypted_tests
 
 
-class CoseEnc0Encoder(unittest.TestCase):
+@pytest.mark.encoding
+@pytest.mark.parametrize('encrypt0_test_cases',
+                         [os.path.join(aes_ccm_examples, v) for v in os.listdir(aes_ccm_examples)] +
+                         [os.path.join(aes_gcm_examples, v) for v in os.listdir(aes_gcm_examples)] +
+                         [os.path.join(encrypted_tests, v) for v in os.listdir(encrypted_tests)],
+                         indirect=['encrypt0_test_cases'])
+def test_encrypt0_encoding(encrypt0_test_cases: dict) -> None:
+    try:
+        input_data = encrypt0_test_cases['input']
+    except (TypeError, KeyError):
+        pytest.skip("Invalid parameters")
+        return
 
-    def test_encoding(self):
-        util = TestUtilities()
-        for test in util.get_next_test(os.path.join(TEST_ROOT, 'testcases', 'encrypted-tests')):
-            test_name = test['title']
-            test_input = test['input']
-            test_intermediates = test['intermediates']
-            test_output = test['output']
-            enc0_msg = Enc0Message()
+    if 'fail' in encrypt0_test_cases or "failures" in input_data:
+        fail = True
+    else:
+        fail = False
 
-            with self.subTest(name=test_name):
+    m = Enc0Message(payload=input_data['plaintext'].encode('utf-8'))
 
-                enc0_msg.payload = test_input['plaintext']
+    m.phdr = input_data.get('encrypted').get('protected', {})
+    m.uhdr = input_data.get('encrypted').get('unprotected', {})
 
-                try:
-                    enc0_msg.protected_header = test_input['encrypted']['protected']
-                    alg = test_input['encrypted']['protected']['alg']
-                except KeyError:
-                    pass
+    if 'rng_stream' in input_data:
+        m.uhdr_update({CoseHeaderParam.IV: unhexlify(input_data['rng_stream'][0])})
 
-                try:
-                    enc0_msg.unprotected_header = test_input['encrypted']['unprotected']
-                    alg = test_input['encrypted']['protected']['alg']
-                except KeyError:
-                    pass
+    m.external_aad = unhexlify(input_data.get('encrypted').get('external', b''))
 
-                # add nonce to the unprotected header
-                enc0_msg.add_to_headers({'iv': unhexlify(test_input['rng_stream'][0])}, "UNPROTECTED")
+    m.key = unhexlify(encrypt0_test_cases['intermediates']['CEK_hex'])
 
-                try:
-                    enc0_msg.external_aad = unhexlify(test_input['encrypted']['external'])
-                except KeyError:
-                    pass
+    assert m._enc_structure == unhexlify(encrypt0_test_cases['intermediates']['AAD_hex'])
 
-                enc0_msg.key = crypto.base64decode(test_input['encrypted']['recipients'][0]['key']['k'])
+    m.encrypt()
 
-                self.assertEqual(enc0_msg._enc_structure, unhexlify(test_intermediates["AAD_hex"]))
-                self.assertEqual(enc0_msg.key, unhexlify(test_intermediates["CEK_hex"]))
-
-                enc0_msg.encrypt(alg, nonce=unhexlify(test_input['rng_stream'][0]))
-
-                if 'failures' in test_input:
-
-                    failure = test_input['failures']
-                    if 'ChangeCBORTag' in failure:
-                        enc0_msg.cbor_tag = failure['ChangeCBORTag']
-                        self.assertEqual(enc0_msg.encode(), unhexlify(test_output['cbor']))
-
-                    elif 'ChangeTag' in failure:
-                        decoded_msg = CoseMessage.decode(unhexlify(test_output['cbor']))
-                        self.assertAlmostEqual(int(hexlify(enc0_msg.payload), 16),
-                                               int(hexlify(decoded_msg.payload), 16), delta=1)
-
-                    elif 'ChangeAttr' in failure:
-                        if enc0_msg.find_in_headers(enc0_msg.protected_header, 'alg'):
-                            enc0_msg.protected_header = failure["ChangeAttr"]
-                        elif enc0_msg.find_in_headers(enc0_msg.unprotected_header, 'alg'):
-                            enc0_msg.unprotected_header = failure["ChangeAttr"]
-                        self.assertEqual(enc0_msg.encode(), unhexlify(test_output['cbor']))
-
-                    elif "AddProtected" in failure:
-                        enc0_msg.add_to_headers(failure["AddProtected"], "PROTECTED")
-                        self.assertEqual(enc0_msg.encode(), unhexlify(test_output['cbor']))
-
-                    elif "RemoveProtected" in failure:
-                        enc0_msg.remove_from_headers(failure["RemoveProtected"], "PROTECTED")
-                        self.assertEqual(enc0_msg.encode(), unhexlify(test_output['cbor']))
-
-                    elif "RemoveCBORTag" in failure:
-                        self.assertEqual(hexlify(enc0_msg.encode())[2:], hexlify(unhexlify(test_output['cbor'])))
-
-                    elif "ChangeProtected" in failure:
-                        with self.assertRaises(TypeError):
-                            enc0_msg.protected_header = failure["ChangeProtected"]
-
-                    else:
-                        raise Exception("Test case {} failed.".format(test_name))
-
-                else:
-                    self.assertEqual(enc0_msg.encode(), unhexlify(test_output['cbor']))
+    if fail:
+        assert m.encode() != unhexlify(encrypt0_test_cases["output"]["cbor"])
+    else:
+        assert m.encode() == unhexlify(encrypt0_test_cases["output"]["cbor"])
 
 
-if __name__ == "__main__":
-    unittest.main()
+@pytest.mark.decoding
+@pytest.mark.parametrize('encrypt0_test_cases',
+                         [os.path.join(aes_ccm_examples, v) for v in os.listdir(aes_ccm_examples)],
+                         indirect=['encrypt0_test_cases'])
+def test_encrypt_decoding(encrypt0_test_cases: dict) -> None:
+    try:
+        output_data = encrypt0_test_cases['output']
+        input_data = encrypt0_test_cases['input']
+    except (TypeError, KeyError):
+        pytest.skip("Invalid parameters")
+        return
+
+    msg = CoseMessage.decode(unhexlify(output_data['cbor']))
