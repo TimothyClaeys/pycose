@@ -1,9 +1,8 @@
 import abc
 
-import cbor
+import cbor2
 
 from pycose import cosemessage, crypto
-from pycose.attributes import CoseAttrs
 
 
 class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
@@ -17,8 +16,8 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
             msg.recipients = None
         return msg
 
-    def __init__(self, p_header=CoseAttrs(), u_header=CoseAttrs(), payload=None, key=None):
-        super(MacCommon, self).__init__(p_header, u_header, payload)
+    def __init__(self, phdr, uhdr, payload, key=None):
+        super(MacCommon, self).__init__(phdr, uhdr, payload)
         self._auth_tag = None
         self._key = key
 
@@ -37,13 +36,6 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
     def auth_tag(self):
         return self._auth_tag
 
-    @auth_tag.setter
-    def auth_tag(self, new_value):
-        if not isinstance(new_value, bytes):
-            raise TypeError("Auth tag must be of type bytes")
-        else:
-            self._auth_tag = new_value
-
     def verify_auth_tag(self, alg):
         """Verifies the authentication tag of a received message."""
         to_digest = self._mac_structure
@@ -52,7 +44,7 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
     def compute_auth_tag(self, alg):
         """Wrapper function to access the cryptographic primitives."""
         to_digest = self._mac_structure
-        self.auth_tag = crypto.calc_tag_wrapper(self.key, to_digest, alg)
+        self._auth_tag = crypto.calc_tag_wrapper(self.key, to_digest, alg)
 
     @abc.abstractmethod
     def encode(self):
@@ -61,11 +53,12 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
     @property
     def _mac_structure(self):
         """Create the mac_structure that needs to be MAC'ed."""
+
         mac_structure = list()
         mac_structure.append(self.context)
 
         # add empty_or_serialized_map
-        if len(self.protected_header) == 0:
+        if len(self.phdr) == 0:
             mac_structure.append(bytes())
         else:
             mac_structure.append(self.encoded_protected_header)
@@ -83,5 +76,5 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
         elif isinstance(self.payload, bytes):
             mac_structure.append(self.payload)
 
-        to_be_maced = cbor.dumps(mac_structure)
+        to_be_maced = cbor2.dumps(mac_structure)
         return to_be_maced

@@ -12,7 +12,7 @@
 import binascii
 from copy import deepcopy
 
-import cbor
+import cbor2
 
 from pycose import cosemessage, maccommon
 from pycose.attributes import CoseAttrs
@@ -24,10 +24,10 @@ class MacMessage(maccommon.MacCommon):
     context = "MAC"
     cbor_tag = 97
 
-    def __init__(self, p_header=CoseAttrs(), u_header=CoseAttrs(), payload=None, key=None, recipients=[]):
+    def __init__(self, phdr=CoseAttrs(), uhdr=CoseAttrs(), payload=None, key=None, recipients=[]):
         super(MacMessage, self).__init__(
-            deepcopy(p_header),
-            deepcopy(u_header),
+            deepcopy(phdr),
+            deepcopy(uhdr),
             payload,
             key
         )
@@ -73,7 +73,7 @@ class MacMessage(maccommon.MacCommon):
         if len(binascii.hexlify(self.auth_tag)) not in [16, 32, 64, 96, 128]:
             raise ValueError("Tag has invalid size.")
 
-        return cbor.dumps(cbor.Tag(self.cbor_tag, [self.encoded_protected_header, self.unprotected_header,
+        return cbor2.dumps(cbor2.CBORTag(self.cbor_tag, [self.encoded_protected_header, self.unprotected_header,
                                                    self.payload, self.auth_tag, self.encoded_recipients]))
 
     def __encode_recipients(self):

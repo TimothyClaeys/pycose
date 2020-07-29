@@ -10,10 +10,9 @@
 import binascii
 import copy
 
-import cbor
+import cbor2
 
 from pycose import cosemessage, maccommon
-from pycose.attributes import CoseAttrs
 from pycose.exceptions import *
 
 
@@ -22,16 +21,16 @@ class Mac0Message(maccommon.MacCommon):
     context = "MAC0"
     cbor_tag = 17
 
-    def __init__(self, p_header=CoseAttrs(), u_header=CoseAttrs(), payload=None, key=None):
+    def __init__(self, phdr, uhdr, payload, key):
         super(Mac0Message, self).__init__(
-            p_header=copy.deepcopy(p_header),
-            u_header=copy.deepcopy(u_header),
+            phdr=copy.deepcopy(phdr),
+            uhdr=copy.deepcopy(uhdr),
             payload=payload,
             key=key
         )
 
     def __repr__(self):
-        repr = cbor.loads(cbor.dumps(cbor.Tag(self.cbor_tag,
+        repr = cbor2.loads(cbor2.dumps(cbor2.CBORTag(self.cbor_tag,
                                               [self.encoded_protected_header, self.encoded_unprotected_header,
                                                self.payload, self.auth_tag])))
         t = repr.tag
