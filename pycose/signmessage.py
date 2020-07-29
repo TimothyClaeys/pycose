@@ -21,10 +21,10 @@ class SignMessage(signcommon.SignCommon):
     context = "Signature"
     cbor_tag = 98
 
-    def __init__(self, p_header=CoseAttrs(), u_header=CoseAttrs(), payload=b'', signers=CoseAttrs(), key=b''):
+    def __init__(self, phdr=CoseAttrs(), uhdr=CoseAttrs(), payload=b'', signers=CoseAttrs(), key=b''):
         super(SignMessage, self).__init__(
-            copy.deepcopy(p_header),
-            copy.deepcopy(u_header),
+            copy.deepcopy(phdr),
+            copy.deepcopy(uhdr),
             payload)
         self._key = key
         self._signers = self._BasicCoseStructure__convert_to_coseattrs(copy.deepcopy(signers))
@@ -63,7 +63,7 @@ class SignMessage(signcommon.SignCommon):
                 self._signers[key] = sig
                 key += 1
 
-            # cbor decode the byte string protected header, so that we can do lookups
+            # cbor decode the byte string protected common_header_params, so that we can do lookups
 
             for sig in self._signers:
                 if len(self._signers[sig][0]) != 0:

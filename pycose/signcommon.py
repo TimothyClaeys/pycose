@@ -32,7 +32,7 @@ class SignCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
 
     def compute_signature(self, alg='ES256', curve='P-256'):
         """
-        pass key, byte-string-to-mac and algorithm found in the header buckets to the hmac wrapper
+        pass key, byte-string-to-mac and algorithm found in the common_header_params buckets to the hmac wrapper
         :return: tag
         """
 
