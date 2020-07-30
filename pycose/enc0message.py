@@ -3,15 +3,13 @@
 # COSE_Encrypt0 = [
 #    Headers,
 #    ciphertext: bstr / nil,
-#]
+# ]
 #
+from typing import Union
 
-import copy
-
-import cbor
+import cbor2
 
 from pycose import cosemessage, enccommon
-from pycose.attributes import CoseAttrs
 
 
 @cosemessage.CoseMessage.record_cbor_tag(16)
@@ -19,16 +17,28 @@ class Enc0Message(enccommon.EncCommon):
     context = "Encrypt0"
     cbor_tag = 16
 
-    def __init__(self, p_header=CoseAttrs(), u_header=CoseAttrs(), payload=None, key=None):
-        super(Enc0Message, self).__init__(
-            p_header=copy.deepcopy(p_header),
-            u_header=copy.deepcopy(u_header),
-            payload=payload,
-            key=key
-        )
-        self.is_encrypted = False
+    def __init__(self,
+                 phdr: Union[dict, None] = None,
+                 uhdr: Union[dict, None] = None,
+                 payload: bytes = b'',
+                 key: bytes = b''):
+        if phdr is None:
+            phdr = {}
+        if uhdr is None:
+            uhdr = {}
 
-    def encode(self):
-        return cbor.dumps(cbor.Tag(self.cbor_tag,
-                            [self.encoded_protected_header, self.encoded_unprotected_header, self.payload]))
+        super(Enc0Message, self).__init__(phdr, uhdr, payload, key)
 
+    def encode(self, tagged: bool = True) -> bytes:
+        if tagged:
+            res = cbor2.dumps(cbor2.CBORTag(self.cbor_tag, [self.encode_phdr(), self.encode_uhdr(), self.payload]))
+        else:
+            res = cbor2.dumps([self.encode_phdr(), self.encode_uhdr(), self.payload])
+
+        return res
+
+    def __repr__(self):
+        return f'<COSE_Encrypt0:\n' \
+               f'\t phdr={self._phdr}\n' \
+               f'\t uhdr={self._uhdr}\n' \
+               f'\t payload={self._payload}>'
