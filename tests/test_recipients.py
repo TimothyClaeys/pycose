@@ -1,14 +1,16 @@
 from binascii import unhexlify, hexlify
+from typing import Type
 
 import cbor2
 import pytest
 from cryptography.hazmat.backends import openssl
 from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.asymmetric.ec import derive_private_key, SECP256R1, ECDH
+from cryptography.hazmat.primitives.asymmetric.ec import derive_private_key, SECP256R1, ECDH, EllipticCurve
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 
 from pycose import Enc0Message
 from pycose.attributes import CoseHeaderParam, CoseAlgorithm
+from pycose.crypto import ecdh_key_derivation
 from pycose.recipients import CoseRecipient
 from tests.conftest import base64decode
 
@@ -54,32 +56,46 @@ def test_key_wrap_recipient(phdr, uhdr, cek, kek, encoded_phdr, encoded_uhdr, wr
     assert hexlify(r.encode()) == hexlify(cbor2.dumps(expected))
 
 
-@pytest.mark.parametrize("phdr, uhdr, d1, crv, d_hex",
+@pytest.mark.parametrize("phdr, uhdr, d1, crv, d_hex, payload, cek, alg, nonce, d2, secret",
                          [
                              ({CoseHeaderParam.ALG: CoseAlgorithm.ECDH_SS_HKDF_256},
                               {CoseHeaderParam.KID: "meriadoc.brandybuck@buckland.example".encode('utf-8')},
-                              "r_kHyZ-a06rmxM3yESK84r1otSg-aQcVStkRhA-iCM8",
+                              int(hexlify(base64decode("r_kHyZ-a06rmxM3yESK84r1otSg-aQcVStkRhA-iCM8")), 16),
                               SECP256R1,
-                              'aff907c99f9ad3aae6c4cdf21122bce2bd68b5283e6907154ad911840fa208cf')
-
+                              'aff907c99f9ad3aae6c4cdf21122bce2bd68b5283e6907154ad911840fa208cf',
+                              b'This is the content',
+                              unhexlify(b'56074D506729CA40C4B4FE50C6439893'),
+                              CoseAlgorithm.A128GCM,
+                              unhexlify(b'C9CF4DF2FE6C632BF7886413'),
+                              int("02D1F7E6F26C43D4868D87CEB2353161740AACF1F7163647984B522A848DF1C3", 16),
+                              b'4B31712E096E5F20B4ECF9790FD8CC7C8B7E2C8AD90BDA81CB224F62C0E7B9A6')
                          ])
-def test_key_derivation_direct_recipient(phdr, uhdr, d1, crv, d_hex):
-    d1 = hexlify(base64decode(d1))
-    d1 = derive_private_key(int(d1, 16), crv(), openssl.backend)
+def test_key_derivation_direct_recipient(phdr: dict,
+                                         uhdr: dict,
+                                         d1: int,
+                                         crv: Type[EllipticCurve],
+                                         d_hex: str,
+                                         payload: bytes,
+                                         cek: bytes,
+                                         alg: int,
+                                         nonce: bytes,
+                                         d2: int,
+                                         secret: bytes):
+    d1 = derive_private_key(d1, crv(), openssl.backend)
     private_numbers = d1.private_numbers()
 
     assert hex(private_numbers.private_value) == hex(int(d_hex, 16))
 
-    m = Enc0Message(payload=b'This is the content.')
-    m.key = unhexlify('56074D506729CA40C4B4FE50C6439893')
-    m.encrypt(alg=CoseAlgorithm.A128GCM, nonce=unhexlify(b'C9CF4DF2FE6C632BF7886413'))
+    m = Enc0Message(payload=payload)
+    m.key = cek
+    m.encrypt(alg=alg, nonce=nonce)
 
-    d2 = "02D1F7E6F26C43D4868D87CEB2353161740AACF1F7163647984B522A848DF1C3"
-    d2 = derive_private_key(int(d2, 16), crv(), openssl.backend)
+    d2 = derive_private_key(d2, crv(), openssl.backend)
 
-    shared_key = d2.exchange(ECDH(), d1.public_key())
+    context = unhexlify(b'840183F6F6F683F6F6F682188044A1013818')
 
-    derived_key = HKDF(algorithm=hashes.SHA256(), length=16, salt=None, info=b'', backend=openssl.backend)
-    print(derived_key.derive(hexlify(shared_key)))
+    shared_secret, derived_key = ecdh_key_derivation(d1, d2.public_key(), 16, context)
+    assert derived_key == cek
+    assert shared_secret == unhexlify(secret)
 
-
+    r = CoseRecipient(phdr=phdr, uhdr=uhdr)
