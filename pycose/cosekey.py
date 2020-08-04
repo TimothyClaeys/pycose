@@ -67,6 +67,13 @@ class SymmetricParam(IntEnum):
     K = -1
 
 
+@unique
+class EcdhAlgorithmParam(IntEnum):
+    EPHEMERAL_KEY = -1
+    STATIC_KEY = - 2
+    STATIC_KEY_ID = -3
+
+
 class CoseKey(metaclass=ABCMeta):
     @property
     def kty(self):
