@@ -1,11 +1,12 @@
 import abc
-from typing import Union
+from typing import Union, Tuple
 
 import cbor2
 
 from pycose import cosemessage
 from pycose import crypto
 from pycose.attributes import CoseHeaderParam
+from pycose.cosekey import SymmetricKey
 
 
 class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
@@ -18,48 +19,23 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
             msg.recipients = None
         return msg
 
-    def __init__(self, phdr: Union[dict, None], uhdr: Union[dict, None], payload: bytes, key: bytes):
+    def __init__(self, phdr: Union[dict, None], uhdr: Union[dict, None], payload: bytes, key: SymmetricKey):
         super().__init__(phdr, uhdr, payload)
-        if isinstance(key, bytes):
-            self._key = key
-        else:
-            raise ValueError('Key must be of type bytes')
+        self.key = key
 
-    @property
-    def key(self) -> bytes:
-        return self._key
-
-    @key.setter
-    def key(self, new_value: bytes) -> None:
-        if isinstance(new_value, bytes):
-            self._key = new_value
-        else:
-            raise ValueError("Key must be of type bytes")
-
-    def decrypt(self, alg: str, nonce: bytes) -> None:
+    def decrypt(self, alg: str = None, nonce: bytes = None, key: bytes = None) -> None:
         """ Decrypts the payload. """
-        if self.key is None:
-            raise AttributeError('No key specified')
 
-        self.payload = crypto.aead_encrypt(self.key, self._enc_structure, self.payload, alg, nonce)
+        key, alg, nonce = self._crypt_parameters(alg, nonce, key)
 
-    def encrypt(self, alg: int = None, nonce: bytes = b'') -> None:
+        self.payload = crypto.aead_encrypt(key, self._enc_structure, self.payload, alg, nonce)
+
+    def encrypt(self, alg: int = None, nonce: bytes = None, key: bytes = None) -> None:
         """ Encrypts the payload. """
-        if self.key is None:
-            raise AttributeError('No key specified')
 
-        # search in protected headers
-        _alg = self.phdr.get(CoseHeaderParam.ALG) if alg is None else alg
-        _nonce = self.phdr.get(CoseHeaderParam.IV) if nonce is b'' else nonce
+        key, alg, nonce = self._crypt_parameters(alg, nonce, key)
 
-        # search in unprotected headers
-        _alg = self.uhdr.get(CoseHeaderParam.ALG) if _alg is None else _alg
-        _nonce = self.uhdr.get(CoseHeaderParam.IV) if _nonce is None else _nonce
-
-        if _alg is None:
-            raise AttributeError('No algorithm specified')
-
-        self.payload = crypto.aead_encrypt(self.key, self._enc_structure, self.payload, _alg, _nonce)
+        self.payload = crypto.aead_encrypt(key, self._enc_structure, self.payload, alg, nonce)
 
     def encode(self, tagged: bool = True):
         raise NotImplementedError("Cannot instantiate abstract class EncCommon")
@@ -80,6 +56,27 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
 
         aad = cbor2.dumps(enc_structure)
         return aad
+
+    def _crypt_parameters(self, alg: int = None, nonce: bytes = None, key: bytes = None) -> Tuple[bytes, int, bytes]:
+        if self.key is None and key is None:
+            raise AttributeError('No key specified')
+        elif self.key is not None:
+            _key = self.key.keybytes
+        else:
+            _key = key
+
+        # search in protected headers
+        _alg = self.phdr.get(CoseHeaderParam.ALG) if alg is None else alg
+        _nonce = self.phdr.get(CoseHeaderParam.IV) if nonce is None else nonce
+
+        # search in unprotected headers
+        _alg = self.uhdr.get(CoseHeaderParam.ALG) if _alg is None else _alg
+        _nonce = self.uhdr.get(CoseHeaderParam.IV) if _nonce is None else _nonce
+
+        if _alg is None:
+            raise AttributeError('No algorithm specified')
+
+        return _key, _alg, _nonce
 
     @abc.abstractmethod
     def __repr__(self) -> str:

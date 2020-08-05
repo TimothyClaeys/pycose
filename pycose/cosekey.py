@@ -1,9 +1,7 @@
-from abc import ABCMeta, abstractmethod
+import dataclasses as dc
+from abc import ABCMeta
 from enum import IntEnum, unique
 from typing import List, Union, Dict
-
-import dataclasses
-from dataclasses import dataclass
 
 
 @unique
@@ -12,21 +10,6 @@ class KTY(IntEnum):
     OKP = 1
     EC2 = 2
     SYMMETRIC = 4
-
-
-@unique
-class ECParam(IntEnum):
-    CRV = -1
-    X = -2
-    Y = - 3
-    D = -4
-
-
-@unique
-class OKPParam(IntEnum):
-    CRV = -1
-    X = -2
-    D = -4
 
 
 @unique
@@ -57,11 +40,6 @@ class CoseEllipticCurves(IntEnum):
 
 
 @unique
-class SymmetricParam(IntEnum):
-    K = -1
-
-
-@unique
 class EcdhAlgorithmParam(IntEnum):
     EPHEMERAL_KEY = -1
     STATIC_KEY = - 2
@@ -79,107 +57,116 @@ class EllipticCurveKeys(IntEnum):
     ED448 = 7
 
 
-@dataclass
+@dc.dataclass
 class CoseKey(metaclass=ABCMeta):
-    kid: Union[int, str]
-    alg: int
-    key_ops: int
-    base_iv: bytes
+    KTY: int
+    KID: Union[int, bytes]
+    ALG: int
+    KEY_OPS: int
+    BASE_IV: bytes
 
-    @unique
-    class Param(IntEnum):
+    class Common(IntEnum):
         KTY = 1
         KID = 2
         ALG = 3
         KEY_OPS = 4
         BASE_IV = 5
 
-    @abstractmethod
-    def encode(self) -> Dict[Param, Union[int, bytes]]:
-        return {self.Param[k.name.upper()]: getattr(self, k.name) for k in dataclasses.fields(CoseKey) if
-                getattr(self, k.name) is not None}
+        @classmethod
+        def has_member(cls, item):
+            return item in cls.__members__
 
-    def _check(self, attr):
-        return getattr(self, attr) is not None and attr not in CoseKey.__dict__['__annotations__']
+    def encode(self) -> Dict[int, Union[int, bytes]]:
+        return {self.Common[k]: v for k, v in dc.asdict(self).items() if v is not None and self.Common.has_member(k)}
 
 
-@dataclass(init=False)
+@dc.dataclass(init=False)
 class EC2(CoseKey):
-    crv: int = None
-    x: bytes = None
-    y: bytes = None
-    d: bytes = None
+    CRV: int = None
+    X: bytes = None
+    Y: bytes = None
+    D: bytes = None
+
+    class EC2Prm(IntEnum):
+        CRV = -1
+        X = -2
+        Y = -3
+        D = -4
+
+        @classmethod
+        def has_member(cls, item):
+            return item in cls.__members__
 
     def __init__(self, kid: Union[int, bytes] = None, alg: int = None, key_ops: int = None, base_iv: bytes = None,
                  crv: int = None, x: bytes = None, y: bytes = None, d: bytes = None):
-        self.key_params = {CoseKeyParam.KTY: KTY.EC2}
+        super().__init__(KTY.EC2, kid, alg, key_ops, base_iv)
+        self.CRV = crv
+        self.X = x
+        self.Y = y
+        self.D = d
 
-        self.alg = alg
-        self.kid = kid
-        self.key_ops = key_ops
-        self.base_iv = base_iv
-        self.crv = crv
-        self.x = x
-        self.y = y
-        self.d = d
-
-    def encode(self) -> Dict[int, Union[int, bytes]]:
-        base = super().encode()
-        self.key_params.update(base)
-
-        local = \
-            {ECParam[k.name.upper()]: getattr(self, k.name) for k in dataclasses.fields(EC2) if self._check(k.name)}
-        self.key_params.update(local)
-        return self.key_params
+    def encode(self):
+        b = super().encode()
+        b.update({self.EC2Prm[k]: v for k, v in dc.asdict(self).items() if v is not None and self.EC2Prm.has_member(k)})
+        return b
 
 
-@dataclass(init=False)
+@dc.dataclass(init=False)
 class OKP(CoseKey):
     """
     Octet Key Pairs: Do not assume that keys using this type are elliptic curves.  This key type could be used for
     other curve types.
     """
-    crv: int = None
-    x: bytes = None
-    d: bytes = None
+    CRV: int = None
+    X: bytes = None
+    D: bytes = None
+
+    class OKPPrm(IntEnum):
+        CRV = -1
+        X = -2
+        D = -4
+
+        @classmethod
+        def has_member(cls, item):
+            return item in cls.__members__
 
     def __init__(self, kid: Union[int, bytes] = None, alg: int = None, key_ops: int = None, base_iv: bytes = None,
                  crv: int = None, x: bytes = None, d: bytes = None):
-        self.key_params = {CoseKeyParam.KTY: KTY.OKP}
+        super().__init__(KTY.OKP, kid, alg, key_ops, base_iv)
+        self.CRV = crv
+        self.X = x
+        self.D = d
 
-        self.alg = alg
-        self.kid = kid
-        self.key_ops = key_ops
-        self.base_iv = base_iv
-        self.crv = crv
-        self.x = x
-        self.d = d
-
-    def encode(self) -> Dict[int, Union[int, bytes]]:
-        base = super().encode()
-        self.key_params.update(base)
-
-        local = \
-            {OKPParam[k.name.upper()]: getattr(self, k.name) for k in dataclasses.fields(OKP) if self._check(k.name)}
-        self.key_params.update(local)
-        return self.key_params
+    def encode(self):
+        b = super().encode()
+        b.update({self.OKPPrm[k]: v for k, v in dc.asdict(self).items() if v is not None and self.OKPPrm.has_member(k)})
+        return b
 
 
+@dc.dataclass(init=False)
 class SymmetricKey(CoseKey):
-    kty = KTY.SYMMETRIC
+    K: bytes = None
+
+    class SymPrm(IntEnum):
+        K = - 1
+
+        @classmethod
+        def has_member(cls, item):
+            return item in cls.__members__
 
     def __init__(self, kid: Union[int, bytes] = None, alg: int = None, key_ops: int = None, base_iv: bytes = None,
                  k: bytes = None):
-        self.key_params = {CoseKeyParam.KTY: KTY.SYMMETRIC}
+        super().__init__(KTY.OKP, kid, alg, key_ops, base_iv)
+        self.K = k
 
-        self.alg = alg
-        self.kid = kid
-        self.key_ops = key_ops
-        self.base_iv = base_iv
-        self.k = k
+    @property
+    def keybytes(self):
+        return self.K
 
-    def encode(self) -> Dict[int, Union[int, bytes]]:
-        pass
+    def encode(self):
+        b = super().encode()
+        b.update({self.SymPrm[k]: v for k, v in dc.asdict(self).items() if v is not None and self.SymPrm.has_member(k)})
+        return b
 
 
 class CoseKeySet:
