@@ -20,6 +20,12 @@ class CoseHeaderParam(IntEnum):
 class CoseAlgorithm(IntEnum):
     ES512 = -37
     ES384 = -36
+    ECDH_SS_A256KW = -34
+    ECDH_SS_A192KW = -33
+    ECDH_SS_A128KW = -32
+    ECDH_ES_A256KW = -31
+    ECDH_ES_A192KW = -30
+    ECDH_ES_A128KW = -29
     ECDH_SS_HKDF_512 = -28
     ECDH_SS_HKDF_256 = -27
     ECDH_ES_HKDF_512 = -26

@@ -1,6 +1,9 @@
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 from enum import IntEnum, unique
-from typing import List
+from typing import List, Union, Dict
+
+import dataclasses
+from dataclasses import dataclass
 
 
 @unique
@@ -24,15 +27,6 @@ class OKPParam(IntEnum):
     CRV = -1
     X = -2
     D = -4
-
-
-@unique
-class CoseKeyParam(IntEnum):
-    KTY = 1
-    KID = 2
-    ALG = 3
-    KEY_OPS = 4
-    BASE_IV = 5
 
 
 @unique
@@ -74,16 +68,118 @@ class EcdhAlgorithmParam(IntEnum):
     STATIC_KEY_ID = -3
 
 
-class CoseKey(metaclass=ABCMeta):
-    @property
-    def kty(self):
-        raise NotImplementedError
+@unique
+class EllipticCurveKeys(IntEnum):
+    P_256 = 1
+    P_384 = 2
+    P_521 = 3
+    X25519 = 4
+    X448 = 5
+    ED25519 = 6
+    ED448 = 7
 
-    def __init__(self, kid: bytes = None, alg: int = None, key_ops: int = None, base_iv: bytes = None):
-        self.kid = kid
+
+@dataclass
+class CoseKey(metaclass=ABCMeta):
+    kid: Union[int, str]
+    alg: int
+    key_ops: int
+    base_iv: bytes
+
+    @unique
+    class Param(IntEnum):
+        KTY = 1
+        KID = 2
+        ALG = 3
+        KEY_OPS = 4
+        BASE_IV = 5
+
+    @abstractmethod
+    def encode(self) -> Dict[Param, Union[int, bytes]]:
+        return {self.Param[k.name.upper()]: getattr(self, k.name) for k in dataclasses.fields(CoseKey) if
+                getattr(self, k.name) is not None}
+
+    def _check(self, attr):
+        return getattr(self, attr) is not None and attr not in CoseKey.__dict__['__annotations__']
+
+
+@dataclass(init=False)
+class EC2(CoseKey):
+    crv: int = None
+    x: bytes = None
+    y: bytes = None
+    d: bytes = None
+
+    def __init__(self, kid: Union[int, bytes] = None, alg: int = None, key_ops: int = None, base_iv: bytes = None,
+                 crv: int = None, x: bytes = None, y: bytes = None, d: bytes = None):
+        self.key_params = {CoseKeyParam.KTY: KTY.EC2}
+
         self.alg = alg
+        self.kid = kid
         self.key_ops = key_ops
         self.base_iv = base_iv
+        self.crv = crv
+        self.x = x
+        self.y = y
+        self.d = d
+
+    def encode(self) -> Dict[int, Union[int, bytes]]:
+        base = super().encode()
+        self.key_params.update(base)
+
+        local = \
+            {ECParam[k.name.upper()]: getattr(self, k.name) for k in dataclasses.fields(EC2) if self._check(k.name)}
+        self.key_params.update(local)
+        return self.key_params
+
+
+@dataclass(init=False)
+class OKP(CoseKey):
+    """
+    Octet Key Pairs: Do not assume that keys using this type are elliptic curves.  This key type could be used for
+    other curve types.
+    """
+    crv: int = None
+    x: bytes = None
+    d: bytes = None
+
+    def __init__(self, kid: Union[int, bytes] = None, alg: int = None, key_ops: int = None, base_iv: bytes = None,
+                 crv: int = None, x: bytes = None, d: bytes = None):
+        self.key_params = {CoseKeyParam.KTY: KTY.OKP}
+
+        self.alg = alg
+        self.kid = kid
+        self.key_ops = key_ops
+        self.base_iv = base_iv
+        self.crv = crv
+        self.x = x
+        self.d = d
+
+    def encode(self) -> Dict[int, Union[int, bytes]]:
+        base = super().encode()
+        self.key_params.update(base)
+
+        local = \
+            {OKPParam[k.name.upper()]: getattr(self, k.name) for k in dataclasses.fields(OKP) if self._check(k.name)}
+        self.key_params.update(local)
+        return self.key_params
+
+
+class SymmetricKey(CoseKey):
+    kty = KTY.SYMMETRIC
+
+    def __init__(self, kid: Union[int, bytes] = None, alg: int = None, key_ops: int = None, base_iv: bytes = None,
+                 k: bytes = None):
+        self.key_params = {CoseKeyParam.KTY: KTY.SYMMETRIC}
+
+        self.alg = alg
+        self.kid = kid
+        self.key_ops = key_ops
+        self.base_iv = base_iv
+        self.k = k
+
+    def encode(self) -> Dict[int, Union[int, bytes]]:
+        pass
 
 
 class CoseKeySet:
@@ -94,34 +190,5 @@ class CoseKeySet:
             self.cose_keys = cose_keys
 
 
-class EC2(CoseKey):
-    kty = KTY.EC2
-
-    def __init__(self, crv, x: bytes, y: bytes, d: bytes, kid: bytes, alg: int, key_ops: int, base_iv: bytes):
-        super().__init__(kid, alg, key_ops, base_iv)
-        self.crv = crv
-        self.x = x
-        self.y = y
-        self.d = d
-
-
-class OKP(CoseKey):
-    """
-    Octet Key Pairs: Do not assume that keys using this type are elliptic curves.  This key type could be used for
-    other curve types.
-    """
-    kty = KTY.OKP
-
-    def __init__(self, crv, x: bytes, d: bytes, kid, alg, key_ops, base_iv):
-        super().__init__(kid, alg, key_ops, base_iv)
-        self.crv = crv
-        self.x = x
-        self.d = d
-
-
-class SymmetricKeys(CoseKey):
-    kty = KTY.SYMMETRIC
-
-    def __init__(self, k, kid, alg, key_ops, base_iv):
-        super().__init__(kid, alg, key_ops, base_iv)
-        self.k = k
+if __name__ == "__main__":
+    print(EC2(crv=EllipticCurveKeys.P_256).encode())

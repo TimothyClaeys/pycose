@@ -4,13 +4,11 @@ from typing import Type
 import cbor2
 import pytest
 from cryptography.hazmat.backends import openssl
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.asymmetric.ec import derive_private_key, SECP256R1, ECDH, EllipticCurve
-from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+from cryptography.hazmat.primitives.asymmetric.ec import derive_private_key, SECP256R1, EllipticCurve
 
 from pycose import Enc0Message
 from pycose.attributes import CoseHeaderParam, CoseAlgorithm
-from pycose.crypto import ecdh_key_derivation
+from pycose.crypto import ecdh_key_derivation, CoseKDFContext, PartyInfo, SuppPubInfo
 from pycose.recipients import CoseRecipient
 from tests.conftest import base64decode
 
@@ -45,7 +43,7 @@ from tests.conftest import base64decode
                          ])
 def test_key_wrap_recipient(phdr, uhdr, cek, kek, encoded_phdr, encoded_uhdr, wrapped_key, expected):
     r = CoseRecipient(phdr=phdr, uhdr=uhdr, payload=unhexlify(cek))
-    r.key = base64decode(kek)
+    r.wrapping_key = base64decode(kek)
 
     assert r.encode_phdr() == unhexlify(encoded_phdr)
     assert r.encode_uhdr() == encoded_uhdr
@@ -56,9 +54,9 @@ def test_key_wrap_recipient(phdr, uhdr, cek, kek, encoded_phdr, encoded_uhdr, wr
     assert hexlify(r.encode()) == hexlify(cbor2.dumps(expected))
 
 
-@pytest.mark.parametrize("phdr, uhdr, d1, crv, d_hex, payload, cek, alg, nonce, d2, secret",
+@pytest.mark.parametrize("phdr, uhdr, d1, crv, d_hex, payload, cek, alg, nonce, d2, secret, context, phdr_res",
                          [
-                             ({CoseHeaderParam.ALG: CoseAlgorithm.ECDH_SS_HKDF_256},
+                             ({CoseHeaderParam.ALG: CoseAlgorithm.ECDH_ES_HKDF_256},
                               {CoseHeaderParam.KID: "meriadoc.brandybuck@buckland.example".encode('utf-8')},
                               int(hexlify(base64decode("r_kHyZ-a06rmxM3yESK84r1otSg-aQcVStkRhA-iCM8")), 16),
                               SECP256R1,
@@ -68,7 +66,9 @@ def test_key_wrap_recipient(phdr, uhdr, cek, kek, encoded_phdr, encoded_uhdr, wr
                               CoseAlgorithm.A128GCM,
                               unhexlify(b'C9CF4DF2FE6C632BF7886413'),
                               int("02D1F7E6F26C43D4868D87CEB2353161740AACF1F7163647984B522A848DF1C3", 16),
-                              b'4B31712E096E5F20B4ECF9790FD8CC7C8B7E2C8AD90BDA81CB224F62C0E7B9A6')
+                              b'4B31712E096E5F20B4ECF9790FD8CC7C8B7E2C8AD90BDA81CB224F62C0E7B9A6',
+                              unhexlify(b'840183F6F6F683F6F6F682188044A1013818'),
+                              unhexlify(b'A1013818'))
                          ])
 def test_key_derivation_direct_recipient(phdr: dict,
                                          uhdr: dict,
@@ -80,7 +80,9 @@ def test_key_derivation_direct_recipient(phdr: dict,
                                          alg: int,
                                          nonce: bytes,
                                          d2: int,
-                                         secret: bytes):
+                                         secret: bytes,
+                                         context: bytes,
+                                         phdr_res: bytes):
     d1 = derive_private_key(d1, crv(), openssl.backend)
     private_numbers = d1.private_numbers()
 
@@ -92,10 +94,14 @@ def test_key_derivation_direct_recipient(phdr: dict,
 
     d2 = derive_private_key(d2, crv(), openssl.backend)
 
-    context = unhexlify(b'840183F6F6F683F6F6F682188044A1013818')
+    r = CoseRecipient(phdr=phdr, uhdr=uhdr)
+
+    assert r.encode_phdr() == phdr_res
+    kdf_ctx = CoseKDFContext(CoseAlgorithm.A128GCM, PartyInfo(), PartyInfo(), SuppPubInfo(128, r.encode_phdr()))
+
+    assert kdf_ctx.encode() == context
 
     shared_secret, derived_key = ecdh_key_derivation(d1, d2.public_key(), 16, context)
     assert derived_key == cek
     assert shared_secret == unhexlify(secret)
 
-    r = CoseRecipient(phdr=phdr, uhdr=uhdr)

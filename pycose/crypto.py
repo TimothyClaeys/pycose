@@ -1,6 +1,4 @@
-import hashlib
-from os import urandom
-
+import cbor2
 from cryptography.hazmat.backends import default_backend, openssl
 from cryptography.hazmat.primitives import cmac
 from cryptography.hazmat.primitives import hashes
@@ -9,12 +7,16 @@ from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePrivateKey
 from cryptography.hazmat.primitives.ciphers import algorithms, aead
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.primitives.keywrap import aes_key_wrap
-from ecdsa import curves
+from dataclasses import dataclass
 
 from pycose.attributes import CoseAlgorithm
 from pycose.exceptions import *
 
-aes_key_wraps = {CoseAlgorithm.A128KW, CoseAlgorithm.A192KW, CoseAlgorithm.A256KW}
+AESKW = {
+    CoseAlgorithm.A128KW,
+    CoseAlgorithm.A192KW,
+    CoseAlgorithm.A256KW
+}
 
 HMAC = {
     CoseAlgorithm.HMAC_256_64: hashes.SHA256,
@@ -45,6 +47,46 @@ AEAD = {
 }
 
 
+@dataclass
+class PartyInfo:
+    identity: bytes = None
+    nonce: bytes = None
+    other: bytes = None
+
+    def encode(self):
+        return [self.identity, self.nonce, self.other]
+
+
+@dataclass
+class SuppPubInfo:
+    key_data_length: int
+    protected: bytes
+    other: bytes = None
+
+    def encode(self):
+        info = [self.key_data_length, self.protected]
+        if self.other is not None:
+            info.append(self.other)
+
+        return info
+
+
+@dataclass
+class CoseKDFContext:
+    algorithm_id: int
+    party_u_info: PartyInfo
+    party_v_info: PartyInfo
+    supp_pub_info: SuppPubInfo
+    supp_priv_info: bytes = None
+
+    def encode(self):
+        context = \
+            [self.algorithm_id, self.party_u_info.encode(), self.party_v_info.encode(), self.supp_pub_info.encode()]
+        if self.supp_priv_info is not None:
+            context.append(self.supp_priv_info)
+        return cbor2.dumps(context)
+
+
 def aead_encrypt(key, aad, plaintext, algorithm, nonce):
     try:
         primitive, tag_length = AEAD[algorithm]
@@ -71,7 +113,7 @@ def aead_decrypt(key, aad, ciphertext, algorithm, nonce):
 
 
 def key_wrap(alg, kek, plaintext_key):
-    if alg in aes_key_wraps:
+    if alg in AESKW:
         return aes_key_wrap(kek, plaintext_key, default_backend())
     elif alg == CoseAlgorithm.DIRECT:
         return b''
