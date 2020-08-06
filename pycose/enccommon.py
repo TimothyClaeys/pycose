@@ -1,5 +1,5 @@
 import abc
-from typing import Union, Tuple
+from typing import Tuple
 
 import cbor2
 
@@ -19,21 +19,27 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
             msg.recipients = None
         return msg
 
-    def __init__(self, phdr: Union[dict, None], uhdr: Union[dict, None], payload: bytes, key: SymmetricKey):
-        super().__init__(phdr, uhdr, payload)
-        self.key = key
+    def __init__(self, phdr: dict, uhdr: dict, payload: bytes, external_data: bytes = b'', key: SymmetricKey = None):
+        super().__init__(phdr, uhdr, payload, external_data, key)
 
-    def decrypt(self, alg: str = None, nonce: bytes = None, key: bytes = None) -> None:
+    @property
+    def key_bytes(self) -> bytes:
+        if self.key is None:
+            raise AttributeError('COSE_Key is not set')
+        else:
+            return self.key.key_bytes
+
+    def decrypt(self, alg: int = None, nonce: bytes = None, key: bytes = None) -> None:
         """ Decrypts the payload. """
 
-        key, alg, nonce = self._crypt_parameters(alg, nonce, key)
+        key, alg, nonce = self._get_crypt_parameters(alg, nonce, key)
 
         self.payload = crypto.aead_encrypt(key, self._enc_structure, self.payload, alg, nonce)
 
     def encrypt(self, alg: int = None, nonce: bytes = None, key: bytes = None) -> None:
         """ Encrypts the payload. """
 
-        key, alg, nonce = self._crypt_parameters(alg, nonce, key)
+        key, alg, nonce = self._get_crypt_parameters(alg, nonce, key)
 
         self.payload = crypto.aead_encrypt(key, self._enc_structure, self.payload, alg, nonce)
 
@@ -57,27 +63,23 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
         aad = cbor2.dumps(enc_structure)
         return aad
 
-    def _crypt_parameters(self, alg: int = None, nonce: bytes = None, key: bytes = None) -> Tuple[bytes, int, bytes]:
-        if self.key is None and key is None:
-            raise AttributeError('No key specified')
-        elif self.key is not None:
-            _key = self.key.keybytes
-        else:
-            _key = key
+    @abc.abstractmethod
+    def __repr__(self) -> str:
+        raise NotImplementedError()
+
+    def _get_crypt_parameters(self, alg: int, nonce: bytes, key: bytes) -> Tuple[bytes, int, bytes]:
+
+        _key = key if key is not None else self.key_bytes
 
         # search in protected headers
-        _alg = self.phdr.get(CoseHeaderParam.ALG) if alg is None else alg
-        _nonce = self.phdr.get(CoseHeaderParam.IV) if nonce is None else nonce
+        _alg = alg if alg is not None else self.phdr.get(CoseHeaderParam.ALG)
+        _nonce = nonce if nonce is not None else self.phdr.get(CoseHeaderParam.IV)
 
         # search in unprotected headers
-        _alg = self.uhdr.get(CoseHeaderParam.ALG) if _alg is None else _alg
-        _nonce = self.uhdr.get(CoseHeaderParam.IV) if _nonce is None else _nonce
+        _alg = _alg if _alg is not None else self.uhdr.get(CoseHeaderParam.ALG)
+        _nonce = _nonce if _nonce is not None else self.uhdr.get(CoseHeaderParam.IV)
 
         if _alg is None:
             raise AttributeError('No algorithm specified')
 
         return _key, _alg, _nonce
-
-    @abc.abstractmethod
-    def __repr__(self) -> str:
-        raise NotImplementedError()

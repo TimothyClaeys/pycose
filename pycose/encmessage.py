@@ -1,9 +1,9 @@
-from itertools import zip_longest
-from typing import Union, List, Tuple
+from typing import Union, List
 
 import cbor2
 
 from pycose import cosemessage, enccommon
+from pycose.cosekey import SymmetricKey
 from pycose.recipients import CoseRecipient
 
 
@@ -16,14 +16,15 @@ class EncMessage(enccommon.EncCommon):
                  phdr: dict = None,
                  uhdr: dict = None,
                  payload: bytes = b'',
-                 key: bytes = b'',
+                 external_aad: bytes = b'',
+                 key: SymmetricKey = None,
                  recipients: List[Union[CoseRecipient]] = None):
         if phdr is None:
             phdr = {}
         if uhdr is None:
             uhdr = {}
 
-        super(EncMessage, self).__init__(phdr, uhdr, payload, key)
+        super(EncMessage, self).__init__(phdr, uhdr, payload, external_aad, key)
 
         if recipients is None:
             self.recipients = []
@@ -42,16 +43,6 @@ class EncMessage(enccommon.EncCommon):
                 [self.encode_phdr(), self.encode_uhdr(), self.payload, [r.encode() for r in self.recipients]])
 
         return res
-
-    def encrypt(self, alg: int = None, nonce: bytes = b'', rcpt_algs: List[Tuple[int, bytes]] = None) -> None:
-        """ Encrypts the COSE_Encrypt message. """
-        super(EncMessage, self).encrypt(alg, nonce)
-
-        if rcpt_algs is None:
-            rcpt_algs = []
-
-        for r, a in zip_longest(self.recipients, rcpt_algs):
-            r.encrypt(*a)
 
     def __repr__(self) -> str:
         return f'<COSE_Encrypt:\n' \

@@ -1,8 +1,10 @@
 import abc
+from typing import Type, Union
 
 import cbor2
 
 from pycose.basicstructure import BasicCoseStructure
+from pycose.cosekey import CoseKey
 
 
 class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
@@ -60,18 +62,10 @@ class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
 
         return cls(phdr, uhdr, payload)
 
-    def __init__(self, phdr: dict, uhdr: dict, payload: bytes, external_aad: bytes = b''):
-
+    def __init__(self, phdr: dict, uhdr: dict, payload: bytes, external_aad: bytes, key: Union[Type[CoseKey], None]):
         super(CoseMessage, self).__init__(phdr, uhdr, payload)
-        self._external_aad = external_aad
-
-    @property
-    def external_aad(self) -> bytes:
-        return self._external_aad
-
-    @external_aad.setter
-    def external_aad(self, new_external_aad: bytes) -> None:
-        self._external_aad = new_external_aad
+        self.external_aad = external_aad
+        self.key = key
 
     @abc.abstractmethod
     def encode(self, tagged: bool = True):
@@ -82,3 +76,4 @@ class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
     def context(self):
         """Getter for the context of the message."""
         NotImplementedError("Cannot not instantiate abstract class CoseMessage")
+

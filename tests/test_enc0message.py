@@ -5,6 +5,7 @@ import pytest
 
 from pycose import CoseMessage
 from pycose.attributes import CoseHeaderParam
+from pycose.cosekey import SymmetricKey, CoseKey
 from pycose.enc0message import Enc0Message
 from tests.conftest import aes_ccm_examples, aes_gcm_examples, encrypted_tests
 
@@ -37,8 +38,10 @@ def test_encrypt0_encoding(encrypt0_test_cases: dict) -> None:
 
     m.external_aad = unhexlify(input_data.get('encrypted').get('external', b''))
 
-    m.key = unhexlify(encrypt0_test_cases['intermediates']['CEK_hex'])
+    key_data = input_data.get('encrypted').get('recipients')[0].get('key')
+    m.key = SymmetricKey(k=CoseKey.base64decode(key_data['k']))
 
+    assert m.key_bytes == unhexlify(encrypt0_test_cases.get('intermediates').get('CEK_hex'))
     assert m._enc_structure == unhexlify(encrypt0_test_cases['intermediates']['AAD_hex'])
 
     m.encrypt()

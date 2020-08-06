@@ -5,11 +5,11 @@
 #    ciphertext: bstr / nil,
 # ]
 #
-from typing import Union
 
 import cbor2
 
 from pycose import cosemessage, enccommon
+from pycose.cosekey import SymmetricKey
 
 
 @cosemessage.CoseMessage.record_cbor_tag(16)
@@ -18,16 +18,17 @@ class Enc0Message(enccommon.EncCommon):
     cbor_tag = 16
 
     def __init__(self,
-                 phdr: Union[dict, None] = None,
-                 uhdr: Union[dict, None] = None,
+                 phdr: dict = None,
+                 uhdr: dict = None,
                  payload: bytes = b'',
-                 key: bytes = b''):
+                 external_aad: bytes = b'',
+                 key: SymmetricKey = None):
         if phdr is None:
             phdr = {}
         if uhdr is None:
             uhdr = {}
 
-        super(Enc0Message, self).__init__(phdr, uhdr, payload, key)
+        super(Enc0Message, self).__init__(phdr, uhdr, payload, external_aad, key)
 
     def encode(self, tagged: bool = True) -> bytes:
         if tagged:

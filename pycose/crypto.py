@@ -3,13 +3,15 @@ from cryptography.hazmat.backends import default_backend, openssl
 from cryptography.hazmat.primitives import cmac
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import hmac
-from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePrivateKey, EllipticCurvePublicKey, ECDH
+from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePrivateKey, EllipticCurvePublicKey, ECDH, \
+    SECP256R1, SECP384R1, SECP521R1
 from cryptography.hazmat.primitives.ciphers import algorithms, aead
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.primitives.keywrap import aes_key_wrap
 from dataclasses import dataclass
 
 from pycose.attributes import CoseAlgorithm
+from pycose.cosekey import CoseEllipticCurves
 from pycose.exceptions import *
 
 AESKW = {
@@ -46,6 +48,12 @@ AEAD = {
     CoseAlgorithm.AES_CCM_64_128_128: (aead.AESCCM, 16),
 }
 
+KEY_DERIVATION_CURVES = {
+    CoseEllipticCurves.P_256: SECP256R1,
+    CoseEllipticCurves.P_384: SECP384R1,
+    CoseEllipticCurves.P_521: SECP521R1,
+}
+
 
 @dataclass
 class PartyInfo:
@@ -59,9 +67,24 @@ class PartyInfo:
 
 @dataclass
 class SuppPubInfo:
-    key_data_length: int
+    _key_data_length: int
     protected: bytes
     other: bytes = None
+
+    @property
+    def key_data_length(self):
+        return self._key_data_length
+
+    @key_data_length.setter
+    def key_data_length(self, new_length):
+        if new_length in [128, 192, 256]:
+            self._key_data_length = new_length
+        else:
+            raise ValueError(f"Not a valid key length: {new_length}")
+
+    def __post__init__(self):
+        if self._key_data_length not in [128, 192, 256]:
+            raise ValueError(f"Not a valid key length: {self._key_data_length}")
 
     def encode(self):
         info = [self.key_data_length, self.protected]
@@ -180,7 +203,7 @@ def verify_tag_wrapper(key, tag, to_be_maced, algorithm):
 def ecdh_key_derivation(private_key: EllipticCurvePrivateKey,
                         public_key: EllipticCurvePublicKey,
                         length: int,
-                        context: bytes = b''):
+                        context: bytes = b'') -> bytes:
     shared_key = private_key.exchange(ECDH(), public_key)
 
     derived_key = HKDF(algorithm=hashes.SHA256(),
@@ -189,7 +212,7 @@ def ecdh_key_derivation(private_key: EllipticCurvePrivateKey,
                        info=context,
                        backend=openssl.backend).derive(shared_key)
 
-    return shared_key, derived_key
+    return derived_key
 
 # def ec_sign_wrapper(key, to_be_signed, algorithm, curve):
 #     if isinstance(key, str):

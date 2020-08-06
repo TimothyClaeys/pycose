@@ -2,11 +2,8 @@ import base64
 import json
 import os
 import pathlib
-from binascii import hexlify
-from hashlib import sha256
 
 import pytest
-from ecdsa import keys, ellipticcurve, curves
 
 from pycose.attributes import CoseHeaderParam, CoseAlgorithm
 
@@ -86,16 +83,3 @@ def _fix_header_attribute_names(input_data: dict, key: str, hdr_type: str):
                    header_dict.items()}
     input_data['input'][key][hdr_type] = header_dict
 
-
-def base64decode(to_decode):
-    to_decode = to_decode.replace('-', '+')
-    to_decode = to_decode.replace('_', '/')
-
-    if len(to_decode) % 4 == 0:
-        return base64.b64decode(to_decode)
-    if len(to_decode) % 4 == 2:
-        to_decode = to_decode + "=="
-        return base64.b64decode(to_decode)
-    if len(to_decode) % 4 == 3:
-        to_decode = to_decode + "="
-        return base64.b64decode(to_decode)
