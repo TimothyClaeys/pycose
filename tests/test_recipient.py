@@ -12,11 +12,11 @@ from pycose.recipients import CoseRecipient
                   [
                       ({CoseHeaderParam.ALG: CoseAlgorithm.ECDH_ES_HKDF_256},
                        {
-                           CoseHeaderParam.KID: "meriadoc.brandybuck@buckland.example".encode('utf-8'),
                            EcdhAlgorithmParam.EPHEMERAL_KEY:
                                EC2(crv=CoseEllipticCurves.P_256,
                                    x=CoseKey.base64decode('Ze2loSV3wrroKUN_4zhwGhCqo3Xhu1td4QjeQ5wIVR0'),
-                                   y=CoseKey.base64decode('HlLtdXARY_f55A3fnzQbPcm6hgr34Mp8p-nuzQCE0Zw')).encode()
+                                   y=CoseKey.base64decode('HlLtdXARY_f55A3fnzQbPcm6hgr34Mp8p-nuzQCE0Zw')).encode(),
+                           CoseHeaderParam.KID: "meriadoc.brandybuck@buckland.example".encode('utf-8')
                        },
                        CoseAlgorithm.A128GCM,
                        EC2(crv=CoseEllipticCurves.P_256,
@@ -44,9 +44,10 @@ def test_kek_direct_recipient(phdr, uhdr, alg, peer_key, private_key, encoded_ph
     # since this is direct usage --> kek == cek
     assert kek == cek
 
-    # assert r.encode_phdr() == unhexlify(encoded_phdr)
-    # assert r.encode_uhdr() == encoded_uhdr
+    assert r.encode_phdr() == encoded_phdr
+    assert r.encode_uhdr() == encoded_uhdr
 
+    # no encryption of cek required since the key is used directly
     # r.encrypt()
 
     # assert r.payload == unhexlify(wrapped_key)
