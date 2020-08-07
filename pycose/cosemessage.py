@@ -1,8 +1,9 @@
 import abc
-from typing import Type, Union
+from typing import Type, Union, Optional
 
 import cbor2
 
+from pycose.attributes import CoseHeaderParam, CoseAlgorithm
 from pycose.basicstructure import BasicCoseStructure
 from pycose.cosekey import CoseKey
 
@@ -49,12 +50,16 @@ class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
         """Returns an initialized COSE message object."""
 
         try:
-            phdr = cbor2.loads(cose_obj.pop(0))
+            phdr = {(CoseHeaderParam(k) if CoseHeaderParam.has_value(k) else k): (
+                CoseAlgorithm(v) if CoseHeaderParam.has_value(k) and CoseHeaderParam(k) == CoseHeaderParam.ALG else v)
+                for k, v in cbor2.loads(cose_obj.pop(0)).items()}
         except (ValueError, EOFError):
             phdr = {}
 
         try:
-            uhdr = cose_obj.pop(0)
+            uhdr = {(CoseHeaderParam(k) if CoseHeaderParam.has_value(k) else k): (
+                CoseAlgorithm(v) if CoseHeaderParam.has_value(k) and CoseHeaderParam(k) == CoseHeaderParam.ALG else v)
+                for k, v in cose_obj.pop(0).items()}
         except ValueError:
             uhdr = {}
 

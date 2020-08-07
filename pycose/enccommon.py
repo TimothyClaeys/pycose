@@ -1,11 +1,11 @@
 import abc
-from typing import Tuple
+from typing import Tuple, Optional
 
 import cbor2
 
 from pycose import cosemessage
 from pycose import crypto
-from pycose.attributes import CoseHeaderParam
+from pycose.attributes import CoseHeaderParam, CoseAlgorithm
 from pycose.cosekey import SymmetricKey
 
 
@@ -13,19 +13,16 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
     @classmethod
     def from_cose_obj(cls, cose_obj: list):
         msg = super().from_cose_obj(cose_obj)
+
         try:
             msg.recipients = cose_obj.pop(0)
         except (IndexError, ValueError):
             msg.recipients = None
         return msg
 
-    def __init__(self, phdr: dict, uhdr: dict, payload: bytes, external_data: bytes = b'', key: SymmetricKey = None):
+    def __init__(self, phdr: dict, uhdr: dict, payload: bytes, external_data: bytes = b'',
+                 key: Optional[SymmetricKey] = None):
         super().__init__(phdr, uhdr, payload, external_data, key)
-        self._encrypted = False
-
-    @property
-    def encrypted(self):
-        return self._encrypted
 
     @property
     def key_bytes(self) -> bytes:
@@ -34,24 +31,19 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
         else:
             return self.key.key_bytes
 
-    def decrypt(self, alg: int = None, nonce: bytes = None, key: SymmetricKey = None) -> bytes:
+    def decrypt(self, alg: CoseAlgorithm = None, nonce: bytes = None, key: SymmetricKey = None) -> bytes:
         """ Decrypts the payload. """
-        if self._encrypted is False:
-            return self.payload
+        key, alg, nonce = self._get_crypt_params(alg, nonce, key)
 
-        key, alg, nonce = self._get_crypt_parameters(alg, nonce, key)
+        return crypto.aead_decrypt(key, self._enc_structure, self.payload, alg, nonce)
 
-        self._encrypted = False
-        return crypto.aead_encrypt(key, self._enc_structure, self.payload, alg, nonce)
-
-    def encrypt(self, alg: int = None, nonce: bytes = None, key: SymmetricKey = None) -> bytes:
+    def encrypt(self,
+                alg: Optional[CoseAlgorithm] = None,
+                nonce: Optional[bytes] = None,
+                key: Optional[SymmetricKey] = None) -> bytes:
         """ Encrypts the payload. """
-        if self._encrypted:
-            return self.payload
+        key, alg, nonce = self._get_crypt_params(alg, nonce, key)
 
-        key, alg, nonce = self._get_crypt_parameters(alg, nonce, key)
-
-        self._encrypted = True
         return crypto.aead_encrypt(key, self._enc_structure, self.payload, alg, nonce)
 
     def encode(self, tagged: bool = True):
@@ -78,12 +70,14 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
     def __repr__(self) -> str:
         raise NotImplementedError()
 
-    def _get_crypt_parameters(self, alg: int, nonce: bytes, key: SymmetricKey) -> Tuple[bytes, int, bytes]:
-
+    def _get_crypt_params(self,
+                          alg: CoseAlgorithm,
+                          nonce: bytes,
+                          key: SymmetricKey) -> Tuple[bytes, CoseAlgorithm, bytes]:
         try:
             _key = key.key_bytes if key is not None else self.key_bytes
         except AttributeError:
-            raise AttributeError("No key specified")
+            raise AttributeError("No key specified.")
 
         # search in protected headers
         _alg = alg if alg is not None else self.phdr.get(CoseHeaderParam.ALG)
@@ -94,6 +88,19 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
         _nonce = _nonce if _nonce is not None else self.uhdr.get(CoseHeaderParam.IV)
 
         if _alg is None:
-            raise AttributeError('No algorithm specified')
+            raise AttributeError('No algorithm specified.')
+
+        # if nonce is still None and we don't have a Partial IV, abort
+        if _nonce is None and CoseHeaderParam.PARTIAL_IV in self.phdr:
+            _nonce = self._build_nonce(self.phdr[CoseHeaderParam.PARTIAL_IV])
+
+        if _nonce is None and CoseHeaderParam.PARTIAL_IV in self.uhdr:
+            _nonce = self._build_nonce(self.uhdr[CoseHeaderParam.PARTIAL_IV])
+
+        if _nonce is None:
+            raise AttributeError('No nonce specified.')
 
         return _key, _alg, _nonce
+
+    def _build_nonce(self, partial_iv: bytes) -> bytes:
+        raise NotImplementedError()

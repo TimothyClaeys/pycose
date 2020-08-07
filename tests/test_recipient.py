@@ -5,7 +5,7 @@ from pytest import mark
 from pycose.attributes import CoseHeaderParam, CoseAlgorithm
 from pycose.cosekey import CoseKey, EC2, CoseEllipticCurves, EcdhAlgorithmParam
 from pycose.crypto import CoseKDFContext, PartyInfo, SuppPubInfo
-from pycose.recipients import CoseRecipient
+from pycose.recipient import CoseRecipient
 
 
 @mark.parametrize("phdr, uhdr, alg, peer_key, eph_private_key, encoded_phdr, encoded_uhdr, cek, rcpt",
@@ -61,3 +61,4 @@ def test_kek_ecdh_direct_recipient(phdr, uhdr, alg, peer_key, eph_private_key, e
 
     r.payload = b''
     assert r.encode() == rcpt
+

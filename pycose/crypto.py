@@ -117,7 +117,7 @@ def aead_encrypt(key, aad, plaintext, algorithm, nonce):
             aead_cipher = primitive(key, tag_length=tag_length)
         else:
             aead_cipher = primitive(key)
-        ciphertext = aead_cipher.encrypt(nonce, plaintext, aad)
+        ciphertext = aead_cipher.encrypt(nonce=nonce, data=plaintext, associated_data=aad)
     except KeyError as err:
         raise CoseUnsupportedEnc("This cipher is not supported by the COSE specification: {}".format(err))
 
@@ -126,9 +126,12 @@ def aead_encrypt(key, aad, plaintext, algorithm, nonce):
 
 def aead_decrypt(key, aad, ciphertext, algorithm, nonce):
     try:
-        primitive = AEAD[algorithm]
-        aesgcm = primitive(key)
-        plaintext = aesgcm.decrypt(nonce, ciphertext, aad)
+        primitive, tag_length = AEAD[algorithm]
+        if tag_length != 16:
+            aead_cipher = primitive(key, tag_length=tag_length)
+        else:
+            aead_cipher = primitive(key)
+        plaintext = aead_cipher.decrypt(nonce, ciphertext, aad)
     except KeyError as err:
         raise CoseUnsupportedEnc("This cipher is not supported by the COSE specification: {}".format(err))
 

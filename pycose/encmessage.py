@@ -1,10 +1,11 @@
-from typing import Union, List
+from typing import Union, List, Optional, Tuple
 
 import cbor2
+from pycose.recipient import CoseRecipient
 
 from pycose import cosemessage, enccommon
+from pycose.attributes import CoseAlgorithm
 from pycose.cosekey import SymmetricKey
-from pycose.recipients import CoseRecipient
 
 
 @cosemessage.CoseMessage.record_cbor_tag(96)
@@ -31,16 +32,24 @@ class EncMessage(enccommon.EncCommon):
         else:
             self.recipients = recipients
 
-    def encode(self, tagged: bool = True) -> bytes:
+    def encode(self,
+               tagged: bool = True,
+               encrypt: bool = True,
+               alg: Optional[CoseAlgorithm] = None,
+               nonce: Optional[bytes] = None,
+               key: Optional[SymmetricKey] = None,
+               kek_list: Optional[Tuple[CoseAlgorithm, SymmetricKey]] = None) -> bytes:
         """ Encodes the message into a CBOR array """
 
-        if tagged:
-            res = cbor2.dumps(
-                cbor2.CBORTag(self.cbor_tag, [self.encode_phdr(), self.encode_uhdr(), self.payload,
-                                              [r.encode() for r in self.recipients]]))
+        if encrypt:
+            message = [self.encode_phdr(), self.encode_uhdr(), self.encrypt(alg, nonce, key), self.recipients]
         else:
-            res = cbor2.dumps(
-                [self.encode_phdr(), self.encode_uhdr(), self.payload, [r.encode() for r in self.recipients]])
+            message = [self.encode_phdr(), self.encode_uhdr(), self.payload, self.recipients]
+
+        if tagged:
+            res = cbor2.dumps(cbor2.CBORTag(self.cbor_tag, message))
+        else:
+            res = cbor2.dumps(message)
 
         return res
 

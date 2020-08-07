@@ -5,6 +5,7 @@
 #    ciphertext: bstr / nil,
 # ]
 #
+from typing import Optional
 
 import cbor2
 
@@ -30,11 +31,22 @@ class Enc0Message(enccommon.EncCommon):
 
         super(Enc0Message, self).__init__(phdr, uhdr, payload, external_aad, key)
 
-    def encode(self, tagged: bool = True) -> bytes:
-        if tagged:
-            res = cbor2.dumps(cbor2.CBORTag(self.cbor_tag, [self.encode_phdr(), self.encode_uhdr(), self.encrypt()]))
+    def encode(self,
+               tagged: bool = True,
+               encrypt: bool = True,
+               alg: Optional[int] = None,
+               nonce: Optional[bytes] = None,
+               key: Optional[SymmetricKey] = None) -> bytes:
+
+        if encrypt:
+            message = [self.encode_phdr(), self.encode_uhdr(), self.encrypt(alg, nonce, key)]
         else:
-            res = cbor2.dumps([self.encode_phdr(), self.encode_uhdr(), self.encrypt()])
+            message = [self.encode_phdr(), self.encode_uhdr(), self.payload]
+
+        if tagged:
+            res = cbor2.dumps(cbor2.CBORTag(self.cbor_tag, message))
+        else:
+            res = cbor2.dumps(message)
 
         return res
 

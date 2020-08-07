@@ -15,6 +15,14 @@ class CoseHeaderParam(IntEnum):
     COUNTER_SIGNATURE0 = 9
     KID_CONTEXT = 10
 
+    @classmethod
+    def has_member(cls, item):
+        return item in cls.__members__
+
+    @classmethod
+    def has_value(cls, value):
+        return value in set(cls.__members__[attr] for attr in cls.__members__)
+
 
 @unique
 class CoseAlgorithm(IntEnum):
@@ -56,3 +64,11 @@ class CoseAlgorithm(IntEnum):
     AES_CCM_16_128_256 = 31
     AES_CCM_64_128_128 = 32
     AES_CCM_64_128_256 = 33
+
+    @classmethod
+    def has_member(cls, item):
+        return item in cls.__members__
+
+    @classmethod
+    def has_value(cls, value):
+        return value in set(cls.__members__[attr] for attr in cls.__members__)

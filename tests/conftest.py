@@ -1,7 +1,7 @@
-import base64
 import json
 import os
 import pathlib
+from binascii import unhexlify
 
 import pytest
 
@@ -25,19 +25,21 @@ algs_to_be_replaced = {
     'AES-CCM-64-256/64': CoseAlgorithm.AES_CCM_64_64_256,
     'AES-CCM-16-256/128': CoseAlgorithm.AES_CCM_16_128_256,
     'AES-CCM-64-256/128': CoseAlgorithm.AES_CCM_64_128_256,
+    'direct': CoseAlgorithm.DIRECT,
 }
 
 params_to_be_replaced = {
     'ctyp': CoseHeaderParam.CONTENT_TYPE,
     'kid': CoseHeaderParam.KID,
     'alg': CoseHeaderParam.ALG,
+    'partialIV_hex': CoseHeaderParam.PARTIAL_IV,
 }
 
 
 @pytest.fixture
 def protected_header(request):
     test_case = json.load(open(request.param, 'r'))
-    _fix_header_algorithm_names(test_case, 'enveloped', 'protected')
+    _fix_header_algorithm_names(test_case['input']['enveloped'], 'protected')
     return test_case['input']['enveloped']['protected']
 
 
@@ -45,10 +47,10 @@ def protected_header(request):
 def encrypt0_test_cases(request):
     test_input = json.load(open(request.param, 'r'))
     if 'encrypted' in test_input['input']:
-        _fix_header_attribute_names(test_input, 'encrypted', 'protected')
-        _fix_header_attribute_names(test_input, 'encrypted', 'unprotected')
-        _fix_header_algorithm_names(test_input, 'encrypted', 'protected')
-        _fix_header_algorithm_names(test_input, 'encrypted', 'unprotected')
+        _fix_header_attribute_names(test_input['input']['encrypted'], 'protected')
+        _fix_header_attribute_names(test_input['input']['encrypted'], 'unprotected')
+        _fix_header_algorithm_names(test_input['input']['encrypted'], 'protected')
+        _fix_header_algorithm_names(test_input['input']['encrypted'], 'unprotected')
         return test_input
 
 
@@ -56,30 +58,48 @@ def encrypt0_test_cases(request):
 def encrypt_test_cases(request):
     test_input = json.load(open(request.param, 'r'))
     if 'enveloped' in test_input['input']:
-        _fix_header_attribute_names(test_input, 'enveloped', 'protected')
-        _fix_header_attribute_names(test_input, 'enveloped', 'unprotected')
-        _fix_header_algorithm_names(test_input, 'enveloped', 'protected')
-        _fix_header_algorithm_names(test_input, 'enveloped', 'unprotected')
+        _fix_header_attribute_names(test_input['input']['enveloped'], 'protected')
+        _fix_header_attribute_names(test_input['input']['enveloped'], 'unprotected')
+        _fix_header_algorithm_names(test_input['input']['enveloped'], 'protected')
+        _fix_header_algorithm_names(test_input['input']['enveloped'], 'unprotected')
+
+        recipients = test_input['input']['enveloped']['recipients']
+        _fix_recipients(recipients)
+
         return test_input
 
 
-def _fix_header_algorithm_names(input_data: dict, key: str, hdr_type: str) -> None:
+def _fix_recipients(recipients: dict) -> None:
+    for r_info in recipients:
+        _fix_header_attribute_names(r_info, 'unprotected')
+        _fix_header_attribute_names(r_info, 'protected')
+        _fix_header_algorithm_names(r_info, 'unprotected')
+        _fix_header_algorithm_names(r_info, 'protected')
+
+        if 'recipients' in r_info:
+            _fix_recipients(r_info['recipients'])
+
+
+def _fix_header_algorithm_names(data: dict, key) -> None:
     try:
-        header_dict = input_data['input'][key][hdr_type]
+        header_dict = data[key]
     except KeyError:
         return
 
     header_dict = {k: (v if v not in algs_to_be_replaced else algs_to_be_replaced[v]) for k, v in header_dict.items()}
-    input_data['input'][key][hdr_type] = header_dict
+    data[key] = header_dict
 
 
-def _fix_header_attribute_names(input_data: dict, key: str, hdr_type: str):
+def _fix_header_attribute_names(data: dict, key) -> None:
     try:
-        header_dict = input_data['input'][key][hdr_type]
+        header_dict = data[key]
     except KeyError:
         return
 
     header_dict = {(k if k not in params_to_be_replaced else params_to_be_replaced[k]): v for k, v in
                    header_dict.items()}
-    input_data['input'][key][hdr_type] = header_dict
-
+    if CoseHeaderParam.KID in header_dict and type(header_dict[CoseHeaderParam.KID]) == str:
+        header_dict[CoseHeaderParam.KID] = header_dict[CoseHeaderParam.KID].encode('utf-8')
+    if CoseHeaderParam.PARTIAL_IV in header_dict and type(header_dict[CoseHeaderParam.PARTIAL_IV]) == str:
+        header_dict[CoseHeaderParam.PARTIAL_IV] = unhexlify(header_dict[CoseHeaderParam.PARTIAL_IV].encode('utf-8'))
+    data[key] = header_dict

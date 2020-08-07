@@ -2,7 +2,6 @@ from binascii import hexlify
 from functools import singledispatch, update_wrapper
 from typing import Union, List, Optional
 
-import cbor2
 from cryptography.hazmat.backends import openssl
 from cryptography.hazmat.primitives.asymmetric import ec
 
@@ -36,7 +35,7 @@ class CoseRecipient(BasicCoseStructure):
         super().__init__(phdr=phdr, uhdr=uhdr, payload=payload)
 
         self.key = key
-        self.recipients = recipients
+        self.recipients = [] if recipients is None else recipients
 
     @property
     def key_bytes(self) -> bytes:
@@ -45,23 +44,35 @@ class CoseRecipient(BasicCoseStructure):
         else:
             return self.key.key_bytes
 
-    def encode(self):
-        if self.recipients is not None:
-            res = [self.encode_phdr(), self.encode_uhdr(), self.encrypt(), [r.encode() for r in self.recipients]]
+    def encode(self, encrypt: bool = True, alg: Optional[int] = None, key: Optional[SymmetricKey] = None):
+
+        if encrypt:
+            recipient = [self.encode_phdr(), self.encode_uhdr(), self.encrypt(alg, key)]
         else:
-            res = [self.encode_phdr(), self.encode_uhdr(), self.encrypt()]
+            recipient = [self.encode_phdr(), self.encode_uhdr(), self.payload]
+
+        if len(self.recipients) > 0:
+            res = [recipient, [r.encode() for r in self.recipients]]
+        else:
+            res = recipient
 
         return res
 
-    def encrypt(self, alg: int = None, key: bytes = None) -> bytes:
+    def encrypt(self, alg: Optional[CoseAlgorithm] = None, key: Optional[SymmetricKey] = None) -> bytes:
         """ Do key wrapping. """
         _alg = alg if alg is not None else self.phdr.get(CoseHeaderParam.ALG)
         _alg = _alg if _alg is not None else self.uhdr.get(CoseHeaderParam.ALG)
 
-        if CoseAlgorithm.ECDH_SS_HKDF_512 <= _alg <= CoseAlgorithm.ECDH_ES_HKDF_256:
+        if _alg is None:
+            raise AttributeError('No algorithm specified.')
+
+        if CoseAlgorithm.ECDH_SS_HKDF_512 <= _alg <= CoseAlgorithm.ECDH_ES_HKDF_256 or _alg == CoseAlgorithm.DIRECT:
             return b''
 
-        _key = key if key is not None else self.key_bytes
+        try:
+            _key = key.key_bytes if key is not None else self.key_bytes
+        except AttributeError:
+            raise AttributeError("No key specified.")
 
         return key_wrap(_key, self.payload)
 
