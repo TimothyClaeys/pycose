@@ -135,11 +135,8 @@ def aead_decrypt(key, aad, ciphertext, algorithm, nonce):
     return plaintext
 
 
-def key_wrap(alg, kek, plaintext_key):
-    if alg in AESKW:
-        return aes_key_wrap(kek, plaintext_key, default_backend())
-    elif alg == CoseAlgorithm.DIRECT:
-        return b''
+def key_wrap(kek: bytes, plaintext_key: bytes) -> bytes:
+    return aes_key_wrap(kek, plaintext_key, openssl.backend)
 
 
 def calc_tag_wrapper(key, to_be_maced, algorithm):

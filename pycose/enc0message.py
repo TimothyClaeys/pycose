@@ -32,9 +32,9 @@ class Enc0Message(enccommon.EncCommon):
 
     def encode(self, tagged: bool = True) -> bytes:
         if tagged:
-            res = cbor2.dumps(cbor2.CBORTag(self.cbor_tag, [self.encode_phdr(), self.encode_uhdr(), self.payload]))
+            res = cbor2.dumps(cbor2.CBORTag(self.cbor_tag, [self.encode_phdr(), self.encode_uhdr(), self.encrypt()]))
         else:
-            res = cbor2.dumps([self.encode_phdr(), self.encode_uhdr(), self.payload])
+            res = cbor2.dumps([self.encode_phdr(), self.encode_uhdr(), self.encrypt()])
 
         return res
 

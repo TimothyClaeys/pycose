@@ -21,6 +21,11 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
 
     def __init__(self, phdr: dict, uhdr: dict, payload: bytes, external_data: bytes = b'', key: SymmetricKey = None):
         super().__init__(phdr, uhdr, payload, external_data, key)
+        self._encrypted = False
+
+    @property
+    def encrypted(self):
+        return self._encrypted
 
     @property
     def key_bytes(self) -> bytes:
@@ -29,19 +34,25 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
         else:
             return self.key.key_bytes
 
-    def decrypt(self, alg: int = None, nonce: bytes = None, key: bytes = None) -> None:
+    def decrypt(self, alg: int = None, nonce: bytes = None, key: SymmetricKey = None) -> bytes:
         """ Decrypts the payload. """
+        if self._encrypted is False:
+            return self.payload
 
         key, alg, nonce = self._get_crypt_parameters(alg, nonce, key)
 
-        self.payload = crypto.aead_encrypt(key, self._enc_structure, self.payload, alg, nonce)
+        self._encrypted = False
+        return crypto.aead_encrypt(key, self._enc_structure, self.payload, alg, nonce)
 
-    def encrypt(self, alg: int = None, nonce: bytes = None, key: bytes = None) -> None:
+    def encrypt(self, alg: int = None, nonce: bytes = None, key: SymmetricKey = None) -> bytes:
         """ Encrypts the payload. """
+        if self._encrypted:
+            return self.payload
 
         key, alg, nonce = self._get_crypt_parameters(alg, nonce, key)
 
-        self.payload = crypto.aead_encrypt(key, self._enc_structure, self.payload, alg, nonce)
+        self._encrypted = True
+        return crypto.aead_encrypt(key, self._enc_structure, self.payload, alg, nonce)
 
     def encode(self, tagged: bool = True):
         raise NotImplementedError("Cannot instantiate abstract class EncCommon")
@@ -67,9 +78,12 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
     def __repr__(self) -> str:
         raise NotImplementedError()
 
-    def _get_crypt_parameters(self, alg: int, nonce: bytes, key: bytes) -> Tuple[bytes, int, bytes]:
+    def _get_crypt_parameters(self, alg: int, nonce: bytes, key: SymmetricKey) -> Tuple[bytes, int, bytes]:
 
-        _key = key if key is not None else self.key_bytes
+        try:
+            _key = key.key_bytes if key is not None else self.key_bytes
+        except AttributeError:
+            raise AttributeError("No key specified")
 
         # search in protected headers
         _alg = alg if alg is not None else self.phdr.get(CoseHeaderParam.ALG)

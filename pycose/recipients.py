@@ -6,7 +6,7 @@ import cbor2
 from cryptography.hazmat.backends import openssl
 from cryptography.hazmat.primitives.asymmetric import ec
 
-from pycose.attributes import CoseHeaderParam
+from pycose.attributes import CoseHeaderParam, CoseAlgorithm
 from pycose.basicstructure import BasicCoseStructure
 from pycose.cosekey import SymmetricKey, EC2, OKP
 from pycose.crypto import key_wrap, CoseKDFContext, KEY_DERIVATION_CURVES, ecdh_key_derivation
@@ -47,21 +47,23 @@ class CoseRecipient(BasicCoseStructure):
 
     def encode(self):
         if self.recipients is not None:
-            res = cbor2.dumps(
-                [self.encode_phdr(), self.encode_uhdr(), self.payload, [r.encode() for r in self.recipients]])
+            res = [self.encode_phdr(), self.encode_uhdr(), self.encrypt(), [r.encode() for r in self.recipients]]
         else:
-            res = cbor2.dumps([self.encode_phdr(), self.encode_uhdr(), self.payload])
+            res = [self.encode_phdr(), self.encode_uhdr(), self.encrypt()]
 
         return res
 
-    def encrypt(self, alg: int = None, key: bytes = None) -> None:
+    def encrypt(self, alg: int = None, key: bytes = None) -> bytes:
         """ Do key wrapping. """
-
-        _key = key if key is not None else self.key_bytes
         _alg = alg if alg is not None else self.phdr.get(CoseHeaderParam.ALG)
         _alg = _alg if _alg is not None else self.uhdr.get(CoseHeaderParam.ALG)
 
-        self.payload = key_wrap(alg, _key, self.payload)
+        if CoseAlgorithm.ECDH_SS_HKDF_512 <= _alg <= CoseAlgorithm.ECDH_ES_HKDF_256:
+            return b''
+
+        _key = key if key is not None else self.key_bytes
+
+        return key_wrap(_key, self.payload)
 
     @method_dispatch
     def derive_kek(self, private_key, public_key: Optional[Union[EC2, OKP]] = None, context: CoseKDFContext = None,
