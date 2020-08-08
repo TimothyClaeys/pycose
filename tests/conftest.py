@@ -12,6 +12,7 @@ path_examples = os.path.join(pathlib.Path(__file__).parent.absolute(), 'examples
 aes_ccm_examples = os.path.join(path_examples, 'aes-ccm-examples')
 aes_gcm_examples = os.path.join(path_examples, 'aes-gcm-examples')
 encrypted_tests = os.path.join(path_examples, 'encrypted-tests')
+enveloped_tests = os.path.join(path_examples, 'enveloped-tests')
 
 algs_to_be_replaced = {
     'A128GCM': CoseAlgorithm.A128GCM,

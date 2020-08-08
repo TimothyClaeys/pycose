@@ -1,7 +1,9 @@
 from binascii import hexlify
 from functools import singledispatch, update_wrapper
-from typing import Union, List, Optional
+from typing import Union, List, Optional, Any, Tuple
 
+import cbor2
+from cbor2 import CBORDecodeEOF
 from cryptography.hazmat.backends import openssl
 from cryptography.hazmat.primitives.asymmetric import ec
 
@@ -26,12 +28,53 @@ def method_dispatch(func):
 
 
 class CoseRecipient(BasicCoseStructure):
+    @classmethod
+    def recusive_encode(
+            cls,
+            recipients: List['CoseRecipient'],
+            crypto_params:
+            Tuple[Tuple[bool, Union[CoseAlgorithm, None], Union[SymmetricKey, None], Union[Tuple[Any], None]]] = None
+    ) -> list:
+        """ Recursively encode/encrypt the recipients """
+        if crypto_params is None:
+            recipients = [r.encode() for r in recipients]
+        else:
+            if len(crypto_params) != len(recipients):
+                raise ValueError("'crypto_params' should have the same length as the internal recipients list.")
+            recipients = [r.encode(*p) for r, p in zip(recipients, crypto_params)]
+
+        return recipients
+
+    @classmethod
+    def from_recipient_obj(cls, recipient_obj: list):
+        try:
+            phdr = cbor2.loads(recipient_obj.pop(0))
+        except (IndexError, CBORDecodeEOF):
+            phdr = {}
+
+        try:
+            uhdr = recipient_obj.pop(0)
+        except IndexError:
+            uhdr = {}
+
+        try:
+            payload = recipient_obj.pop(0)
+        except IndexError:
+            payload = b''
+
+        try:
+            recipient_list = recipient_obj.pop(0)
+            recipient_list = CoseRecipient.from_recipient_obj(recipient_list)
+        except IndexError:
+            recipient_list = None
+
+        return CoseRecipient(phdr=phdr, uhdr=uhdr, payload=payload, recipients=recipient_list)
 
     def __init__(self, phdr: Union[dict, None] = None,
                  uhdr: Union[dict, None] = None,
                  payload: bytes = b'',
-                 key: SymmetricKey = None,
-                 recipients: Union[List, None] = None):
+                 key: Optional[SymmetricKey] = None,
+                 recipients: Optional[List] = None):
         super().__init__(phdr=phdr, uhdr=uhdr, payload=payload)
 
         self.key = key
@@ -44,19 +87,24 @@ class CoseRecipient(BasicCoseStructure):
         else:
             return self.key.key_bytes
 
-    def encode(self, encrypt: bool = True, alg: Optional[int] = None, key: Optional[SymmetricKey] = None):
+    def encode(self,
+               encrypt: bool = True,
+               alg: Optional[CoseAlgorithm] = None,
+               key: Optional[SymmetricKey] = None,
+               crypto_params:
+               List[Tuple[bool, Union[CoseAlgorithm, None], Union[SymmetricKey, None], List[Any]]] = None) -> list:
 
         if encrypt:
             recipient = [self.encode_phdr(), self.encode_uhdr(), self.encrypt(alg, key)]
         else:
             recipient = [self.encode_phdr(), self.encode_uhdr(), self.payload]
 
+        # recursively encode/encrypt the recipients
         if len(self.recipients) > 0:
-            res = [recipient, [r.encode() for r in self.recipients]]
-        else:
-            res = recipient
+            recipients = CoseRecipient.recusive_encode(self.recipients, crypto_params)
+            recipient.append(recipients)
 
-        return res
+        return recipient
 
     def encrypt(self, alg: Optional[CoseAlgorithm] = None, key: Optional[SymmetricKey] = None) -> bytes:
         """ Do key wrapping. """

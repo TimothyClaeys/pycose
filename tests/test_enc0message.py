@@ -10,8 +10,8 @@ from pycose.cosekey import SymmetricKey, CoseKey, KeyOps
 from pycose.enc0message import Enc0Message
 from tests.conftest import aes_ccm_examples, aes_gcm_examples, encrypted_tests
 
-test_cases = [os.path.join(aes_ccm_examples, v) for v in os.listdir(aes_ccm_examples)] + \
-             [os.path.join(aes_gcm_examples, v) for v in os.listdir(aes_gcm_examples)] + \
+test_cases = [os.path.join(aes_ccm_examples, v) for v in os.listdir(aes_ccm_examples) if '-enc-' in v] + \
+             [os.path.join(aes_gcm_examples, v) for v in os.listdir(aes_gcm_examples) if '-enc-' in v] + \
              [os.path.join(encrypted_tests, v) for v in os.listdir(encrypted_tests)]
 
 
@@ -21,8 +21,7 @@ def test_encrypt0_encoding(encrypt0_test_cases: dict) -> None:
     try:
         input_data = encrypt0_test_cases['input']
     except (TypeError, KeyError):
-        pytest.skip("Invalid parameters")
-        return
+        return pytest.skip("Invalid parameters")
 
     if 'fail' in encrypt0_test_cases or "failures" in input_data:
         fail = True
@@ -95,8 +94,7 @@ def test_encrypt0_decoding(encrypt0_test_cases: dict) -> None:
         output_data = encrypt0_test_cases['output']
         input_data = encrypt0_test_cases['input']
     except (TypeError, KeyError):
-        pytest.skip("Invalid parameters")
-        return
+        return pytest.skip("Invalid parameters")
 
     if 'fail' in encrypt0_test_cases or "failures" in input_data:
         pytest.skip("Invalid parameters")

@@ -52,13 +52,14 @@ def test_kek_ecdh_direct_recipient(phdr, uhdr, alg, peer_key, eph_private_key, e
     assert r.encode_phdr() == encoded_phdr
 
     eph_key_info = {EcdhAlgorithmParam.EPHEMERAL_KEY:
-                    EC2(crv=CoseEllipticCurves.P_256,
-                        x=unhexlify(b'98F50A4FF6C05861C8860D13A638EA56C3F5AD7590BBFBF054E1C7B4D91D6280'),
-                        y=unhexlify(b'F01400B089867804B8E9FC96C3932161F1934F4223069170D924B7E03BF822BB')).encode()}
+                        EC2(crv=CoseEllipticCurves.P_256,
+                            x=unhexlify(b'98F50A4FF6C05861C8860D13A638EA56C3F5AD7590BBFBF054E1C7B4D91D6280'),
+                            y=unhexlify(b'F01400B089867804B8E9FC96C3932161F1934F4223069170D924B7E03BF822BB')).encode()}
     r.uhdr_update(eph_key_info)
 
     assert r.encode_uhdr() == encoded_uhdr
 
     r.payload = b''
     assert r.encode() == rcpt
+
 

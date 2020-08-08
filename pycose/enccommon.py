@@ -10,16 +10,6 @@ from pycose.cosekey import SymmetricKey
 
 
 class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
-    @classmethod
-    def from_cose_obj(cls, cose_obj: list):
-        msg = super().from_cose_obj(cose_obj)
-
-        try:
-            msg.recipients = cose_obj.pop(0)
-        except (IndexError, ValueError):
-            msg.recipients = None
-        return msg
-
     def __init__(self, phdr: dict, uhdr: dict, payload: bytes, external_data: bytes = b'',
                  key: Optional[SymmetricKey] = None):
         super().__init__(phdr, uhdr, payload, external_data, key)
@@ -90,17 +80,7 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
         if _alg is None:
             raise AttributeError('No algorithm specified.')
 
-        # if nonce is still None and we don't have a Partial IV, abort
-        if _nonce is None and CoseHeaderParam.PARTIAL_IV in self.phdr:
-            _nonce = self._build_nonce(self.phdr[CoseHeaderParam.PARTIAL_IV])
-
-        if _nonce is None and CoseHeaderParam.PARTIAL_IV in self.uhdr:
-            _nonce = self._build_nonce(self.uhdr[CoseHeaderParam.PARTIAL_IV])
-
         if _nonce is None:
             raise AttributeError('No nonce specified.')
 
         return _key, _alg, _nonce
-
-    def _build_nonce(self, partial_iv: bytes) -> bytes:
-        raise NotImplementedError()
