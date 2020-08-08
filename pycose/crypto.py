@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import cbor2
 from cryptography.hazmat.backends import default_backend, openssl
 from cryptography.hazmat.primitives import cmac
@@ -203,7 +205,7 @@ def verify_tag_wrapper(key, tag, to_be_maced, algorithm):
 def ecdh_key_derivation(private_key: EllipticCurvePrivateKey,
                         public_key: EllipticCurvePublicKey,
                         length: int,
-                        context: bytes = b'') -> bytes:
+                        context: bytes = b'') -> Tuple[bytes, bytes]:
     shared_key = private_key.exchange(ECDH(), public_key)
 
     derived_key = HKDF(algorithm=hashes.SHA256(),
@@ -212,7 +214,7 @@ def ecdh_key_derivation(private_key: EllipticCurvePrivateKey,
                        info=context,
                        backend=openssl.backend).derive(shared_key)
 
-    return derived_key
+    return shared_key, derived_key
 
 # def ec_sign_wrapper(key, to_be_signed, algorithm, curve):
 #     if isinstance(key, str):

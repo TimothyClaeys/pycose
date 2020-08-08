@@ -5,16 +5,19 @@ import pytest
 
 from pycose import EncMessage, CoseMessage
 from pycose.attributes import CoseHeaderParam, CoseAlgorithm
-from pycose.cosekey import SymmetricKey, KeyOps, CoseKey
+from pycose.cosekey import SymmetricKey, KeyOps, CoseKey, EC2
+from pycose.crypto import PartyInfo, SuppPubInfo, CoseKDFContext
 from pycose.recipient import CoseRecipient
-from tests.conftest import aes_gcm_examples, enveloped_tests
+from tests.conftest import aes_gcm_examples, enveloped_tests, ecdh_direct_examples
 
-test_cases = [os.path.join(aes_gcm_examples, v) for v in os.listdir(aes_gcm_examples) if '-enc-' not in v] + \
-             [os.path.join(aes_gcm_examples, v) for v in os.listdir(aes_gcm_examples) if '-enc-' not in v] + \
-             [os.path.join(enveloped_tests, v) for v in os.listdir(enveloped_tests)]
+test_cases_1 = [os.path.join(aes_gcm_examples, v) for v in os.listdir(aes_gcm_examples) if '-enc-' not in v] + \
+               [os.path.join(aes_gcm_examples, v) for v in os.listdir(aes_gcm_examples) if '-enc-' not in v] + \
+               [os.path.join(enveloped_tests, v) for v in os.listdir(enveloped_tests)]
+
+test_cases_2 = [os.path.join(ecdh_direct_examples, v) for v in os.listdir(ecdh_direct_examples)]
 
 
-@pytest.mark.parametrize('encrypt_test_cases', test_cases, indirect=['encrypt_test_cases'])
+@pytest.mark.parametrize('encrypt_test_cases', test_cases_1, indirect=['encrypt_test_cases'])
 def test_encrypt_encoding(encrypt_test_cases: dict) -> None:
     try:
         input_data = encrypt_test_cases['input']
@@ -72,7 +75,7 @@ def test_encrypt_encoding(encrypt_test_cases: dict) -> None:
 
 
 @pytest.mark.decoding
-@pytest.mark.parametrize('encrypt_test_cases', test_cases, indirect=['encrypt_test_cases'])
+@pytest.mark.parametrize('encrypt_test_cases', test_cases_1, indirect=['encrypt_test_cases'])
 def test_encrypt_decoding(encrypt_test_cases: dict) -> None:
     try:
         output_data = encrypt_test_cases['output']
@@ -120,3 +123,64 @@ def test_encrypt_decoding(encrypt_test_cases: dict) -> None:
 
     # re-encode and verify we are back where we started
     assert msg.encode(encrypt=False) == unhexlify(output_data['cbor'])
+
+
+@pytest.mark.decoding
+@pytest.mark.parametrize('ecdh_direct_enc_test_cases', test_cases_2, indirect=['ecdh_direct_enc_test_cases'])
+def test_encrypt_ecdh_direct_kek_encoding(ecdh_direct_enc_test_cases: dict) -> None:
+    try:
+        input_data = ecdh_direct_enc_test_cases['input']
+        enveloped = input_data['enveloped']
+    except (TypeError, KeyError):
+        return pytest.skip("Invalid parameters")
+
+    m = EncMessage(payload=input_data['plaintext'].encode('utf-8'))
+    m.phdr = enveloped.get('protected', {})
+    m.uhdr = enveloped.get('unprotected', {})
+
+    nonce = None
+    if 'rng_stream' in input_data:
+        m.uhdr_update({CoseHeaderParam.IV: unhexlify(input_data['rng_stream'][0])})
+    else:
+        if 'unsent' in enveloped:
+            nonce = unhexlify(enveloped.get('unsent').get('IV_hex'))
+
+    # check for external data and verify internal _enc_structure
+    m.external_aad = unhexlify(enveloped.get('external', b''))
+    assert m._enc_structure == unhexlify(ecdh_direct_enc_test_cases['intermediates']['AAD_hex'])
+
+    # setting up the keys for the sender and receiver and create the recipient
+    recipients = enveloped.get('recipients', [])
+    if len(recipients) > 1 or len(recipients) == 0:
+        raise NotImplementedError("Can't deal with this now")
+
+    rcpt = recipients[0]
+
+    r = CoseRecipient(phdr=rcpt.get("protected", {}), uhdr=rcpt.get("unprotected", {}))
+
+    receiver_key = EC2(
+        kid=rcpt['key']['kid'].encode('utf-8'),
+        crv=rcpt['key']['crv'],
+        x=CoseKey.base64decode(rcpt['key']['x']),
+        y=CoseKey.base64decode(rcpt['key']['y'])
+    )
+
+    if 'sender_key' in rcpt:
+        # static keys, skip for now
+        return pytest.skip('static keys, skip for now')
+
+    sender_key = EC2(
+        kid=rcpt['key']['kid'].encode('utf-8'),
+        crv=rcpt['key']['crv'],
+        d=unhexlify(input_data['rng_stream'][0])
+    )
+
+    # create context KDF
+    u = PartyInfo()
+    v = PartyInfo()
+    s = SuppPubInfo(len(ecdh_direct_enc_test_cases['intermediates']['CEK_hex']) * 4, r.encode_phdr())
+    kdf_ctx = CoseKDFContext(m.phdr[CoseHeaderParam.ALG], u, v, s)
+    assert kdf_ctx.encode() == unhexlify(ecdh_direct_enc_test_cases['intermediates']['recipients'][0]['Context_hex'])
+
+    secret, kek = r.derive_kek(private_key=sender_key, public_key=receiver_key, context=kdf_ctx, expose_secret=True)
+    # assert secret == unhexlify(ecdh_direct_enc_test_cases['intermediates']['recipients'][0]['Secret_hex'])

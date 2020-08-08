@@ -2,3 +2,4 @@ cryptography>=3.0
 cbor2>=5.1.2
 ecdsa>=0.15
 pytest==6.0.1
+dataclasses>=0.7 ; python_version <= '3.6'

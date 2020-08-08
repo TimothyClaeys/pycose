@@ -126,11 +126,12 @@ class CoseRecipient(BasicCoseStructure):
 
     @method_dispatch
     def derive_kek(self, private_key, public_key: Optional[Union[EC2, OKP]] = None, context: CoseKDFContext = None,
-                   salt: bytes = None):
+                   salt: bytes = None, expose_secret: bool = False):
         raise NotImplementedError()
 
     @derive_kek.register(EC2)
-    def _(self, private_key: EC2, public_key: EC2 = None, context: CoseKDFContext = None, salt: bytes = None):
+    def _(self, private_key: EC2, public_key: EC2 = None, context: CoseKDFContext = None, salt: bytes = None,
+          expose_secret: bool = False):
         _ = salt
 
         try:
@@ -142,15 +143,21 @@ class CoseRecipient(BasicCoseStructure):
         p = ec.EllipticCurvePublicNumbers(
             int(hexlify(public_key.X), 16), int(hexlify(public_key.Y), 16), crv).public_key(openssl.backend)
 
-        return ecdh_key_derivation(d, p, int(context.supp_pub_info.key_data_length / 8), context.encode())
+        secret, kek = ecdh_key_derivation(d, p, int(context.supp_pub_info.key_data_length / 8), context.encode())
+
+        if expose_secret:
+            return secret, kek
+        else:
+            return kek
 
     @derive_kek.register(SymmetricKey)
-    def _(self, private_key: SymmetricKey, public_key=None, context: CoseKDFContext = None, salt: bytes = None):
+    def _(self, private_key: SymmetricKey, public_key=None, context: CoseKDFContext = None, salt: bytes = None,
+          expose_secret: bool = False):
         raise NotImplementedError()
 
     @derive_kek.register(OKP)
-    def _(self, private_key: OKP, public_key: OKP = None, context: CoseKDFContext = None,
-          salt: bytes = None):
+    def _(self, private_key: OKP, public_key: OKP = None, context: CoseKDFContext = None, salt: bytes = None,
+          expose_secret: bool = False):
         raise NotImplementedError()
 
     def __repr__(self) -> str:
