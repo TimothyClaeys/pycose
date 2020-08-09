@@ -1,30 +1,18 @@
 from binascii import hexlify
-from functools import singledispatch, update_wrapper
 from typing import Union, List, Optional, Any, Tuple
 
 import cbor2
 from cbor2 import CBORDecodeEOF
 from cryptography.hazmat.backends import openssl
 from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PublicKey, X25519PrivateKey
+from singledispatchmethod import singledispatchmethod
 
-from pycose.attributes import CoseHeaderParam, CoseAlgorithm
+from pycose.attributes import CoseHeaderParam as Hp, CoseAlgorithm
 from pycose.basicstructure import BasicCoseStructure
 from pycose.cosekey import SymmetricKey, EC2, OKP
-from pycose.crypto import key_wrap, CoseKDFContext, KEY_DERIVATION_CURVES, ecdh_key_derivation
-
-
-def method_dispatch(func):
-    dispatcher = singledispatch(func)
-
-    def wrapper(*args, **kw):
-        try:
-            return dispatcher.dispatch(args[1].__class__)(*args, **kw)
-        except IndexError:
-            return dispatcher.dispatch(kw['private_key'].__class__)(*args, **kw)
-
-    wrapper.register = dispatcher.register
-    update_wrapper(wrapper, func)
-    return wrapper
+from pycose.crypto import key_wrap, CoseKDFContext, KEY_DERIVATION_CURVES, ecdh_key_derivation, key_unwrap, \
+    x25519_key_derivation
 
 
 class CoseRecipient(BasicCoseStructure):
@@ -124,26 +112,48 @@ class CoseRecipient(BasicCoseStructure):
 
         return key_wrap(_key, self.payload)
 
-    @method_dispatch
-    def derive_kek(self, private_key, public_key: Optional[Union[EC2, OKP]] = None, context: CoseKDFContext = None,
-                   salt: bytes = None, expose_secret: bool = False):
+    def decrypt(self, alg: Optional[CoseAlgorithm] = None, key: Optional[SymmetricKey] = None) -> bytes:
+        """ Do key wrapping. """
+        _alg = alg if alg is not None else self.phdr.get(Hp.ALG)
+        _alg = _alg if _alg is not None else self.uhdr.get(Hp.ALG)
+
+        if _alg is None:
+            raise AttributeError('No algorithm specified.')
+
+        if not (CoseAlgorithm.ECDH_SS_A256KW <= _alg <= CoseAlgorithm.ECDH_ES_HKDF_256 or CoseAlgorithm.ECDH_ES_A128KW
+                or CoseAlgorithm.A256KW <= _alg <= CoseAlgorithm.A128KW):
+            raise ValueError("algorithm is not a key wrapping algorithm")
+
+        try:
+            _key = key.key_bytes if key is not None else self.key_bytes
+        except AttributeError:
+            raise AttributeError("No key specified.")
+
+        return key_unwrap(_key, self.payload)
+
+    @singledispatchmethod
+    @classmethod
+    def derive_kek(cls, private_key, public_key: Optional[Union[EC2, OKP]] = None, alg: Optional[CoseAlgorithm] = None,
+                   context: CoseKDFContext = None, salt: bytes = None, expose_secret: bool = False):
         raise NotImplementedError()
 
     @derive_kek.register(EC2)
-    def _(self, private_key: EC2, public_key: EC2 = None, context: CoseKDFContext = None, salt: bytes = None,
-          expose_secret: bool = False):
+    @classmethod
+    def _(cls, private_key: EC2, public_key: EC2 = None, alg: Optional[CoseAlgorithm] = None,
+          context: CoseKDFContext = None,
+          salt: bytes = None, expose_secret: bool = False):
         _ = salt
 
         try:
-            crv = KEY_DERIVATION_CURVES[public_key.CRV]()
+            crv = KEY_DERIVATION_CURVES[public_key.crv]()
         except KeyError:
-            raise ValueError(f'Invalid curve: {public_key.CRV}')
+            raise ValueError(f'Invalid curve: {public_key.crv}')
 
         d = ec.derive_private_key(int(hexlify(private_key.private_bytes), 16), crv, openssl.backend)
         p = ec.EllipticCurvePublicNumbers(
-            int(hexlify(public_key.X), 16), int(hexlify(public_key.Y), 16), crv).public_key(openssl.backend)
+            int(hexlify(public_key.x), 16), int(hexlify(public_key.y), 16), crv).public_key(openssl.backend)
 
-        secret, kek = ecdh_key_derivation(d, p, int(context.supp_pub_info.key_data_length / 8), context.encode())
+        secret, kek = ecdh_key_derivation(d, p, alg, int(context.supp_pub_info.key_data_length / 8), context.encode())
 
         if expose_secret:
             return secret, kek
@@ -151,14 +161,26 @@ class CoseRecipient(BasicCoseStructure):
             return kek
 
     @derive_kek.register(SymmetricKey)
-    def _(self, private_key: SymmetricKey, public_key=None, context: CoseKDFContext = None, salt: bytes = None,
-          expose_secret: bool = False):
+    @classmethod
+    def _(cls, private_key: SymmetricKey, public_key=None, alg: Optional[CoseAlgorithm] = None,
+          context: CoseKDFContext = None, salt: bytes = None, expose_secret: bool = False):
         raise NotImplementedError()
 
     @derive_kek.register(OKP)
-    def _(self, private_key: OKP, public_key: OKP = None, context: CoseKDFContext = None, salt: bytes = None,
-          expose_secret: bool = False):
-        raise NotImplementedError()
+    @classmethod
+    def _(cls, private_key: OKP, public_key: OKP = None, alg: Optional[CoseAlgorithm] = None,
+          context: CoseKDFContext = None, salt: bytes = None, expose_secret: bool = False):
+        _ = salt
+
+        p = X25519PublicKey.from_public_bytes(public_key.public_bytes)
+        d = X25519PrivateKey.from_private_bytes(private_key.private_bytes)
+
+        secret, kek = x25519_key_derivation(d, p, alg, int(context.supp_pub_info.key_data_length / 8), context.encode())
+
+        if expose_secret:
+            return secret, kek
+        else:
+            return kek
 
     def __repr__(self) -> str:
         return f'<COSE_Recipient:\n' \

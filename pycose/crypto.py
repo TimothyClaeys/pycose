@@ -7,9 +7,10 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import hmac
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePrivateKey, EllipticCurvePublicKey, ECDH, \
     SECP256R1, SECP384R1, SECP521R1
+from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, X25519PublicKey
 from cryptography.hazmat.primitives.ciphers import algorithms, aead
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
-from cryptography.hazmat.primitives.keywrap import aes_key_wrap
+from cryptography.hazmat.primitives.keywrap import aes_key_wrap, aes_key_unwrap
 from dataclasses import dataclass
 
 from pycose.attributes import CoseAlgorithm
@@ -20,6 +21,19 @@ AESKW = {
     CoseAlgorithm.A128KW,
     CoseAlgorithm.A192KW,
     CoseAlgorithm.A256KW
+}
+
+ECDH_HASHES = {
+    CoseAlgorithm.ECDH_SS_HKDF_512: hashes.SHA512,
+    CoseAlgorithm.ECDH_SS_HKDF_256: hashes.SHA256,
+    CoseAlgorithm.ECDH_ES_HKDF_256: hashes.SHA256,
+    CoseAlgorithm.ECDH_ES_HKDF_512: hashes.SHA512,
+    CoseAlgorithm.ECDH_ES_A128KW: hashes.SHA256,
+    CoseAlgorithm.ECDH_SS_A128KW: hashes.SHA256,
+    CoseAlgorithm.ECDH_ES_A192KW: hashes.SHA256,
+    CoseAlgorithm.ECDH_SS_A192KW: hashes.SHA256,
+    CoseAlgorithm.ECDH_ES_A256KW: hashes.SHA256,
+    CoseAlgorithm.ECDH_SS_A256KW: hashes.SHA256,
 }
 
 HMAC = {
@@ -144,6 +158,10 @@ def key_wrap(kek: bytes, plaintext_key: bytes) -> bytes:
     return aes_key_wrap(kek, plaintext_key, openssl.backend)
 
 
+def key_unwrap(kek: bytes, wrapped_key: bytes) -> bytes:
+    return aes_key_unwrap(kek, wrapped_key, openssl.backend)
+
+
 def calc_tag_wrapper(key, to_be_maced, algorithm):
     """
     Wrapper function for the supported hmac in COSE
@@ -204,17 +222,38 @@ def verify_tag_wrapper(key, tag, to_be_maced, algorithm):
 
 def ecdh_key_derivation(private_key: EllipticCurvePrivateKey,
                         public_key: EllipticCurvePublicKey,
+                        alg: CoseAlgorithm,
                         length: int,
                         context: bytes = b'') -> Tuple[bytes, bytes]:
     shared_key = private_key.exchange(ECDH(), public_key)
 
-    derived_key = HKDF(algorithm=hashes.SHA256(),
+    hash_func = ECDH_HASHES[alg]
+
+    derived_key = HKDF(algorithm=hash_func(),
                        length=length,
                        salt=None,
                        info=context,
                        backend=openssl.backend).derive(shared_key)
 
     return shared_key, derived_key
+
+
+def x25519_key_derivation(private_key: X25519PrivateKey,
+                          public_key: X25519PublicKey,
+                          alg: CoseAlgorithm,
+                          length: int,
+                          context: bytes = b'') -> Tuple[bytes, bytes]:
+    shared_secret = private_key.exchange(public_key)
+
+    hash_func = ECDH_HASHES[alg]
+
+    derived_key = HKDF(algorithm=hash_func(),
+                       length=length,
+                       salt=None,
+                       info=context,
+                       backend=openssl.backend).derive(shared_secret)
+
+    return shared_secret, derived_key
 
 # def ec_sign_wrapper(key, to_be_signed, algorithm, curve):
 #     if isinstance(key, str):

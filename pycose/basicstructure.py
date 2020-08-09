@@ -1,13 +1,17 @@
+from typing import Dict, Union
+
 import cbor2
 import abc
+
+from pycose.attributes import CoseHeaderParam as Hp, CoseAlgorithm as Alg
 
 
 class BasicCoseStructure(metaclass=abc.ABCMeta):
     """ Basic COSE information buckets. """
 
     def __init__(self, phdr: dict = None, uhdr: dict = None, payload: bytes = b''):
-        self._phdr = phdr.copy()
-        self._uhdr = uhdr.copy()
+        self._phdr = {} if phdr is None else phdr.copy()
+        self._uhdr = {} if uhdr is None else uhdr.copy()
 
         self._payload = payload  # can be plaintext or ciphertext
 
