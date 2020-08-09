@@ -64,13 +64,13 @@ class EllipticCurveKeys(IntEnum):
 
 @dc.dataclass
 class CoseKey(metaclass=ABCMeta):
-    KTY: Optional[int]
-    KID: Optional[Union[int, bytes]]
-    ALG: Optional[int]
-    KEY_OPS: Optional[int]
-    BASE_IV: Optional[bytes]
+    kty: Optional[int]
+    kid: Optional[Union[int, bytes]]
+    alg: Optional[int]
+    key_ops: Optional[int]
+    base_iv: Optional[bytes]
 
-    kty = {}
+    KTY = {}
 
     class Common(IntEnum):
         KTY = 1
@@ -90,7 +90,7 @@ class CoseKey(metaclass=ABCMeta):
         def decorator(the_class):
             if not issubclass(the_class, CoseKey):
                 raise ValueError("Can only decorate subclass of CoseMessage")
-            cls.kty[kty_id] = the_class
+            cls.KTY[kty_id] = the_class
             return the_class
 
         return decorator
@@ -119,7 +119,7 @@ class CoseKey(metaclass=ABCMeta):
     @classmethod
     def decode(cls, received: dict):
         try:
-            return cls.kty[received[cls.Common.KTY]].from_cose_key_obj(received)
+            return cls.KTY[received[cls.Common.KTY]].from_cose_key_obj(received)
         except KeyError as e:
             raise KeyError("Key type identifier is not recognized", e)
 
@@ -145,8 +145,9 @@ class CoseKey(metaclass=ABCMeta):
     def _key_repr(cls, k: int, v: bytes) -> str:
         return f"\t{repr(k):<16} = {hexlify(v)}"
 
-    def encode(self) -> Dict[int, Union[int, bytes]]:
-        return {self.Common[k]: v for k, v in dc.asdict(self).items() if v is not None and self.Common.has_member(k)}
+    def encode(self, *argv) -> Dict[int, Union[int, bytes]]:
+        key_words = [kw for kw in argv if self.Common.has_member(kw.upper())] + ['kty']
+        return {self.Common[kw.upper()]: dc.asdict(self)[kw] for kw in key_words}
 
     @abstractmethod
     def __repr__(self):
@@ -156,10 +157,10 @@ class CoseKey(metaclass=ABCMeta):
 @CoseKey.record_kty(KTY.EC2)
 @dc.dataclass(init=False)
 class EC2(CoseKey):
-    CRV: Optional[int] = None
-    X: Optional[bytes] = None
-    Y: Optional[bytes] = None
-    D: Optional[bytes] = None
+    crv: Optional[int] = None
+    x: Optional[bytes] = None
+    y: Optional[bytes] = None
+    d: Optional[bytes] = None
 
     class EC2Prm(IntEnum):
         CRV = -1
@@ -181,10 +182,10 @@ class EC2(CoseKey):
                  y: Optional[bytes] = None,
                  d: Optional[bytes] = None):
         super().__init__(KTY.EC2, kid, alg, key_ops, base_iv)
-        self.CRV = crv
-        self.X = x
-        self.Y = y
-        self.D = d
+        self.crv = crv
+        self.x = x
+        self.y = y
+        self.d = d
 
     @classmethod
     def from_cose_key_obj(cls, cose_key_obj: dict) -> dict:
@@ -205,16 +206,15 @@ class EC2(CoseKey):
 
     @property
     def public_bytes(self) -> Tuple[bytes, bytes]:
-        return self.X, self.Y
+        return self.x, self.y
 
     @property
     def private_bytes(self) -> bytes:
-        return self.D
+        return self.d
 
-    def encode(self):
-        b = super().encode()
-        b.update({self.EC2Prm[k]: v for k, v in dc.asdict(self).items() if v is not None and self.EC2Prm.has_member(k)})
-        return b
+    def encode(self, *argv):
+        key_words = [kw for kw in argv if self.EC2Prm.has_member(kw.upper())]
+        return {**super().encode(*argv), **{self.EC2Prm[kw.upper()]: dc.asdict(self)[kw] for kw in key_words}}
 
     def __repr__(self):
         content = self.encode()
@@ -231,9 +231,9 @@ class OKP(CoseKey):
     Octet Key Pairs: Do not assume that keys using this type are elliptic curves.  This key type could be used for
     other curve types.
     """
-    CRV: Optional[int] = None
-    X: Optional[bytes] = None
-    D: Optional[bytes] = None
+    crv: Optional[int] = None
+    x: Optional[bytes] = None
+    d: Optional[bytes] = None
 
     class OKPPrm(IntEnum):
         CRV = -1
@@ -253,17 +253,17 @@ class OKP(CoseKey):
                  x: Optional[bytes] = None,
                  d: Optional[bytes] = None):
         super().__init__(KTY.OKP, kid, alg, key_ops, base_iv)
-        self.CRV = crv
-        self.X = x
-        self.D = d
+        self.crv = crv
+        self.x = x
+        self.d = d
 
     @property
     def public_bytes(self) -> bytes:
-        return self.X
+        return self.x
 
     @property
     def private_bytes(self) -> bytes:
-        return self.D
+        return self.d
 
     @classmethod
     def from_cose_key_obj(cls, cose_key_obj: dict) -> dict:
@@ -282,10 +282,9 @@ class OKP(CoseKey):
 
         return key_obj
 
-    def encode(self):
-        b = super().encode()
-        b.update({self.OKPPrm[k]: v for k, v in dc.asdict(self).items() if v is not None and self.OKPPrm.has_member(k)})
-        return b
+    def encode(self, *argv):
+        key_words = [kw for kw in argv if self.OKPPrm.has_member(kw.upper())]
+        return {**super().encode(*argv), **{self.OKPPrm[kw.upper()]: dc.asdict(self)[kw] for kw in key_words}}
 
     def __repr__(self):
         content = self.encode()
@@ -297,7 +296,7 @@ class OKP(CoseKey):
 @CoseKey.record_kty(KTY.SYMMETRIC)
 @dc.dataclass(init=False)
 class SymmetricKey(CoseKey):
-    K: Optional[bytes] = None
+    k: Optional[bytes] = None
 
     class SymPrm(IntEnum):
         K = - 1
@@ -313,11 +312,11 @@ class SymmetricKey(CoseKey):
                  base_iv: Optional[bytes] = None,
                  k: Optional[bytes] = None):
         super().__init__(KTY.SYMMETRIC, kid, alg, key_ops, base_iv)
-        self.K = k
+        self.k = k
 
     @property
     def key_bytes(self):
-        return self.K
+        return self.k
 
     @classmethod
     def from_cose_key_obj(cls, cose_key_obj: dict) -> dict:
@@ -330,10 +329,9 @@ class SymmetricKey(CoseKey):
 
         return key_obj
 
-    def encode(self):
-        b = super().encode()
-        b.update({self.SymPrm[k]: v for k, v in dc.asdict(self).items() if v is not None and self.SymPrm.has_member(k)})
-        return b
+    def encode(self, *argv):
+        key_words = [kw for kw in argv if self.SymPrm.has_member(kw.upper())]
+        return {**super().encode(*argv), **{self.SymPrm[kw.upper()]: dc.asdict(self)[kw] for kw in key_words}}
 
     def __repr__(self):
         content = self.encode()
@@ -348,4 +346,3 @@ class CoseKeySet:
             self.cose_keys = []
         else:
             self.cose_keys = cose_keys
-

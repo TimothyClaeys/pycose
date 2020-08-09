@@ -34,7 +34,7 @@ from pycose.cosekey import EC2, EllipticCurveKeys, CoseKey, KTY
                          ])
 def test_cosekey_create(crv, x, y, expected):
     key = EC2(crv=crv, x=x, y=y)
-    assert sorted(key.encode()) == sorted(expected)
+    assert sorted(key.encode('x', 'y', 'crv')) == sorted(expected)
 
 
 @pytest.mark.parametrize('encoded_key_obj, expected',
