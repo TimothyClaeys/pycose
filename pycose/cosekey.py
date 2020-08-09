@@ -45,13 +45,6 @@ class CoseEllipticCurves(IntEnum):
 
 
 @unique
-class EcdhAlgorithmParam(IntEnum):
-    EPHEMERAL_KEY = -1
-    STATIC_KEY = - 2
-    STATIC_KEY_ID = -3
-
-
-@unique
 class EllipticCurveKeys(IntEnum):
     P_256 = 1
     P_384 = 2
