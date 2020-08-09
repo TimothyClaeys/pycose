@@ -3,7 +3,6 @@ from typing import Type, Union, Optional
 
 import cbor2
 
-from pycose.attributes import CoseHeaderParam, CoseAlgorithm
 from pycose.basicstructure import BasicCoseStructure
 from pycose.cosekey import CoseKey
 
@@ -50,16 +49,12 @@ class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
         """Returns an initialized COSE message object."""
 
         try:
-            phdr = {(CoseHeaderParam(k) if CoseHeaderParam.has_value(k) else k): (
-                CoseAlgorithm(v) if CoseHeaderParam.has_value(k) and CoseHeaderParam(k) == CoseHeaderParam.ALG else v)
-                for k, v in cbor2.loads(cose_obj.pop(0)).items()}
+            phdr = BasicCoseStructure.parse_cose_hdr(cbor2.loads(cose_obj.pop(0)))
         except (ValueError, EOFError):
             phdr = {}
 
         try:
-            uhdr = {(CoseHeaderParam(k) if CoseHeaderParam.has_value(k) else k): (
-                CoseAlgorithm(v) if CoseHeaderParam.has_value(k) and CoseHeaderParam(k) == CoseHeaderParam.ALG else v)
-                for k, v in cose_obj.pop(0).items()}
+            uhdr = BasicCoseStructure.parse_cose_hdr(cose_obj.pop(0))
         except ValueError:
             uhdr = {}
 
@@ -67,7 +62,7 @@ class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
 
         return cls(phdr, uhdr, payload)
 
-    def __init__(self, phdr: dict, uhdr: dict, payload: bytes, external_aad: bytes, key: Union[Type[CoseKey], None]):
+    def __init__(self, phdr: dict, uhdr: dict, payload: bytes, external_aad: bytes, key: Optional[Type[CoseKey]]):
         super(CoseMessage, self).__init__(phdr, uhdr, payload)
         self.external_aad = external_aad
         self.key = key
@@ -81,4 +76,3 @@ class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
     def context(self):
         """Getter for the context of the message."""
         NotImplementedError("Cannot not instantiate abstract class CoseMessage")
-

@@ -48,12 +48,12 @@ class CoseRecipient(BasicCoseStructure):
     @classmethod
     def from_recipient_obj(cls, recipient_obj: list):
         try:
-            phdr = cbor2.loads(recipient_obj.pop(0))
+            phdr = BasicCoseStructure.parse_cose_hdr(cbor2.loads(recipient_obj.pop(0)))
         except (IndexError, CBORDecodeEOF):
             phdr = {}
 
         try:
-            uhdr = recipient_obj.pop(0)
+            uhdr = BasicCoseStructure.parse_cose_hdr(recipient_obj.pop(0))
         except IndexError:
             uhdr = {}
 
@@ -108,8 +108,8 @@ class CoseRecipient(BasicCoseStructure):
 
     def encrypt(self, alg: Optional[CoseAlgorithm] = None, key: Optional[SymmetricKey] = None) -> bytes:
         """ Do key wrapping. """
-        _alg = alg if alg is not None else self.phdr.get(CoseHeaderParam.ALG)
-        _alg = _alg if _alg is not None else self.uhdr.get(CoseHeaderParam.ALG)
+        _alg = alg if alg is not None else self.phdr.get(Hp.ALG)
+        _alg = _alg if _alg is not None else self.uhdr.get(Hp.ALG)
 
         if _alg is None:
             raise AttributeError('No algorithm specified.')

@@ -52,6 +52,11 @@ class BasicCoseStructure(metaclass=abc.ABCMeta):
         """ Encode the unprotected header. """
         return self._uhdr
 
+    @classmethod
+    def parse_cose_hdr(cls, hdr: Dict[int, Union[int, bytes]]) -> Dict[Union[Hp, bytes], Union[Alg, bytes]]:
+        return {(Hp(k) if Hp.has_value(k) else k): (Alg(v) if Hp.has_value(k) and Hp(k) == Hp.ALG else v)
+                for k, v in hdr.items()}
+
     @abc.abstractmethod
     def __repr__(self) -> str:
         raise NotImplementedError("Cannot instantiate abstract class BasicCoseStructure")
