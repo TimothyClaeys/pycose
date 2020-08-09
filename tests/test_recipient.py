@@ -3,7 +3,7 @@ from binascii import unhexlify
 from pytest import mark
 
 from pycose.attributes import CoseHeaderParam, CoseAlgorithm
-from pycose.cosekey import CoseKey, EC2, CoseEllipticCurves, EcdhAlgorithmParam
+from pycose.cosekey import CoseKey, EC2, CoseEllipticCurves
 from pycose.crypto import CoseKDFContext, PartyInfo, SuppPubInfo
 from pycose.recipient import CoseRecipient
 
@@ -45,21 +45,20 @@ def test_kek_ecdh_direct_recipient(phdr, uhdr, alg, peer_key, eph_private_key, e
     v = PartyInfo()
     s = SuppPubInfo(128, r.encode_phdr())
     kdf_ctx = CoseKDFContext(alg, u, v, s)
-    kek = r.derive_kek(private_key=eph_private_key, public_key=peer_key, context=kdf_ctx)
+    kek = r.derive_kek(eph_private_key, public_key=peer_key, alg=phdr[CoseHeaderParam.ALG], context=kdf_ctx)
 
     # since this is direct usage --> kek == cek
     assert kek == cek
     assert r.encode_phdr() == encoded_phdr
 
-    eph_key_info = {EcdhAlgorithmParam.EPHEMERAL_KEY:
+    eph_key_info = {CoseHeaderParam.EPHEMERAL_KEY:
                         EC2(crv=CoseEllipticCurves.P_256,
                             x=unhexlify(b'98F50A4FF6C05861C8860D13A638EA56C3F5AD7590BBFBF054E1C7B4D91D6280'),
-                            y=unhexlify(b'F01400B089867804B8E9FC96C3932161F1934F4223069170D924B7E03BF822BB')).encode()}
+                            y=unhexlify(b'F01400B089867804B8E9FC96C3932161F1934F4223069170D924B7E03BF822BB')).encode(
+                            'crv', 'x', 'y')}
     r.uhdr_update(eph_key_info)
 
     assert r.encode_uhdr() == encoded_uhdr
 
     r.payload = b''
     assert r.encode() == rcpt
-
-

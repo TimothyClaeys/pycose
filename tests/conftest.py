@@ -15,6 +15,8 @@ aes_gcm_examples = os.path.join(path_examples, 'aes-gcm-examples')
 encrypted_tests = os.path.join(path_examples, 'encrypted-tests')
 enveloped_tests = os.path.join(path_examples, 'enveloped-tests')
 ecdh_direct_examples = os.path.join(path_examples, 'ecdh-direct-examples')
+ecdh_wrap_examples = os.path.join(path_examples, 'ecdh-wrap-examples')
+x25519_tests = os.path.join(path_examples, "X25519-tests")
 
 algs_to_be_replaced = {
     'A128GCM': CoseAlgorithm.A128GCM,
@@ -31,6 +33,15 @@ algs_to_be_replaced = {
     'direct': CoseAlgorithm.DIRECT,
     "ECDH-ES-512": CoseAlgorithm.ECDH_ES_HKDF_512,
     "ECDH-ES": CoseAlgorithm.ECDH_ES_HKDF_256,
+    "ECDH-SS": CoseAlgorithm.ECDH_SS_HKDF_256,
+    "ECDH-SS-256": CoseAlgorithm.ECDH_SS_HKDF_256,
+    "ECDH-SS-512": CoseAlgorithm.ECDH_SS_HKDF_512,
+    "ECDH-SS-A192KW": CoseAlgorithm.ECDH_SS_A192KW,
+    "ECDH-ES-A256KW": CoseAlgorithm.ECDH_ES_A256KW,
+    "ECDH-SS-A128KW": CoseAlgorithm.ECDH_SS_A128KW,
+    "ECDH-ES-A192KW": CoseAlgorithm.ECDH_ES_A192KW,
+    "ECDH-ES-A128KW": CoseAlgorithm.ECDH_ES_A128KW,
+    "ECDH-SS-A256KW": CoseAlgorithm.ECDH_SS_A256KW,
 }
 
 params_to_be_replaced = {
@@ -81,9 +92,39 @@ def encrypt_test_cases(request):
 
         return test_input
 
+@pytest.fixture
+def x25519_direct_enc_test_cases(request):
+    test_input = json.load(open(request.param, 'r'))
+
+    if 'enveloped' in test_input['input']:
+        _fix_header_attribute_names(test_input['input']['enveloped'], 'protected')
+        _fix_header_algorithm_names(test_input['input']['enveloped'], 'protected')
+        _fix_header_algorithm_names(test_input['input']['enveloped'], 'unprotected')
+        _fix_header_attribute_names(test_input['input']['enveloped'], 'unprotected')
+
+        recipients = test_input['input']['enveloped']['recipients']
+        _fix_recipients(recipients)
+
+        return test_input
 
 @pytest.fixture
 def ecdh_direct_enc_test_cases(request):
+    test_input = json.load(open(request.param, 'r'))
+
+    if 'enveloped' in test_input['input']:
+        _fix_header_attribute_names(test_input['input']['enveloped'], 'protected')
+        _fix_header_algorithm_names(test_input['input']['enveloped'], 'protected')
+        _fix_header_algorithm_names(test_input['input']['enveloped'], 'unprotected')
+        _fix_header_attribute_names(test_input['input']['enveloped'], 'unprotected')
+
+        recipients = test_input['input']['enveloped']['recipients']
+        _fix_recipients(recipients)
+
+        return test_input
+
+
+@pytest.fixture
+def ecdh_wrap_enc_test_cases(request):
     test_input = json.load(open(request.param, 'r'))
 
     if 'enveloped' in test_input['input']:
@@ -126,7 +167,16 @@ def _fix_header_algorithm_names(data: dict, key) -> None:
     except KeyError:
         return
 
+    temp = None
+    if "epk" in header_dict:
+        _fix_key_object(header_dict, "epk")
+        temp = header_dict["epk"]
+        del header_dict["epk"]
+
     header_dict = {k: (v if v not in algs_to_be_replaced else algs_to_be_replaced[v]) for k, v in header_dict.items()}
+
+    if temp is not None:
+        header_dict[CoseHeaderParam.EPHEMERAL_KEY] = temp
     data[key] = header_dict
 
 
@@ -138,6 +188,7 @@ def _fix_header_attribute_names(data: dict, key) -> None:
 
     header_dict = {(k if k not in params_to_be_replaced else params_to_be_replaced[k]): v for k, v in
                    header_dict.items()}
+
     if CoseHeaderParam.KID in header_dict and type(header_dict[CoseHeaderParam.KID]) == str:
         header_dict[CoseHeaderParam.KID] = header_dict[CoseHeaderParam.KID].encode('utf-8')
     if CoseHeaderParam.PARTIAL_IV in header_dict and type(header_dict[CoseHeaderParam.PARTIAL_IV]) == str:
