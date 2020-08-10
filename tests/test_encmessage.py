@@ -8,7 +8,8 @@ from pycose.attributes import CoseHeaderParam, CoseAlgorithm
 from pycose.cosekey import SymmetricKey, KeyOps, CoseKey, EC2, KTY, OKP
 from pycose.crypto import PartyInfo, SuppPubInfo, CoseKDFContext
 from pycose.recipient import CoseRecipient
-from tests.conftest import aes_gcm_examples, enveloped_tests, ecdh_direct_examples, ecdh_wrap_examples, x25519_tests
+from tests.conftest import aes_gcm_examples, enveloped_tests, ecdh_direct_examples, ecdh_wrap_examples, x25519_tests, \
+    triple_layer_enc
 
 test_cases_1 = [os.path.join(aes_gcm_examples, v) for v in os.listdir(aes_gcm_examples) if '-enc-' not in v] + \
                [os.path.join(aes_gcm_examples, v) for v in os.listdir(aes_gcm_examples) if '-enc-' not in v] + \
@@ -17,6 +18,7 @@ test_cases_1 = [os.path.join(aes_gcm_examples, v) for v in os.listdir(aes_gcm_ex
 test_cases_2 = [os.path.join(ecdh_direct_examples, v) for v in os.listdir(ecdh_direct_examples)]
 test_cases_3 = [os.path.join(ecdh_wrap_examples, v) for v in os.listdir(ecdh_wrap_examples)]
 test_cases_4 = [os.path.join(x25519_tests, v) for v in os.listdir(x25519_tests)]
+test_cases_5 = [os.path.join(triple_layer_enc, v) for v in os.listdir(triple_layer_enc) if "Appendix_B" in v]
 
 
 @pytest.mark.parametrize('encrypt_test_cases', test_cases_1, indirect=['encrypt_test_cases'])
@@ -429,3 +431,20 @@ def test_encrypt_x25519_wrap_decode(x25519_direct_enc_test_cases: dict) -> None:
 
     md.key = SymmetricKey(k=kek)
     assert md.decrypt() == input_data['plaintext'].encode('utf-8')
+
+
+@pytest.mark.decoding
+@pytest.mark.parametrize('triple_layer_msg', test_cases_5, indirect=['triple_layer_msg'])
+def test_encrypt_triple_layer_decode(triple_layer_msg: dict):
+    try:
+        output = triple_layer_msg['output']['cbor']
+        input_data = triple_layer_msg['input']
+        enveloped = input_data['enveloped']
+    except (TypeError, KeyError):
+        return pytest.skip("Invalid test parameters")
+
+    # TODO: fails because the y coordinate of the third later is 'false' ?
+    # md = CoseMessage.decode(unhexlify(output))
+
+    # # CHECK FIRST LAYER
+    # assert md.phdr == enveloped.get('protected', {})

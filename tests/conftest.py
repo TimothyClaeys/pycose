@@ -17,6 +17,7 @@ enveloped_tests = os.path.join(path_examples, 'enveloped-tests')
 ecdh_direct_examples = os.path.join(path_examples, 'ecdh-direct-examples')
 ecdh_wrap_examples = os.path.join(path_examples, 'ecdh-wrap-examples')
 x25519_tests = os.path.join(path_examples, "X25519-tests")
+triple_layer_enc = os.path.join(path_examples, "RFC8152")
 
 algs_to_be_replaced = {
     'A128GCM': CoseAlgorithm.A128GCM,
@@ -92,6 +93,23 @@ def encrypt_test_cases(request):
 
         return test_input
 
+
+@pytest.fixture
+def triple_layer_msg(request):
+    test_case = json.load(open(request.param, 'r'))
+    test_input = test_case['input']["enveloped"]
+    _fix_header_attribute_names(test_input, 'protected')
+    _fix_header_attribute_names(test_input, 'unprotected')
+    _fix_header_algorithm_names(test_input, 'protected')
+    _fix_header_algorithm_names(test_input, 'unprotected')
+
+    recipients = test_input['recipients']
+    _fix_recipients(recipients)
+
+    test_case['input']['enveloped'] = test_input
+    return test_case
+
+
 @pytest.fixture
 def x25519_direct_enc_test_cases(request):
     test_input = json.load(open(request.param, 'r'))
@@ -106,6 +124,7 @@ def x25519_direct_enc_test_cases(request):
         _fix_recipients(recipients)
 
         return test_input
+
 
 @pytest.fixture
 def ecdh_direct_enc_test_cases(request):
