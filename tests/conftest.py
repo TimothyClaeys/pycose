@@ -2,24 +2,34 @@ import json
 import os
 import pathlib
 from binascii import unhexlify
+from typing import List
 
-import pytest
+from pytest import skip
 
 from pycose.attributes import CoseHeaderParam, CoseAlgorithm
 from pycose.cosekey import KTY, CoseEllipticCurves, CoseKey, SymmetricKey, EC2
 
 path_examples = os.path.join(pathlib.Path(__file__).parent.absolute(), 'examples')
 
-aes_ccm_examples = os.path.join(path_examples, 'aes-ccm-examples')
-aes_gcm_examples = os.path.join(path_examples, 'aes-gcm-examples')
-encrypted_tests = os.path.join(path_examples, 'encrypted-tests')
-enveloped_tests = os.path.join(path_examples, 'enveloped-tests')
-ecdh_direct_examples = os.path.join(path_examples, 'ecdh-direct-examples')
-ecdh_wrap_examples = os.path.join(path_examples, 'ecdh-wrap-examples')
-x25519_tests = os.path.join(path_examples, "X25519-tests")
-triple_layer_enc = os.path.join(path_examples, "RFC8152")
-
 mac0_test_vector_dir = os.path.join(path_examples, "mac0-tests")
+enc0_test_vector_dir = \
+    [
+        os.path.join(path_examples, 'aes-ccm-examples'),
+        os.path.join(path_examples, 'aes-gcm-examples'),
+        os.path.join(path_examples, 'encrypted-tests'),
+    ]
+
+enc_test_vector_dir = \
+    [
+        os.path.join(path_examples, 'aes-ccm-examples'),
+        os.path.join(path_examples, 'aes-gcm-examples'),
+        os.path.join(path_examples, 'enveloped-tests'),
+    ]
+
+ecdh_direct_test_vector_dir = os.path.join(path_examples, 'ecdh-direct-examples')
+ecdh_wrap_test_vector_dir = os.path.join(path_examples, 'ecdh-wrap-examples')
+x25519_direct_test_vector_dir = os.path.join(path_examples, 'X25519-tests')
+triple_layer_enc_test_vector_dir = os.path.join(path_examples, 'RFC8152')
 
 algs_to_be_replaced = {
     'A128GCM': CoseAlgorithm.A128GCM,
@@ -80,131 +90,110 @@ key_attr_to_be_replaced = {
 }
 
 
-@pytest.fixture
-def protected_header(request):
-    test_case = json.load(open(request.param, 'r'))
-    _fix_header_algorithm_names(test_case['input']['enveloped'], 'protected')
-    return test_case['input']['enveloped']['protected']
+def pytest_generate_tests(metafunc):
+    if "mac0_test_input" in metafunc.fixturenames:
+        test_suite = mac0_tests()
+        ids = [test['title'] for test in test_suite]
+        metafunc.parametrize("mac0_test_input", test_suite, ids=ids)
+    if "encrypt0_test_input" in metafunc.fixturenames:
+        test_suite = encrypt0_tests()
+        ids = [test['title'] for test in test_suite]
+        metafunc.parametrize("encrypt0_test_input", test_suite, ids=ids)
+    if "encrypt_test_input" in metafunc.fixturenames:
+        test_suite = encrypt_tests()
+        ids = [test['title'] for test in test_suite]
+        metafunc.parametrize("encrypt_test_input", test_suite, ids=ids)
+    if "encrypt_ecdh_direct_test_input" in metafunc.fixturenames:
+        test_suite = encrypt_ecdh_direct_tests()
+        ids = [test['title'] for test in test_suite]
+        metafunc.parametrize("encrypt_ecdh_direct_test_input", test_suite, ids=ids)
+    if "encrypt_ecdh_wrap_test_input" in metafunc.fixturenames:
+        test_suite = encrypt_ecdh_wrap_tests()
+        ids = [test['title'] for test in test_suite]
+        metafunc.parametrize("encrypt_ecdh_wrap_test_input", test_suite, ids=ids)
+    if "encrypt_x25519_direct_test_input" in metafunc.fixturenames:
+        test_suite = encrypt_x25519_direct_tests()
+        ids = [test['title'] for test in test_suite]
+        metafunc.parametrize("encrypt_x25519_direct_test_input", test_suite, ids=ids)
+    if "encrypt_triple_layer_test_input" in metafunc.fixturenames:
+        test_suite = encrypt_x25519_direct_tests()
+        ids = [test['title'] for test in test_suite]
+        metafunc.parametrize("encrypt_triple_layer_test_input", test_suite, ids=ids)
+
+
+def generic_test_setup(generic_test_input: dict) -> tuple:
+    try:
+        test_input = generic_test_input['input']
+        test_output = generic_test_input['output']['cbor']
+        test_intermediate = generic_test_input['intermediates']
+    except (KeyError, TypeError):
+        return skip("Invalid test input")
+
+    if 'fail' in generic_test_input or "failures" in test_input:
+        fail = True
+    else:
+        fail = False
+
+    return test_input, test_output, test_intermediate, fail
 
 
 def mac0_tests():
-    test_files = [v for v in os.listdir(mac0_test_vector_dir)]
+    test_files = [os.path.join(path_examples, mac0_test_vector_dir, v) for v in os.listdir(mac0_test_vector_dir)]
 
+    return _build_test_cases('mac0', test_files)
+
+
+def encrypt0_tests():
+    test_files = [os.path.join(path_examples, td, file) for td in enc0_test_vector_dir for file in os.listdir(td)]
+    return _build_test_cases('encrypted', test_files)
+
+
+def encrypt_tests():
+    test_files = [os.path.join(path_examples, td, file) for td in enc_test_vector_dir for file in os.listdir(td)]
+    return _build_test_cases('enveloped', test_files)
+
+
+def encrypt_ecdh_direct_tests():
+    test_files = [os.path.join(path_examples, ecdh_direct_test_vector_dir, file) for file in
+                  os.listdir(ecdh_direct_test_vector_dir)]
+    return _build_test_cases('enveloped', test_files)
+
+
+def encrypt_ecdh_wrap_tests():
+    test_files = [os.path.join(path_examples, ecdh_wrap_test_vector_dir, file) for file in
+                  os.listdir(ecdh_wrap_test_vector_dir)]
+    return _build_test_cases('enveloped', test_files)
+
+
+def encrypt_x25519_direct_tests():
+    test_files = [os.path.join(path_examples, x25519_direct_test_vector_dir, file) for file in
+                  os.listdir(x25519_direct_test_vector_dir)]
+    return _build_test_cases('enveloped', test_files)
+
+
+def encrypt_triple_layer_tests():
+    test_files = [os.path.join(path_examples, triple_layer_enc_test_vector_dir, file) for file in
+                  os.listdir(triple_layer_enc_test_vector_dir)]
+    return _build_test_cases('enveloped', test_files)
+
+
+def _build_test_cases(key: str, test_files: List[str]):
     fixed_test_cases = []
 
     for file in test_files:
-        test_case = json.load(open(os.path.join(mac0_test_vector_dir, file), 'r'))
+        test_case = json.load(open(file, 'r'))
+        if key in test_case['input']:
+            _fix_header_attribute_names(test_case['input'][key], 'protected')
+            _fix_header_attribute_names(test_case['input'][key], 'unprotected')
+            _fix_header_algorithm_names(test_case['input'][key], 'protected')
+            _fix_header_algorithm_names(test_case['input'][key], 'unprotected')
 
-        _fix_header_attribute_names(test_case['input']['mac0'], 'protected')
-        _fix_header_attribute_names(test_case['input']['mac0'], 'unprotected')
-        _fix_header_algorithm_names(test_case['input']['mac0'], 'protected')
-        _fix_header_algorithm_names(test_case['input']['mac0'], 'unprotected')
+            recipients = test_case['input'][key]['recipients']
+            _fix_recipients(recipients)
 
-        recipients = test_case['input']['mac0']['recipients']
-        _fix_recipients(recipients)
-
-        fixed_test_cases.append(test_case)
+            fixed_test_cases.append(test_case)
 
     return fixed_test_cases
-
-
-def pytest_generate_tests(metafunc):
-    if "mac0_test_input" in metafunc.fixturenames:
-        metafunc.parametrize("mac0_test_input", mac0_tests())
-
-
-@pytest.fixture
-def encrypt0_test_cases(request):
-    test_input = json.load(open(request.param, 'r'))
-    if 'encrypted' in test_input['input']:
-        _fix_header_attribute_names(test_input['input']['encrypted'], 'protected')
-        _fix_header_attribute_names(test_input['input']['encrypted'], 'unprotected')
-        _fix_header_algorithm_names(test_input['input']['encrypted'], 'protected')
-        _fix_header_algorithm_names(test_input['input']['encrypted'], 'unprotected')
-
-        recipients = test_input['input']['encrypted']['recipients']
-        _fix_recipients(recipients)
-
-        return test_input
-
-
-@pytest.fixture
-def encrypt_test_cases(request):
-    test_input = json.load(open(request.param, 'r'))
-    if 'enveloped' in test_input['input']:
-        _fix_header_attribute_names(test_input['input']['enveloped'], 'protected')
-        _fix_header_attribute_names(test_input['input']['enveloped'], 'unprotected')
-        _fix_header_algorithm_names(test_input['input']['enveloped'], 'protected')
-        _fix_header_algorithm_names(test_input['input']['enveloped'], 'unprotected')
-
-        recipients = test_input['input']['enveloped']['recipients']
-        _fix_recipients(recipients)
-
-        return test_input
-
-
-@pytest.fixture
-def triple_layer_msg(request):
-    test_case = json.load(open(request.param, 'r'))
-    test_input = test_case['input']["enveloped"]
-    _fix_header_attribute_names(test_input, 'protected')
-    _fix_header_attribute_names(test_input, 'unprotected')
-    _fix_header_algorithm_names(test_input, 'protected')
-    _fix_header_algorithm_names(test_input, 'unprotected')
-
-    recipients = test_input['recipients']
-    _fix_recipients(recipients)
-
-    test_case['input']['enveloped'] = test_input
-    return test_case
-
-
-@pytest.fixture
-def x25519_direct_enc_test_cases(request):
-    test_input = json.load(open(request.param, 'r'))
-
-    if 'enveloped' in test_input['input']:
-        _fix_header_attribute_names(test_input['input']['enveloped'], 'protected')
-        _fix_header_algorithm_names(test_input['input']['enveloped'], 'protected')
-        _fix_header_algorithm_names(test_input['input']['enveloped'], 'unprotected')
-        _fix_header_attribute_names(test_input['input']['enveloped'], 'unprotected')
-
-        recipients = test_input['input']['enveloped']['recipients']
-        _fix_recipients(recipients)
-
-        return test_input
-
-
-@pytest.fixture
-def ecdh_direct_enc_test_cases(request):
-    test_input = json.load(open(request.param, 'r'))
-
-    if 'enveloped' in test_input['input']:
-        _fix_header_attribute_names(test_input['input']['enveloped'], 'protected')
-        _fix_header_algorithm_names(test_input['input']['enveloped'], 'protected')
-        _fix_header_algorithm_names(test_input['input']['enveloped'], 'unprotected')
-        _fix_header_attribute_names(test_input['input']['enveloped'], 'unprotected')
-
-        recipients = test_input['input']['enveloped']['recipients']
-        _fix_recipients(recipients)
-
-        return test_input
-
-
-@pytest.fixture
-def ecdh_wrap_enc_test_cases(request):
-    test_input = json.load(open(request.param, 'r'))
-
-    if 'enveloped' in test_input['input']:
-        _fix_header_attribute_names(test_input['input']['enveloped'], 'protected')
-        _fix_header_algorithm_names(test_input['input']['enveloped'], 'protected')
-        _fix_header_algorithm_names(test_input['input']['enveloped'], 'unprotected')
-        _fix_header_attribute_names(test_input['input']['enveloped'], 'unprotected')
-
-        recipients = test_input['input']['enveloped']['recipients']
-        _fix_recipients(recipients)
-
-        return test_input
 
 
 def _fix_recipients(recipients: dict) -> None:

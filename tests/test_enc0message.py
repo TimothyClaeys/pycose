@@ -1,54 +1,52 @@
 import os
 from binascii import unhexlify, hexlify
 
-import pytest
-from pytest import mark
+from pytest import mark, fixture, skip
 
 from pycose import CoseMessage
 from pycose.attributes import CoseHeaderParam, CoseAlgorithm
 from pycose.cosekey import SymmetricKey, CoseKey, KeyOps
 from pycose.enc0message import Enc0Message
-from tests.conftest import aes_ccm_examples, aes_gcm_examples, encrypted_tests
+from tests.conftest import generic_test_setup
 
-test_cases = [os.path.join(aes_ccm_examples, v) for v in os.listdir(aes_ccm_examples) if '-enc-' in v] + \
-             [os.path.join(aes_gcm_examples, v) for v in os.listdir(aes_gcm_examples) if '-enc-' in v] + \
-             [os.path.join(encrypted_tests, v) for v in os.listdir(encrypted_tests)]
+
+@fixture
+def setup_encrypt0_tests(encrypt0_test_input: dict) -> tuple:
+    return generic_test_setup(encrypt0_test_input)
 
 
 @mark.encoding
-@mark.parametrize('encrypt0_test_cases', test_cases, indirect=['encrypt0_test_cases'])
-def test_encrypt0_encoding(encrypt0_test_cases: dict) -> None:
-    try:
-        input_data = encrypt0_test_cases['input']
-    except (TypeError, KeyError):
-        return pytest.skip("Invalid parameters")
+def test_encrypt0_encoding(setup_encrypt0_tests: tuple) -> None:
+    test_input, test_output, test_intermediate, fail = setup_encrypt0_tests
 
-    if 'fail' in encrypt0_test_cases or "failures" in input_data:
-        fail = True
-    else:
-        fail = False
+    # initialize a COSE_Encrypt0 message
+    enc0 = Enc0Message(
+        phdr=test_input['encrypted'].get('protected', {}),
+        uhdr=test_input['encrypted'].get('unprotected', {}),
+        payload=test_input['plaintext'].encode('utf-8'),
+        external_aad=unhexlify(test_input['encrypted'].get("external", b''))
+    )
 
-    # create message and set headers
-    m = Enc0Message(payload=input_data['plaintext'].encode('utf-8'))
-    m.phdr = input_data.get('encrypted').get('protected', {})
-    m.uhdr = input_data.get('encrypted').get('unprotected', {})
-    if 'rng_stream' in input_data:
-        m.uhdr_update({CoseHeaderParam.IV: unhexlify(input_data['rng_stream'][0])})
+    if 'rng_stream' in test_input:
+        enc0.uhdr_update({CoseHeaderParam.IV: unhexlify(test_input['rng_stream'][0])})
 
-    # check for external data and verify internal _enc_structure
-    m.external_aad = unhexlify(input_data.get('encrypted').get('external', b''))
-    assert m._enc_structure == unhexlify(encrypt0_test_cases['intermediates']['AAD_hex'])
+    # verify internal _enc_structure
+    assert enc0._enc_structure == unhexlify(test_intermediate['AAD_hex'])
 
     # set up key data and verify CEK
-    key_data = input_data.get('encrypted').get('recipients')[0].get('key')
-    m.key = SymmetricKey(k=CoseKey.base64decode(key_data[SymmetricKey.SymPrm.K]))
-    assert m.key_bytes == unhexlify(encrypt0_test_cases.get('intermediates').get('CEK_hex'))
+    key = SymmetricKey(
+        k=CoseKey.base64decode(test_input["encrypted"]["recipients"][0]["key"][SymmetricKey.SymPrm.K]),
+        kid=test_input['encrypted']['recipients'][0]["key"][CoseKey.Common.KID],
+    )
+
+    enc0.key = key
+    assert enc0.key_bytes == unhexlify(test_intermediate['CEK_hex'])
 
     # verify encoding (with automatic encryption)
     if fail:
-        assert m.encode(encrypt=True) != unhexlify(encrypt0_test_cases["output"]["cbor"])
+        assert enc0.encode(encrypt=True) != unhexlify(test_output)
     else:
-        assert m.encode(encrypt=True) == unhexlify(encrypt0_test_cases["output"]["cbor"])
+        assert enc0.encode(encrypt=True) == unhexlify(test_output)
 
 
 @mark.parametrize("phdr, uhdr, alg, key1, key2, nonce, expected",
@@ -73,7 +71,7 @@ def test_encrypt0_encoding(encrypt0_test_cases: dict) -> None:
                        None,
                        unhexlify(b'89F52F65A1C580933B5261A72F'),
                        b'6899DA0A132BD2D2B9B10915743EE1F7B92A4680E7C51BDBC1B320EA',),
-                  ]
+                  ], ids=['standalone_encryption_1', 'standalone_encryption_2']
                   )
 def test_encrypt0_standalone_encryption(phdr, uhdr, alg, key1, key2, nonce, expected):
     m = Enc0Message(phdr, uhdr, b'This is the content.')
@@ -88,54 +86,49 @@ def test_encrypt0_standalone_encryption(phdr, uhdr, alg, key1, key2, nonce, expe
 
 
 @mark.decoding
-@mark.parametrize('encrypt0_test_cases', test_cases, indirect=['encrypt0_test_cases'])
-def test_encrypt0_decoding(encrypt0_test_cases: dict) -> None:
-    try:
-        output_data = encrypt0_test_cases['output']
-        input_data = encrypt0_test_cases['input']
-    except (TypeError, KeyError):
-        return pytest.skip("Invalid parameters")
+def test_encrypt0_decoding(setup_encrypt0_tests: tuple) -> None:
+    test_input, test_output, test_intermediate, fail = setup_encrypt0_tests
 
-    if 'fail' in encrypt0_test_cases or "failures" in input_data:
-        pytest.skip("Invalid parameters")
+    if fail:
+        skip("invalid test input")
 
     # parse initial message
-    msg = CoseMessage.decode(unhexlify(output_data['cbor']))
+    cose_msg = CoseMessage.decode(unhexlify(test_output))
 
     # verify parsed protected header
-    assert msg.phdr == input_data.get('encrypted').get('protected', {})
+    assert cose_msg.phdr == test_input['encrypted'].get('protected', {})
 
     # verify parsed unprotected header
-    unprotected = input_data.get('encrypted').get('unprotected', {})
-    unprotected.update({} if input_data.get('rng_stream') is None else {
-        CoseHeaderParam.IV: unhexlify(input_data.get('rng_stream')[0].encode('utf-8'))})
-    assert msg.uhdr == unprotected
+    unprotected = test_input['encrypted'].get('unprotected', {})
+    unprotected.update({} if test_input.get('rng_stream') is None else {
+        CoseHeaderParam.IV: unhexlify(test_input.get('rng_stream')[0].encode('utf-8'))})
+    assert cose_msg.uhdr == unprotected
 
     # prepare and verify pre-shared key
-    key = input_data.get('encrypted').get("recipients")[0].get("key")
     key = SymmetricKey(
-        kid=key[CoseKey.Common.KID],
-        key_ops=KeyOps.DECRYPT,
-        k=CoseKey.base64decode(key[SymmetricKey.SymPrm.K]))
-    assert key.key_bytes == unhexlify(encrypt0_test_cases.get('intermediates').get('CEK_hex'))
+        k=CoseKey.base64decode(test_input["encrypted"]["recipients"][0]["key"][SymmetricKey.SymPrm.K]),
+        kid=test_input['encrypted']['recipients'][0]["key"][CoseKey.Common.KID])
+
+    cose_msg.key = key
+    assert cose_msg.key_bytes == unhexlify(test_intermediate['CEK_hex'])
 
     # look for external data and verify internal enc_structure
-    msg.external_aad = unhexlify(input_data.get('encrypted').get('external', b''))
-    assert msg._enc_structure == unhexlify(encrypt0_test_cases.get('intermediates').get('AAD_hex'))
+    cose_msg.external_aad = unhexlify(test_input['encrypted'].get('external', b''))
+    assert cose_msg._enc_structure == unhexlify(test_intermediate['AAD_hex'])
 
     # (1) verify decryption
-    nonce = unhexlify(input_data.get('rng_stream')[0].encode('utf-8'))
-    assert msg.decrypt(nonce=nonce, key=key) == input_data.get('plaintext', b'').encode('utf-8')
+    nonce = unhexlify(test_input['rng_stream'][0].encode('utf-8'))
+    assert cose_msg.decrypt(nonce=nonce, key=key) == test_input['plaintext'].encode('utf-8')
 
     # (2) verify decryption
-    assert msg.decrypt(key=key) == input_data.get('plaintext', b'').encode('utf-8')
+    assert cose_msg.decrypt(key=key) == test_input['plaintext'].encode('utf-8')
 
     # (3) verify decryption
-    msg.key = key
-    assert msg.decrypt() == input_data.get('plaintext', b'').encode('utf-8')
+    cose_msg.key = key
+    assert cose_msg.decrypt() == test_input['plaintext'].encode('utf-8')
 
     # re-encode and verify we are back where we started
-    assert msg.encode(encrypt=False) == unhexlify(output_data['cbor'])
+    assert cose_msg.encode(encrypt=False) == unhexlify(test_output)
 
 
 @mark.parametrize("phdr, uhdr, payload, key",
@@ -152,7 +145,7 @@ def test_encrypt0_decoding(encrypt0_test_cases: dict) -> None:
                        {CoseHeaderParam.IV: unhexlify(b'89F52F65A1C580933B5261A72F')},
                        os.urandom(100),
                        SymmetricKey(kid=b'you_know', k=os.urandom(16)))
-                  ])
+                  ], ids=['test_encode_decode_1', 'test_encode_decode_2', 'test_encode_decode_3'])
 def test_encode_decode_encrypt0(phdr, uhdr, payload, key):
     # create and encode a message
     original = Enc0Message(phdr, uhdr, payload)

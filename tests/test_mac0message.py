@@ -1,29 +1,19 @@
 from binascii import unhexlify
 
-from pytest import skip, fixture
+from pytest import skip, fixture, mark
 
 from pycose import CoseMessage
 from pycose.cosekey import SymmetricKey, CoseKey
 from pycose.mac0message import Mac0Message
+from tests.conftest import generic_test_setup
 
 
 @fixture
 def setup_mac0_tests(mac0_test_input: dict) -> tuple:
-    try:
-        test_input = mac0_test_input['input']
-        test_output = mac0_test_input['output']['cbor']
-        test_intermediate = mac0_test_input['intermediates']
-    except (KeyError, TypeError):
-        return skip("Invalid test input")
-
-    if 'fail' in mac0_test_input or "failures" in test_input:
-        fail = True
-    else:
-        fail = False
-
-    return test_input, test_output, test_intermediate, fail
+    return generic_test_setup(mac0_test_input)
 
 
+@mark.decoding
 def test_mac0_encoding(setup_mac0_tests: tuple) -> None:
     test_input, test_output, test_intermediate, fail = setup_mac0_tests
 
@@ -75,4 +65,3 @@ def test_mac0_decoding(setup_mac0_tests: tuple) -> None:
     assert key.key_bytes == unhexlify(test_intermediate["CEK_hex"])
 
     assert cose_msg.verify_auth_tag()
-

@@ -31,7 +31,7 @@ from pycose.cosekey import EC2, EllipticCurveKeys, CoseKey, KTY
                                -3: unhexlify(b'0F38495E0CFD448E93B1E366C047CBA0D567B3C526BCE36C3F3403A29D9D2A8A'),
                                1: 2}
                               )
-                         ])
+                         ], ids=['test_EC2_key_encoding_' + str(i) for i in range(3)])
 def test_cosekey_create(crv, x, y, expected):
     key = EC2(crv=crv, x=x, y=y)
     assert sorted(key.encode('x', 'y', 'crv')) == sorted(expected)
@@ -49,8 +49,7 @@ def test_cosekey_create(crv, x, y, expected):
                                    b'edcbd809c754db6582c16d6d65747c8aecc92d619c778eb17f13b55c9b3e48f5'),
                                EC2.EC2Prm.Y: unhexlify(
                                    b'0f38495e0cfd448e93b1e366c047cba0d567b3c526bce36c3f3403a29d9d2a8a')}
-                              )
-                         ])
+                              )], ids=['test_EC2_key_decoding_' + str(i) for i in range(1)])
 def test_cosekey_decode(encoded_key_obj, expected):
     key = CoseKey.decode(encoded_key_obj)
     assert key == expected

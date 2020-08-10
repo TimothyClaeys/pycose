@@ -37,7 +37,7 @@ from pycose.recipient import CoseRecipient
                             4: unhexlify(b'6D65726961646F632E6272616E64796275636B406275636B6C616E642E6578616D706C65')},
                         b'']
                        )
-                  ])
+                  ], ids=['test_ecdh_direct_key_derivation_recipient'])
 def test_kek_ecdh_direct_recipient(phdr, uhdr, alg, peer_key, eph_private_key, encoded_phdr, encoded_uhdr, cek, rcpt):
     r = CoseRecipient(phdr=phdr, uhdr=uhdr)
 
