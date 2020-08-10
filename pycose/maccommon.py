@@ -1,80 +1,98 @@
 import abc
+from typing import List, Optional, Tuple
 
 import cbor2
 
 from pycose import cosemessage, crypto
+from pycose.attributes import CoseAlgorithm, CoseHeaderParam
+from pycose.cosekey import SymmetricKey
+from pycose.recipient import CoseRecipient
 
 
 class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
     @classmethod
     def from_cose_obj(cls, cose_obj):
-        msg = super(MacCommon, cls).from_cose_obj(cose_obj)
+        msg = super().from_cose_obj(cose_obj)
         msg.auth_tag = cose_obj.pop(0)
+
         try:
-            msg.recipients = cose_obj.pop(0)
+            msg.recipients = [CoseRecipient.from_recipient_obj(r) for r in cose_obj.pop(0)]
         except (IndexError, ValueError):
             msg.recipients = None
         return msg
 
-    def __init__(self, phdr, uhdr, payload, key=None):
-        super(MacCommon, self).__init__(phdr, uhdr, payload)
-        self._auth_tag = None
-        self._key = key
+    def __init__(self,
+                 phdr: dict = None,
+                 uhdr: dict = None,
+                 payload: bytes = b'',
+                 external_aad: bytes = b'',
+                 key: SymmetricKey = None,
+                 recipients: Optional[List[CoseRecipient]] = None):
+        if phdr is None:
+            phdr = {}
+        if uhdr is None:
+            uhdr = {}
 
-    @property
-    def key(self):
-        return self._key
+        super().__init__(phdr, uhdr, payload, external_aad, key)
 
-    @key.setter
-    def key(self, new_value):
-        if isinstance(new_value, bytes):
-            self._key = new_value
+        self.auth_tag = b''
+
+        if recipients is None:
+            self.recipients = []
         else:
-            raise ValueError("Key must be of type bytes.")
+            self.recipients = recipients
 
     @property
-    def auth_tag(self):
-        return self._auth_tag
+    def key_bytes(self) -> bytes:
+        if self.key is None:
+            raise AttributeError('COSE_Key is not set')
+        else:
+            return self.key.key_bytes
 
-    def verify_auth_tag(self, alg):
-        """Verifies the authentication tag of a received message."""
-        to_digest = self._mac_structure
-        return crypto.verify_tag_wrapper(self.key, self.auth_tag, to_digest, alg)
+    def verify_auth_tag(self, alg: Optional[CoseAlgorithm] = None, key: Optional[SymmetricKey] = None):
+        """ Verifies the authentication tag of a received message. """
 
-    def compute_auth_tag(self, alg):
-        """Wrapper function to access the cryptographic primitives."""
         to_digest = self._mac_structure
-        self._auth_tag = crypto.calc_tag_wrapper(self.key, to_digest, alg)
+        _alg, _key = self._get_crypt_params(alg, key)
+        return crypto.verify_tag_wrapper(_key, self.auth_tag, to_digest, _alg)
+
+    def compute_auth_tag(self, alg: Optional[CoseAlgorithm] = None, key: Optional[SymmetricKey] = None):
+        """ Wrapper function to access the cryptographic primitives. """
+
+        _alg, _key = self._get_crypt_params(alg, key)
+        return crypto.calc_tag_wrapper(_key, self._mac_structure, _alg)
 
     @abc.abstractmethod
-    def encode(self):
+    def encode(self, tagged: bool = True):
         raise NotImplementedError("Cannot instantiate abstract class MacCommon")
 
     @property
-    def _mac_structure(self):
-        """Create the mac_structure that needs to be MAC'ed."""
-
-        mac_structure = list()
-        mac_structure.append(self.context)
+    def _mac_structure(self) -> bytes:
+        """ Create the mac_structure that needs to be MAC'ed. """
 
         # add empty_or_serialized_map
-        if len(self.phdr) == 0:
-            mac_structure.append(bytes())
-        else:
-            mac_structure.append(self.encoded_protected_header)
-
-        if self.external_aad is None:
-            mac_structure.append(bytes())
-        else:
-            mac_structure.append(self.external_aad)
+        mac_structure = [self.context]
+        mac_structure = self._base_structure(mac_structure)
 
         if self.payload is None:
             raise ValueError("Payload cannot be empty for tag computation")
 
-        if isinstance(self.payload, str):
-            mac_structure.append(bytes(self.payload, 'utf-8'))
-        elif isinstance(self.payload, bytes):
-            mac_structure.append(self.payload)
+        mac_structure.append(self.payload)
+        return cbor2.dumps(mac_structure)
 
-        to_be_maced = cbor2.dumps(mac_structure)
-        return to_be_maced
+    def _get_crypt_params(self,
+                          alg: Optional[CoseAlgorithm],
+                          key: Optional[SymmetricKey]) -> Tuple[CoseAlgorithm, bytes]:
+        # if nothing is overridden by the function parameters, search in COSE headers
+        _alg = alg if alg is not None else self.phdr.get(CoseHeaderParam.ALG)
+        _alg = _alg if _alg is not None else self.uhdr.get(CoseHeaderParam.ALG)
+
+        if _alg is None:
+            raise AttributeError('No algorithm specified.')
+
+        try:
+            _key = key.key_bytes if key is not None else self.key_bytes
+        except AttributeError:
+            raise AttributeError("No key specified.")
+
+        return _alg, _key
