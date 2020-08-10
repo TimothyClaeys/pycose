@@ -67,16 +67,33 @@ class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
         self.external_aad = external_aad
         self.key = key
 
+    @property
+    def external_aad(self) -> bytes:
+        return self._external_aad
+
+    @external_aad.setter
+    def external_aad(self, new_external_aad: bytes) -> None:
+        if type(new_external_aad) is not bytes:
+            raise TypeError("external_aad must be of type 'bytes'")
+        self._external_aad = new_external_aad
+
+    @property
+    def key(self) -> Optional[Type[CoseKey]]:
+        return self._key
+
+    @key.setter
+    def key(self, new_key: Optional[Type[CoseKey]]) -> None:
+        if not issubclass(type(new_key), CoseKey) and new_key is not None:
+            raise TypeError("key must be of type 'bytes'")
+        self._key = new_key
+
     def _base_structure(self, structure: list) -> list:
         if len(self.phdr) == 0:
             structure.append(bytes())
         else:
             structure.append(self.encode_phdr())
 
-        if self.external_aad is None:
-            structure.append(bytes())
-        else:
-            structure.append(self.external_aad)
+        structure.append(self._external_aad)
 
         return structure
 
