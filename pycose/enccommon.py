@@ -43,16 +43,7 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
     def _enc_structure(self) -> bytes:
         enc_structure = [self.context]
 
-        if len(self.phdr) == 0:
-            enc_structure.append(bytes())
-        else:
-            enc_structure.append(self.encode_phdr())
-
-        if self.external_aad is None:
-            enc_structure.append(bytes())
-        else:
-            enc_structure.append(self.external_aad)
-
+        enc_structure = self._base_structure(enc_structure)
         aad = cbor2.dumps(enc_structure)
         return aad
 

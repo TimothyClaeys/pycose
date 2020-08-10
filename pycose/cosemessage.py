@@ -1,5 +1,5 @@
 import abc
-from typing import Type, Union, Optional
+from typing import Type, Optional
 
 import cbor2
 
@@ -66,6 +66,19 @@ class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
         super(CoseMessage, self).__init__(phdr, uhdr, payload)
         self.external_aad = external_aad
         self.key = key
+
+    def _base_structure(self, structure: list) -> list:
+        if len(self.phdr) == 0:
+            structure.append(bytes())
+        else:
+            structure.append(self.encode_phdr())
+
+        if self.external_aad is None:
+            structure.append(bytes())
+        else:
+            structure.append(self.external_aad)
+
+        return structure
 
     @abc.abstractmethod
     def encode(self, tagged: bool = True):
