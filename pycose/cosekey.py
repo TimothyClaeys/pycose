@@ -192,7 +192,8 @@ class EC2(CoseKey):
                 if k == cls.EC2Prm.CRV:
                     v = EllipticCurveKeys(v)
                 else:
-                    v = hexlify(v)
+                    # store key coordinates as bytes
+                    v = v
                 key_obj[cls.EC2Prm(k)] = v
 
         return key_obj
@@ -270,7 +271,8 @@ class OKP(CoseKey):
                 if k == cls.OKPPrm.CRV:
                     v = EllipticCurveKeys(v)
                 else:
-                    v = hexlify(v)
+                    # store key coordinates as bytes
+                    v = v
                 key_obj[cls.OKPPrm(k)] = v
 
         return key_obj

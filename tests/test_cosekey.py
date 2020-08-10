@@ -43,11 +43,12 @@ def test_cosekey_create(crv, x, y, expected):
                                -2: unhexlify(b'EDCBD809C754DB6582C16D6D65747C8AECC92D619C778EB17F13B55C9B3E48F5'),
                                -3: unhexlify(b'0F38495E0CFD448E93B1E366C047CBA0D567B3C526BCE36C3F3403A29D9D2A8A'),
                                1: 2},
-                              {
-                                  CoseKey.Common.KTY: KTY.EC2,
-                                  EC2.EC2Prm.CRV: EllipticCurveKeys.P_256,
-                                  EC2.EC2Prm.X: b'edcbd809c754db6582c16d6d65747c8aecc92d619c778eb17f13b55c9b3e48f5',
-                                  EC2.EC2Prm.Y: b'0f38495e0cfd448e93b1e366c047cba0d567b3c526bce36c3f3403a29d9d2a8a'}
+                              {CoseKey.Common.KTY: KTY.EC2,
+                               EC2.EC2Prm.CRV: EllipticCurveKeys.P_256,
+                               EC2.EC2Prm.X: unhexlify(
+                                   b'edcbd809c754db6582c16d6d65747c8aecc92d619c778eb17f13b55c9b3e48f5'),
+                               EC2.EC2Prm.Y: unhexlify(
+                                   b'0f38495e0cfd448e93b1e366c047cba0d567b3c526bce36c3f3403a29d9d2a8a')}
                               )
                          ])
 def test_cosekey_decode(encoded_key_obj, expected):

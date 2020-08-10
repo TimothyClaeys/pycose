@@ -1,9 +1,10 @@
-from typing import Dict, Union
+import abc
+from typing import Dict, Union, Any
 
 import cbor2
-import abc
 
 from pycose.attributes import CoseHeaderParam as Hp, CoseAlgorithm as Alg
+from pycose.cosekey import CoseKey
 
 
 class BasicCoseStructure(metaclass=abc.ABCMeta):
@@ -57,9 +58,20 @@ class BasicCoseStructure(metaclass=abc.ABCMeta):
         return self._uhdr
 
     @classmethod
-    def parse_cose_hdr(cls, hdr: Dict[int, Union[int, bytes]]) -> Dict[Union[Hp, bytes], Union[Alg, bytes]]:
-        return {(Hp(k) if Hp.has_value(k) else k): (Alg(v) if Hp.has_value(k) and Hp(k) == Hp.ALG else v)
-                for k, v in hdr.items()}
+    def parse_cose_hdr(cls, hdr: Dict[Union[Hp, bytes], Any]) -> Dict[Union[Hp, bytes], Any]:
+        return {(Hp(k) if Hp.has_value(k) else k): cls._parse_hdr_value(k, v) for k, v in hdr.items()}
+
+    @classmethod
+    def _parse_hdr_value(cls, key: Union[Hp, bytes], value: Union[Hp, bytes, dict]) -> Any:
+        if not Hp.has_value(key):
+            return value
+
+        if key == Hp.ALG:
+            return Alg(value)
+        elif key == Hp.EPHEMERAL_KEY:
+            return CoseKey.decode(value)
+        else:
+            return value
 
     @abc.abstractmethod
     def __repr__(self) -> str:
