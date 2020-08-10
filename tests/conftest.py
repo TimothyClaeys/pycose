@@ -6,7 +6,7 @@ from binascii import unhexlify
 import pytest
 
 from pycose.attributes import CoseHeaderParam, CoseAlgorithm
-from pycose.cosekey import KTY, CoseEllipticCurves
+from pycose.cosekey import KTY, CoseEllipticCurves, CoseKey, SymmetricKey, EC2
 
 path_examples = os.path.join(pathlib.Path(__file__).parent.absolute(), 'examples')
 
@@ -52,12 +52,26 @@ params_to_be_replaced = {
     'partialIV_hex': CoseHeaderParam.PARTIAL_IV,
 }
 
+key_param_to_be_replaced = {
+    'kty': CoseKey.Common.KTY,
+    'k': SymmetricKey.SymPrm.K,
+    'x': EC2.EC2Prm.X,
+    'x_hex': EC2.EC2Prm.X,
+    'y_hex': EC2.EC2Prm.Y,
+    'd_hex': EC2.EC2Prm.D,
+    'y': EC2.EC2Prm.Y,
+    'd': EC2.EC2Prm.D,
+    'crv': EC2.EC2Prm.CRV,
+    'kid': CoseKey.Common.KID
+}
+
 key_attr_to_be_replaced = {
     "EC": KTY.EC2,
     "OKP": KTY.OKP,
     "P-256": CoseEllipticCurves.P_256,
     "P-384": CoseEllipticCurves.P_384,
     "P-521": CoseEllipticCurves.P_521,
+    "oct": KTY.SYMMETRIC,
 }
 
 
@@ -76,6 +90,10 @@ def encrypt0_test_cases(request):
         _fix_header_attribute_names(test_input['input']['encrypted'], 'unprotected')
         _fix_header_algorithm_names(test_input['input']['encrypted'], 'protected')
         _fix_header_algorithm_names(test_input['input']['encrypted'], 'unprotected')
+
+        recipients = test_input['input']['encrypted']['recipients']
+        _fix_recipients(recipients)
+
         return test_input
 
 
@@ -176,7 +194,10 @@ def _fix_recipients(recipients: dict) -> None:
 
 
 def _fix_key_object(data: dict, key: str) -> None:
-    updated = {k: key_attr_to_be_replaced[v] if v in key_attr_to_be_replaced else v for k, v in data[key].items()}
+    updated = {
+        (key_param_to_be_replaced[k] if k in key_param_to_be_replaced else k):
+            key_attr_to_be_replaced[v] if v in key_attr_to_be_replaced else v for k, v in data[key].items()
+    }
     data[key] = updated
 
 

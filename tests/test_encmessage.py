@@ -61,7 +61,7 @@ def test_encrypt_encoding(encrypt_test_cases: dict) -> None:
             raise NotImplementedError("Cannot deal with this right now.")
 
         rcpt = CoseRecipient(phdr=phdr, uhdr=uhdr, payload=m.key.key_bytes, recipients=[])
-        rcpt.key = SymmetricKey(k=r_info['key']['k'], kid=r_info["key"]["kid"])
+        rcpt.key = SymmetricKey(k=r_info['key'][SymmetricKey.SymPrm.K], kid=r_info["key"][CoseKey.Common.KID])
         recipients.append(rcpt)
 
     m.recipients = recipients
@@ -109,7 +109,10 @@ def test_encrypt_decoding(encrypt_test_cases: dict) -> None:
     assert msg.uhdr == unprotected
 
     key = input_data.get('enveloped').get("recipients")[0].get("key")
-    key = SymmetricKey(kid=key['kid'], key_ops=KeyOps.DECRYPT, k=CoseKey.base64decode(key["k"]))
+    key = SymmetricKey(
+        kid=key[CoseKey.Common.KID],
+        key_ops=KeyOps.DECRYPT,
+        k=CoseKey.base64decode(key[SymmetricKey.SymPrm.K]))
     assert key.key_bytes == unhexlify(encrypt_test_cases.get('intermediates').get('CEK_hex'))
 
     # look for external data and verify internal enc_structure
@@ -165,19 +168,19 @@ def test_encrypt_ecdh_direct_decode_encode(ecdh_direct_enc_test_cases: dict) -> 
     # assert m.recipients[0].uhdr == rcpt.get('unprotected', {})
 
     receiver_static_key = EC2(
-        kid=rcpt['key']['kid'].encode('utf-8'),
-        crv=rcpt['key']['crv'],
-        x=CoseKey.base64decode(rcpt['key']['x']),
-        y=CoseKey.base64decode(rcpt['key']['y']),
-        d=CoseKey.base64decode(rcpt['key']['d']),
+        kid=rcpt['key'][CoseKey.Common.KID].encode('utf-8'),
+        crv=rcpt['key'][EC2.EC2Prm.CRV],
+        x=CoseKey.base64decode(rcpt['key'][EC2.EC2Prm.X]),
+        y=CoseKey.base64decode(rcpt['key'][EC2.EC2Prm.Y]),
+        d=CoseKey.base64decode(rcpt['key'][EC2.EC2Prm.D]),
     )
 
     if 'sender_key' in rcpt:
         # static key sender key
         sender_key = EC2(
-            crv=rcpt["sender_key"]['crv'],
-            x=CoseKey.base64decode(rcpt['sender_key']['x']),
-            y=CoseKey.base64decode(rcpt['sender_key']['y']),
+            crv=rcpt["sender_key"][EC2.EC2Prm.CRV],
+            x=CoseKey.base64decode(rcpt['sender_key'][EC2.EC2Prm.X]),
+            y=CoseKey.base64decode(rcpt['sender_key'][EC2.EC2Prm.Y]),
         )
 
         u = PartyInfo(nonce=unhexlify(input_data['rng_stream'][0]))
@@ -280,19 +283,19 @@ def test_encrypt_ecdh_wrap_decode(ecdh_wrap_enc_test_cases: dict):
     # assert m.recipients[0].uhdr == rcpt.get('unprotected', {})
 
     receiver_static_key = EC2(
-        kid=rcpt['key']['kid'].encode('utf-8'),
-        crv=rcpt['key']['crv'],
-        x=CoseKey.base64decode(rcpt['key']['x']),
-        y=CoseKey.base64decode(rcpt['key']['y']),
-        d=CoseKey.base64decode(rcpt['key']['d']),
+        kid=rcpt['key'][CoseKey.Common.KID].encode('utf-8'),
+        crv=rcpt['key'][EC2.EC2Prm.CRV],
+        x=CoseKey.base64decode(rcpt['key'][EC2.EC2Prm.X]),
+        y=CoseKey.base64decode(rcpt['key'][EC2.EC2Prm.Y]),
+        d=CoseKey.base64decode(rcpt['key'][EC2.EC2Prm.D]),
     )
 
     if 'sender_key' in rcpt:
         # static key sender key
         sender_key = EC2(
-            crv=rcpt["sender_key"]['crv'],
-            x=CoseKey.base64decode(rcpt['sender_key']['x']),
-            y=CoseKey.base64decode(rcpt['sender_key']['y']),
+            crv=rcpt["sender_key"][EC2.EC2Prm.CRV],
+            x=CoseKey.base64decode(rcpt['sender_key'][EC2.EC2Prm.X]),
+            y=CoseKey.base64decode(rcpt['sender_key'][EC2.EC2Prm.Y]),
         )
     else:
         # ephemeral key pair
@@ -386,17 +389,17 @@ def test_encrypt_x25519_wrap_decode(x25519_direct_enc_test_cases: dict) -> None:
     # assert m.recipients[0].uhdr == rcpt.get('unprotected', {})
 
     receiver_static_key = OKP(
-        kid=rcpt['key']['kid'].encode('utf-8'),
-        crv=rcpt['key']['crv'],
-        x=unhexlify(rcpt['key']['x_hex']),
-        d=unhexlify(rcpt['key']['d_hex']),
+        kid=rcpt['key'][CoseKey.Common.KID].encode('utf-8'),
+        crv=rcpt['key'][OKP.OKPPrm.CRV],
+        x=unhexlify(rcpt['key'][OKP.OKPPrm.X]),
+        d=unhexlify(rcpt['key'][OKP.OKPPrm.D]),
     )
 
     if 'sender_key' in rcpt:
         # static key sender key
         sender_key = OKP(
-            crv=rcpt["sender_key"]['crv'],
-            x=unhexlify(rcpt['sender_key']['x_hex'])
+            crv=rcpt["sender_key"][OKP.OKPPrm.CRV],
+            x=unhexlify(rcpt['sender_key'][OKP.OKPPrm.X])
         )
 
         u = PartyInfo(nonce=unhexlify(input_data['rng_stream'][0]))

@@ -41,7 +41,7 @@ def test_encrypt0_encoding(encrypt0_test_cases: dict) -> None:
 
     # set up key data and verify CEK
     key_data = input_data.get('encrypted').get('recipients')[0].get('key')
-    m.key = SymmetricKey(k=CoseKey.base64decode(key_data['k']))
+    m.key = SymmetricKey(k=CoseKey.base64decode(key_data[SymmetricKey.SymPrm.K]))
     assert m.key_bytes == unhexlify(encrypt0_test_cases.get('intermediates').get('CEK_hex'))
 
     # verify encoding (with automatic encryption)
@@ -113,7 +113,10 @@ def test_encrypt0_decoding(encrypt0_test_cases: dict) -> None:
 
     # prepare and verify pre-shared key
     key = input_data.get('encrypted').get("recipients")[0].get("key")
-    key = SymmetricKey(kid=key['kid'], key_ops=KeyOps.DECRYPT, k=CoseKey.base64decode(key["k"]))
+    key = SymmetricKey(
+        kid=key[CoseKey.Common.KID],
+        key_ops=KeyOps.DECRYPT,
+        k=CoseKey.base64decode(key[SymmetricKey.SymPrm.K]))
     assert key.key_bytes == unhexlify(encrypt0_test_cases.get('intermediates').get('CEK_hex'))
 
     # look for external data and verify internal enc_structure
