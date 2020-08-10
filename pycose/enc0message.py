@@ -1,10 +1,12 @@
-# CDDL fragment Encrypted Messages with Implicit Key
-#
-# COSE_Encrypt0 = [
-#    Headers,
-#    ciphertext: bstr / nil,
-# ]
-#
+"""
+COSE_Encrypt0: Encrypted Messages with Implicit Key
+
+COSE_Encrypt0 = [
+   Headers,
+   ciphertext: bstr / nil,
+]
+"""
+
 from typing import Optional
 
 import cbor2
@@ -29,7 +31,7 @@ class Enc0Message(enccommon.EncCommon):
         if uhdr is None:
             uhdr = {}
 
-        super(Enc0Message, self).__init__(phdr, uhdr, payload, external_aad, key)
+        super().__init__(phdr, uhdr, payload, external_aad, key)
 
     def encode(self,
                tagged: bool = True,

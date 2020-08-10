@@ -18,8 +18,7 @@ class EncMessage(enccommon.EncCommon):
         msg = super().from_cose_obj(cose_obj)
 
         try:
-            recipient_list = cose_obj.pop(0)
-            msg.recipients = [CoseRecipient.from_recipient_obj(r) for r in recipient_list]
+            msg.recipients = [CoseRecipient.from_recipient_obj(r) for r in cose_obj.pop(0)]
         except (IndexError, ValueError):
             msg.recipients = None
         return msg
@@ -36,7 +35,7 @@ class EncMessage(enccommon.EncCommon):
         if uhdr is None:
             uhdr = {}
 
-        super(EncMessage, self).__init__(phdr, uhdr, payload, external_aad, key)
+        super().__init__(phdr, uhdr, payload, external_aad, key)
 
         if recipients is None:
             self.recipients = []

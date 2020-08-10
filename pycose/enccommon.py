@@ -52,9 +52,9 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     def _get_crypt_params(self,
-                          alg: CoseAlgorithm,
-                          nonce: bytes,
-                          key: SymmetricKey) -> Tuple[bytes, CoseAlgorithm, bytes]:
+                          alg: Optional[CoseAlgorithm],
+                          nonce: Optional[bytes],
+                          key: Optional[SymmetricKey]) -> Tuple[bytes, CoseAlgorithm, bytes]:
         try:
             _key = key.key_bytes if key is not None else self.key_bytes
         except AttributeError:
