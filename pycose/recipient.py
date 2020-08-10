@@ -1,3 +1,4 @@
+import sys
 from binascii import hexlify
 from typing import Union, List, Optional, Any, Tuple
 
@@ -6,7 +7,11 @@ from cbor2 import CBORDecodeEOF
 from cryptography.hazmat.backends import openssl
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PublicKey, X25519PrivateKey
-from singledispatchmethod import singledispatchmethod
+
+if sys.version_info.minor < 8:
+    from singledispatchmethod import singledispatchmethod
+else:
+    from functools import singledispatchmethod
 
 from pycose.attributes import CoseHeaderParam as Hp, CoseAlgorithm
 from pycose.basicstructure import BasicCoseStructure
