@@ -1,5 +1,5 @@
 import abc
-from typing import Dict, Union, Any
+from typing import Dict, Union, Any, Optional
 
 import cbor2
 
@@ -10,11 +10,26 @@ from pycose.cosekey import CoseKey
 class BasicCoseStructure(metaclass=abc.ABCMeta):
     """ Basic COSE information buckets. """
 
-    def __init__(self, phdr: dict = None, uhdr: dict = None, payload: bytes = b''):
-        self._phdr = {} if phdr is None else phdr.copy()
-        self._uhdr = {} if uhdr is None else uhdr.copy()
+    def __init__(self, phdr: Optional[dict] = None, uhdr: Optional[dict] = None, payload: bytes = b''):
+        if phdr is None:
+            phdr = {}
 
-        self._payload = payload  # can be plaintext or ciphertext
+        if uhdr is None:
+            uhdr = {}
+
+        if type(phdr) is not dict:
+            raise TypeError("protected header should be of type 'dict'")
+
+        if type(uhdr) is not dict:
+            raise TypeError("unprotected header should be of type 'dict'")
+
+        self._phdr = phdr.copy()
+        self._uhdr = uhdr.copy()
+
+        # can be plaintext or ciphertext
+        if type(payload) is not bytes:
+            raise TypeError("payload should be of type 'bytes'")
+        self._payload = payload
 
     @property
     def phdr(self) -> dict:
@@ -22,6 +37,8 @@ class BasicCoseStructure(metaclass=abc.ABCMeta):
 
     @phdr.setter
     def phdr(self, new_phdr: dict) -> None:
+        if type(new_phdr) is not dict:
+            raise TypeError("protected header should be of type 'dict'")
         self._phdr = new_phdr.copy()
 
     @property
@@ -30,6 +47,8 @@ class BasicCoseStructure(metaclass=abc.ABCMeta):
 
     @uhdr.setter
     def uhdr(self, new_uhdr: dict) -> None:
+        if type(new_uhdr) is not dict:
+            raise TypeError("unprotected header should be of type 'dict'")
         self._uhdr = new_uhdr.copy()
 
     @property
@@ -38,12 +57,18 @@ class BasicCoseStructure(metaclass=abc.ABCMeta):
 
     @payload.setter
     def payload(self, new_payload: bytes) -> None:
+        if type(new_payload) is not bytes:
+            raise TypeError("payload should be of type 'bytes'")
         self._payload = new_payload  # can be plaintext or ciphertext
 
     def phdr_update(self, phdr_params: dict) -> None:
+        if type(phdr_params) is not dict:
+            raise TypeError("protected header should be of type 'dict'")
         self._phdr.update(phdr_params)
 
     def uhdr_update(self, uhdr_params: dict) -> None:
+        if type(uhdr_params) is not dict:
+            raise TypeError("unprotected header should be of type 'dict'")
         self._uhdr.update(uhdr_params)
 
     def encode_phdr(self) -> bytes:
@@ -75,4 +100,4 @@ class BasicCoseStructure(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def __repr__(self) -> str:
-        raise NotImplementedError("Cannot instantiate abstract class BasicCoseStructure")
+        raise NotImplementedError()

@@ -69,6 +69,21 @@ def test_update_uhdr(params, encoded_uhdr):
     assert outcome == encoded_uhdr
 
 
+@pytest.mark.parametrize("phdr, uhdr, payload", [("zefzef", "ezfzef", "zfezfzef")])
+def test_cose_header_type_checks(phdr: dict, uhdr: dict, payload: bytes) -> None:
+    with pytest.raises(TypeError) as except_info:
+        Enc0Message(phdr=phdr)
+    assert "protected header should be of type 'dict'" in str(except_info)
+
+    with pytest.raises(TypeError) as except_info:
+        Enc0Message(uhdr=uhdr)
+    assert "unprotected header should be of type 'dict'" in str(except_info)
+
+    with pytest.raises(TypeError) as except_info:
+        Enc0Message(payload=payload)
+    assert "payload should be of type 'bytes'" in str(except_info)
+
+
 @pytest.mark.parametrize("param1, param2, expected", [({1: 10}, {1: 1}, {1: 1})])
 def test_overwrite_attr_uhdr(param1, param2, expected):
     enc0_msg = Enc0Message()
