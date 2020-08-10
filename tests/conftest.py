@@ -71,6 +71,8 @@ key_attr_to_be_replaced = {
     "P-256": CoseEllipticCurves.P_256,
     "P-384": CoseEllipticCurves.P_384,
     "P-521": CoseEllipticCurves.P_521,
+    "X25519": CoseEllipticCurves.X25519,
+    "X448": CoseEllipticCurves.X448,
     "oct": KTY.SYMMETRIC,
 }
 

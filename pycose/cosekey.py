@@ -57,11 +57,11 @@ class EllipticCurveKeys(IntEnum):
 
 @dc.dataclass
 class CoseKey(metaclass=ABCMeta):
-    kty: Optional[int]
-    kid: Optional[Union[int, bytes]]
-    alg: Optional[int]
-    key_ops: Optional[int]
-    base_iv: Optional[bytes]
+    _kty: Optional[KTY]
+    _kid: Optional[Union[int, bytes]]
+    _alg: Optional[CoseAlgorithm]
+    _key_ops: Optional[KeyOps]
+    _base_iv: Optional[bytes]
 
     KTY = {}
 
@@ -138,9 +138,58 @@ class CoseKey(metaclass=ABCMeta):
     def _key_repr(cls, k: int, v: bytes) -> str:
         return f"\t{repr(k):<16} = {hexlify(v)}"
 
+    @property
+    def kty(self) -> KTY:
+        return self._kty
+
+    @kty.setter
+    def kty(self, new_kty: KTY) -> None:
+        _ = KTY(new_kty)  # check if the new value is a known COSE KTY, should never be None!
+        self._kty = new_kty
+
+    @property
+    def alg(self) -> Optional[CoseAlgorithm]:
+        return self._alg
+
+    @alg.setter
+    def alg(self, new_alg: CoseAlgorithm) -> None:
+        if new_alg is not None:
+            _ = CoseAlgorithm(new_alg)  # check if the new value is a known COSE Algorithm
+        self._alg = new_alg
+
+    @property
+    def kid(self) -> Optional[bytes]:
+        return self._kid
+
+    @kid.setter
+    def kid(self, new_kid: bytes) -> None:
+        if type(new_kid) is not bytes and new_kid is not None:
+            raise ValueError("kid attribute must be of type 'bytes'")
+        self._kid = new_kid
+
+    @property
+    def key_ops(self) -> Optional[KeyOps]:
+        return self._key_ops
+
+    @key_ops.setter
+    def key_ops(self, new_key_ops: Optional[KeyOps]) -> None:
+        if new_key_ops is not None:
+            _ = KeyOps(new_key_ops)  # check if the new value is a known COSE key operation
+        self._key_ops = new_key_ops
+
+    @property
+    def base_iv(self) -> Optional[bytes]:
+        return self._base_iv
+
+    @base_iv.setter
+    def base_iv(self, new_base_iv: bytes) -> None:
+        if new_base_iv is not None:
+            _ = KeyOps(new_base_iv)  # check if the new value is a known COSE key operation
+        self._base_iv = new_base_iv
+
     def encode(self, *argv) -> Dict[int, Union[int, bytes]]:
-        key_words = [kw for kw in argv if self.Common.has_member(kw.upper())] + ['kty']
-        return {self.Common[kw.upper()]: dc.asdict(self)[kw] for kw in key_words}
+        key_words = [kw for kw in argv if self.Common.has_member(kw.upper())] + ['_kty']
+        return {self.Common[kw[1:].upper()]: dc.asdict(self)[kw] for kw in key_words}
 
     @abstractmethod
     def __repr__(self):
@@ -150,10 +199,10 @@ class CoseKey(metaclass=ABCMeta):
 @CoseKey.record_kty(KTY.EC2)
 @dc.dataclass(init=False)
 class EC2(CoseKey):
-    crv: Optional[int] = None
-    x: Optional[bytes] = None
-    y: Optional[bytes] = None
-    d: Optional[bytes] = None
+    _crv: Optional[CoseEllipticCurves] = None
+    _x: Optional[bytes] = None
+    _y: Optional[bytes] = None
+    _d: Optional[bytes] = None
 
     class EC2Prm(IntEnum):
         CRV = -1
@@ -179,6 +228,46 @@ class EC2(CoseKey):
         self.x = x
         self.y = y
         self.d = d
+
+    @property
+    def crv(self) -> Optional[CoseEllipticCurves]:
+        return self._crv
+
+    @crv.setter
+    def crv(self, new_crv: Optional[CoseEllipticCurves]) -> None:
+        if new_crv is not None:
+            _ = CoseEllipticCurves(new_crv)
+        self._crv = new_crv
+
+    @property
+    def x(self) -> bytes:
+        return self._x
+
+    @x.setter
+    def x(self, new_x: Optional[bytes]) -> None:
+        if type(new_x) is not bytes and new_x is not None:
+            raise ValueError("public x coordinate must be of type 'bytes'")
+        self._x = new_x
+
+    @property
+    def y(self) -> Optional[bytes]:
+        return self._y
+
+    @y.setter
+    def y(self, new_y: Optional[bytes]) -> None:
+        if type(new_y) is not bytes and new_y is not None:
+            raise ValueError("public y coordinate must be of type 'bytes'")
+        self._y = new_y
+
+    @property
+    def d(self) -> Optional[bytes]:
+        return self._d
+
+    @d.setter
+    def d(self, new_d: Optional[bytes]) -> None:
+        if type(new_d) is not bytes and new_d is not None:
+            raise ValueError("private key must be of type 'bytes'")
+        self._d = new_d
 
     @classmethod
     def from_cose_key_obj(cls, cose_key_obj: dict) -> dict:
@@ -207,8 +296,8 @@ class EC2(CoseKey):
         return self.d
 
     def encode(self, *argv):
-        key_words = [kw for kw in argv if self.EC2Prm.has_member(kw.upper())]
-        return {**super().encode(*argv), **{self.EC2Prm[kw.upper()]: dc.asdict(self)[kw] for kw in key_words}}
+        key_words = ['_' + kw for kw in argv if self.EC2Prm.has_member(kw.upper())]
+        return {**super().encode(*argv), **{self.EC2Prm[kw[1:].upper()]: dc.asdict(self)[kw] for kw in key_words}}
 
     def __repr__(self):
         content = self.encode()
@@ -225,9 +314,9 @@ class OKP(CoseKey):
     Octet Key Pairs: Do not assume that keys using this type are elliptic curves.  This key type could be used for
     other curve types.
     """
-    crv: Optional[int] = None
-    x: Optional[bytes] = None
-    d: Optional[bytes] = None
+    _crv: Optional[CoseEllipticCurves] = None
+    _x: Optional[bytes] = None
+    _d: Optional[bytes] = None
 
     class OKPPrm(IntEnum):
         CRV = -1
@@ -252,11 +341,41 @@ class OKP(CoseKey):
         self.d = d
 
     @property
-    def public_bytes(self) -> bytes:
+    def crv(self) -> Optional[CoseEllipticCurves]:
+        return self._crv
+
+    @crv.setter
+    def crv(self, new_crv: Optional[CoseEllipticCurves]) -> None:
+        if new_crv is not None:
+            _ = CoseEllipticCurves(new_crv)
+        self._crv = new_crv
+
+    @property
+    def x(self) -> Optional[bytes]:
+        return self._x
+
+    @x.setter
+    def x(self, new_x: Optional[bytes]) -> None:
+        if type(new_x) is not bytes and new_x is not None:
+            raise ValueError("public x coordinate must be of type 'bytes'")
+        self._x = new_x
+
+    @property
+    def d(self) -> Optional[bytes]:
+        return self._d
+
+    @d.setter
+    def d(self, new_d: Optional[bytes]) -> None:
+        if type(new_d) is not bytes and new_d is not None:
+            raise ValueError("private key must be of type 'bytes'")
+        self._d = new_d
+
+    @property
+    def public_bytes(self) -> Optional[bytes]:
         return self.x
 
     @property
-    def private_bytes(self) -> bytes:
+    def private_bytes(self) -> Optional[bytes]:
         return self.d
 
     @classmethod
