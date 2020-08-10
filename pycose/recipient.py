@@ -57,7 +57,7 @@ class CoseRecipient(BasicCoseStructure):
 
         try:
             recipient_list = recipient_obj.pop(0)
-            recipient_list = CoseRecipient.from_recipient_obj(recipient_list)
+            recipient_list = [CoseRecipient.from_recipient_obj(r) for r in recipient_list]
         except IndexError:
             recipient_list = None
 
