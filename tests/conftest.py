@@ -19,6 +19,8 @@ ecdh_wrap_examples = os.path.join(path_examples, 'ecdh-wrap-examples')
 x25519_tests = os.path.join(path_examples, "X25519-tests")
 triple_layer_enc = os.path.join(path_examples, "RFC8152")
 
+mac0_test_vector_dir = os.path.join(path_examples, "mac0-tests")
+
 algs_to_be_replaced = {
     'A128GCM': CoseAlgorithm.A128GCM,
     'A192GCM': CoseAlgorithm.A192GCM,
@@ -43,6 +45,7 @@ algs_to_be_replaced = {
     "ECDH-ES-A192KW": CoseAlgorithm.ECDH_ES_A192KW,
     "ECDH-ES-A128KW": CoseAlgorithm.ECDH_ES_A128KW,
     "ECDH-SS-A256KW": CoseAlgorithm.ECDH_SS_A256KW,
+    "HS256": CoseAlgorithm.HMAC_256_256
 }
 
 params_to_be_replaced = {
@@ -82,6 +85,32 @@ def protected_header(request):
     test_case = json.load(open(request.param, 'r'))
     _fix_header_algorithm_names(test_case['input']['enveloped'], 'protected')
     return test_case['input']['enveloped']['protected']
+
+
+def mac0_tests():
+    test_files = [v for v in os.listdir(mac0_test_vector_dir)]
+
+    fixed_test_cases = []
+
+    for file in test_files:
+        test_case = json.load(open(os.path.join(mac0_test_vector_dir, file), 'r'))
+
+        _fix_header_attribute_names(test_case['input']['mac0'], 'protected')
+        _fix_header_attribute_names(test_case['input']['mac0'], 'unprotected')
+        _fix_header_algorithm_names(test_case['input']['mac0'], 'protected')
+        _fix_header_algorithm_names(test_case['input']['mac0'], 'unprotected')
+
+        recipients = test_case['input']['mac0']['recipients']
+        _fix_recipients(recipients)
+
+        fixed_test_cases.append(test_case)
+
+    return fixed_test_cases
+
+
+def pytest_generate_tests(metafunc):
+    if "mac0_test_input" in metafunc.fixturenames:
+        metafunc.parametrize("mac0_test_input", mac0_tests())
 
 
 @pytest.fixture
