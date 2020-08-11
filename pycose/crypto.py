@@ -1,14 +1,14 @@
+from binascii import unhexlify
 from typing import Tuple
 
 import cbor2
 from cryptography.hazmat.backends import default_backend, openssl
-from cryptography.hazmat.primitives import cmac
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import hmac
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePrivateKey, EllipticCurvePublicKey, ECDH, \
     SECP256R1, SECP384R1, SECP521R1
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, X25519PublicKey
-from cryptography.hazmat.primitives.ciphers import algorithms, aead
+from cryptography.hazmat.primitives.ciphers import algorithms, aead, Cipher, modes
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.primitives.keywrap import aes_key_wrap, aes_key_unwrap
 from dataclasses import dataclass
@@ -43,7 +43,7 @@ HMAC = {
     CoseAlgorithm.HMAC_512_512: hashes.SHA512,
 }
 
-CMAC = {
+AES_CBC_MAC = {
     CoseAlgorithm.AES_MAC_256_64: algorithms.AES,
     CoseAlgorithm.AES_MAC_128_64: algorithms.AES,
     CoseAlgorithm.AES_MAC_256_128: algorithms.AES,
@@ -162,7 +162,7 @@ def key_unwrap(kek: bytes, wrapped_key: bytes) -> bytes:
     return aes_key_unwrap(kek, wrapped_key, openssl.backend)
 
 
-def calc_tag_wrapper(key, to_be_maced, algorithm):
+def calc_tag_wrapper(key: bytes, to_be_maced: bytes, algorithm: CoseAlgorithm) -> bytes:
     """
     Wrapper function for the supported hmac in COSE
     :param key: key for computation of the hmac
@@ -172,14 +172,26 @@ def calc_tag_wrapper(key, to_be_maced, algorithm):
     """
 
     try:
-        primitive = CMAC[algorithm]
-        c = cmac.CMAC(primitive(key), backend=default_backend())
-        c.update(to_be_maced)
-        digest = c.finalize()
+        primitive = AES_CBC_MAC[algorithm]
+        encryptor = Cipher(
+            primitive(key),
+            modes.CBC(unhexlify(b"".join([b"00"] * 16))),
+            backend=openssl.backend
+        ).encryptor()
 
-        if algorithm == 'AES-MAC-256/64':
+        padded = False
+        while len(to_be_maced) % 16 != 0:
+            to_be_maced += unhexlify(b"00")
+            padded = True
+
+        ciphertext = encryptor.update(to_be_maced) + encryptor.finalize()
+        if padded:
+            ciphertext = ciphertext[:-8]
+        if algorithm in {CoseAlgorithm.AES_MAC_256_64, CoseAlgorithm.AES_MAC_128_64}:
             # truncate the result to the first 64 bits
-            digest = digest[:8]
+            digest = ciphertext[-8:]
+        else:
+            digest = ciphertext[-16:]
     except KeyError:
         try:
             primitive = HMAC[algorithm]
@@ -187,7 +199,7 @@ def calc_tag_wrapper(key, to_be_maced, algorithm):
             h.update(to_be_maced)
             digest = h.finalize()
 
-            if algorithm == 'HS256/64':
+            if algorithm == CoseAlgorithm.HMAC_256_64:
                 # truncate the result to the first 64 bits
                 digest = digest[:8]
 
@@ -198,25 +210,9 @@ def calc_tag_wrapper(key, to_be_maced, algorithm):
 
 
 def verify_tag_wrapper(key, tag, to_be_maced, algorithm):
-    if algorithm != 'HS256/64':
-        try:
-            hash_primitive = HMAC[algorithm]
-        except KeyError as e:
-            raise CoseUnsupportedMAC("This cipher is not supported by the COSE specification: {}".format(e))
-
-        h = hmac.HMAC(key, hash_primitive(), backend=default_backend())
-        h.update(to_be_maced)
-        h.verify(tag)
-    elif algorithm == 'HS256/64':
-        try:
-            hash_primitive = HMAC[algorithm]
-        except KeyError as e:
-            raise CoseUnsupportedMAC("This cipher is not supported by the COSE specification: {}".format(e))
-
-        h = hmac.HMAC(key, hash_primitive(), backend=default_backend())
-        h.update(to_be_maced)
-        if h.finalize()[:8] != tag:
-            raise CoseInvalidTag("The authentication tags do not match")
+    computed_tag = calc_tag_wrapper(key, to_be_maced, algorithm)
+    if tag != computed_tag:
+        raise CoseInvalidTag("Invalid authentication tag: {} != {}".format(tag, computed_tag))
     return True
 
 
