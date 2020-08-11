@@ -12,7 +12,7 @@ from pycose.cosekey import KTY, CoseEllipticCurves, CoseKey, SymmetricKey, EC2
 path_examples = os.path.join(pathlib.Path(__file__).parent.absolute(), 'examples')
 
 mac0_test_vector_dirs = [os.path.join(path_examples, "mac0-tests")]
-enc0_test_vector_dir = \
+mac_test_vector_dirs = [os.path.join(path_examples, "mac-tests")]
 enc0_test_vector_dirs = [
     os.path.join(path_examples, 'aes-ccm-examples'),
     os.path.join(path_examples, 'aes-gcm-examples'),
@@ -90,6 +90,10 @@ def pytest_generate_tests(metafunc):
         test_suite = mac0_tests()
         ids = [test['title'] for test in test_suite]
         metafunc.parametrize("mac0_test_input", test_suite, ids=ids)
+    if "mac_test_input" in metafunc.fixturenames:
+        test_suite = mac_tests()
+        ids = [test['title'] for test in test_suite]
+        metafunc.parametrize("mac_test_input", test_suite, ids=ids)
     if "encrypt0_test_input" in metafunc.fixturenames:
         test_suite = encrypt0_tests()
         ids = [test['title'] for test in test_suite]
@@ -135,6 +139,9 @@ def generic_test_setup(generic_test_input: dict) -> tuple:
 def mac0_tests():
     return _build_test_cases('mac0', mac0_test_vector_dirs)
 
+
+def mac_tests():
+    return _build_test_cases('mac', mac_test_vector_dirs)
 
 
 def encrypt0_tests():

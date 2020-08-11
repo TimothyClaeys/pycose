@@ -1,12 +1,11 @@
 import abc
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple
 
 import cbor2
 
 from pycose import cosemessage, crypto
 from pycose.attributes import CoseAlgorithm, CoseHeaderParam
 from pycose.cosekey import SymmetricKey
-from pycose.recipient import CoseRecipient
 
 
 class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
@@ -14,11 +13,6 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
     def from_cose_obj(cls, cose_obj):
         msg = super().from_cose_obj(cose_obj)
         msg.auth_tag = cose_obj.pop(0)
-
-        try:
-            msg.recipients = [CoseRecipient.from_recipient_obj(r) for r in cose_obj.pop(0)]
-        except (IndexError, ValueError):
-            msg.recipients = None
         return msg
 
     def __init__(self,
@@ -26,8 +20,7 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
                  uhdr: dict = None,
                  payload: bytes = b'',
                  external_aad: bytes = b'',
-                 key: SymmetricKey = None,
-                 recipients: Optional[List[CoseRecipient]] = None):
+                 key: SymmetricKey = None):
         if phdr is None:
             phdr = {}
         if uhdr is None:
@@ -36,11 +29,6 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
         super().__init__(phdr, uhdr, payload, external_aad, key)
 
         self.auth_tag = b''
-
-        if recipients is None:
-            self.recipients = []
-        else:
-            self.recipients = recipients
 
     @property
     def key_bytes(self) -> bytes:
@@ -60,7 +48,8 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
         """ Wrapper function to access the cryptographic primitives. """
 
         _alg, _key = self._get_crypt_params(alg, key)
-        return crypto.calc_tag_wrapper(_key, self._mac_structure, _alg)
+        self.auth_tag = crypto.calc_tag_wrapper(_key, self._mac_structure, _alg)
+        return self.auth_tag
 
     @abc.abstractmethod
     def encode(self, tagged: bool = True):

@@ -1,22 +1,22 @@
-# CDDL fragment MACed Message with Recipients
-#
-# COSE_Mac = [
-#       Headers,
-#       payload : bstr / nil,
-#       tag : bstr,
-#       recipients :[+COSE_recipient]
-# ]
-#
+"""
+MACed Message with Recipients
 
+COSE_Mac = [
+      Headers,
+      payload : bstr / nil,
+      tag : bstr,
+      recipients :[+COSE_recipient]
+]
+"""
 
-import binascii
-from copy import deepcopy
+from typing import Optional, List, Union, Tuple, Any
 
 import cbor2
 
 from pycose import cosemessage, maccommon
-from pycose.attributes import CoseAttrs
-from pycose.recipient import CoseMacRecipient
+from pycose.attributes import CoseAlgorithm
+from pycose.cosekey import SymmetricKey
+from pycose.recipient import CoseRecipient
 
 
 @cosemessage.CoseMessage.record_cbor_tag(97)
@@ -24,60 +24,66 @@ class MacMessage(maccommon.MacCommon):
     context = "MAC"
     cbor_tag = 97
 
-    def __init__(self, phdr=CoseAttrs(), uhdr=CoseAttrs(), payload=None, key=None, recipients=[]):
-        super(MacMessage, self).__init__(
-            deepcopy(phdr),
-            deepcopy(uhdr),
-            payload,
-            key
-        )
+    @classmethod
+    def from_cose_obj(cls, cose_obj):
+        msg = super().from_cose_obj(cose_obj)
 
-        for rcpt in recipients:
-            if not isinstance(rcpt, CoseMacRecipient):
-                raise ValueError()
-        self._recipients = deepcopy(recipients)
-        self._encoded_recipients = self.__encode_recipients()
+        try:
+            msg.recipients = [CoseRecipient.from_recipient_obj(r) for r in cose_obj.pop(0)]
+        except (IndexError, ValueError):
+            msg.recipients = None
+        return msg
 
-    @property
-    def recipients(self):
-        """Returns an array of recipients."""
-        return self._recipients
+    def __init__(self,
+                 phdr: dict = None,
+                 uhdr: dict = None,
+                 payload: bytes = b'',
+                 external_aad: bytes = b'',
+                 key: SymmetricKey = None,
+                 recipients: Optional[List[CoseRecipient]] = None):
+        if phdr is None:
+            phdr = {}
+        if uhdr is None:
+            uhdr = {}
 
-    @recipients.setter
-    def recipients(self, new_value):
-        for rcpt in new_value:
-            if not isinstance(rcpt, CoseMacRecipient):
-                raise ValueError()
-        self._recipients = deepcopy(new_value)
+        super().__init__(phdr, uhdr, payload, external_aad, key)
 
-    @property
-    def encoded_recipients(self):
-        return self.__encode_recipients()
-
-    def change_recipient(self, recpt_index, label, value, where):
-        recipient = self._recipients[recpt_index]
-        recipient.add_to_header(label, value, where)
-
-    def add_to_recpients(self, rcpt):
-        if not isinstance(rcpt, CoseMacRecipient):
-            raise ValueError()
+        if recipients is None:
+            self.recipients = []
         else:
-            self._recipients.append(rcpt)
+            self.recipients = recipients
 
-    def find_in_recipients(self, label):
-        raise NotImplementedError
+    def encode(self,
+               tagged: bool = True,
+               mac: bool = True,
+               alg: Optional[CoseAlgorithm] = None,
+               key: Optional[SymmetricKey] = None,
+               crypto_params:
+               Tuple[Tuple[bool, Union[CoseAlgorithm, None], Union[SymmetricKey, None], Union[Tuple[Any], None]]] = None
+               ) -> bytes:
+        """ Encodes the message as a CBOR array """
 
-    def encode(self):
-        """Encodes the message into a CBOR array"""
+        # encode/encrypt the base fields
+        if mac:
+            message = [self.encode_phdr(), self.encode_uhdr(), self.payload, self.compute_auth_tag(alg, key)]
+        else:
+            message = [self.encode_phdr(), self.encode_uhdr(), self.payload]
 
-        if len(binascii.hexlify(self.auth_tag)) not in [16, 32, 64, 96, 128]:
-            raise ValueError("Tag has invalid size.")
+        if len(self.recipients) > 0:
+            message.append(CoseRecipient.recusive_encode(self.recipients, crypto_params))
 
-        return cbor2.dumps(cbor2.CBORTag(self.cbor_tag, [self.encoded_protected_header, self.unprotected_header,
-                                                   self.payload, self.auth_tag, self.encoded_recipients]))
+        if tagged:
+            message = cbor2.dumps(cbor2.CBORTag(self.cbor_tag, message))
+        else:
+            message = cbor2.dumps(message)
 
-    def __encode_recipients(self):
-        recipient_list = []
-        for rcpt in self._recipients:
-            recipient_list.append([rcpt.encoded_protected_header, rcpt.encoded_unprotected_header, rcpt.payload])
-        return recipient_list
+        return message
+
+    def __repr__(self) -> str:
+        return f'<COSE_Encrypt:\n' \
+               f'\t phdr={self._phdr}\n' \
+               f'\t uhdr={self._uhdr}\n' \
+               f'\t payload={self._payload}\n' \
+               f'\t auth_tag={self.auth_tag}\n' \
+               f'\t recipients={self.recipients}>'
+
