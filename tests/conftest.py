@@ -11,25 +11,20 @@ from pycose.cosekey import KTY, CoseEllipticCurves, CoseKey, SymmetricKey, EC2
 
 path_examples = os.path.join(pathlib.Path(__file__).parent.absolute(), 'examples')
 
-mac0_test_vector_dir = os.path.join(path_examples, "mac0-tests")
+mac0_test_vector_dirs = [os.path.join(path_examples, "mac0-tests")]
 enc0_test_vector_dir = \
-    [
-        os.path.join(path_examples, 'aes-ccm-examples'),
-        os.path.join(path_examples, 'aes-gcm-examples'),
-        os.path.join(path_examples, 'encrypted-tests'),
-    ]
-
-enc_test_vector_dir = \
-    [
-        os.path.join(path_examples, 'aes-ccm-examples'),
-        os.path.join(path_examples, 'aes-gcm-examples'),
-        os.path.join(path_examples, 'enveloped-tests'),
-    ]
-
-ecdh_direct_test_vector_dir = os.path.join(path_examples, 'ecdh-direct-examples')
-ecdh_wrap_test_vector_dir = os.path.join(path_examples, 'ecdh-wrap-examples')
-x25519_direct_test_vector_dir = os.path.join(path_examples, 'X25519-tests')
-triple_layer_enc_test_vector_dir = os.path.join(path_examples, 'RFC8152')
+enc0_test_vector_dirs = [
+    os.path.join(path_examples, 'aes-ccm-examples'),
+    os.path.join(path_examples, 'aes-gcm-examples'),
+    os.path.join(path_examples, 'encrypted-tests')]
+enc_test_vector_dirs = [
+    os.path.join(path_examples, 'aes-ccm-examples'),
+    os.path.join(path_examples, 'aes-gcm-examples'),
+    os.path.join(path_examples, 'enveloped-tests')]
+ecdh_direct_test_vector_dirs = [os.path.join(path_examples, 'ecdh-direct-examples')]
+ecdh_wrap_test_vector_dirs = [os.path.join(path_examples, 'ecdh-wrap-examples')]
+x25519_direct_test_vector_dirs = [os.path.join(path_examples, 'X25519-tests')]
+triple_layer_enc_test_vector_dirs = [os.path.join(path_examples, 'RFC8152')]
 
 algs_to_be_replaced = {
     'A128GCM': CoseAlgorithm.A128GCM,
@@ -138,46 +133,36 @@ def generic_test_setup(generic_test_input: dict) -> tuple:
 
 
 def mac0_tests():
-    test_files = [os.path.join(path_examples, mac0_test_vector_dir, v) for v in os.listdir(mac0_test_vector_dir)]
+    return _build_test_cases('mac0', mac0_test_vector_dirs)
 
-    return _build_test_cases('mac0', test_files)
 
 
 def encrypt0_tests():
-    test_files = [os.path.join(path_examples, td, file) for td in enc0_test_vector_dir for file in os.listdir(td)]
-    return _build_test_cases('encrypted', test_files)
+    return _build_test_cases('encrypted', enc0_test_vector_dirs)
 
 
 def encrypt_tests():
-    test_files = [os.path.join(path_examples, td, file) for td in enc_test_vector_dir for file in os.listdir(td)]
-    return _build_test_cases('enveloped', test_files)
+    return _build_test_cases('enveloped', enc_test_vector_dirs)
 
 
 def encrypt_ecdh_direct_tests():
-    test_files = [os.path.join(path_examples, ecdh_direct_test_vector_dir, file) for file in
-                  os.listdir(ecdh_direct_test_vector_dir)]
-    return _build_test_cases('enveloped', test_files)
+    return _build_test_cases('enveloped', ecdh_direct_test_vector_dirs)
 
 
 def encrypt_ecdh_wrap_tests():
-    test_files = [os.path.join(path_examples, ecdh_wrap_test_vector_dir, file) for file in
-                  os.listdir(ecdh_wrap_test_vector_dir)]
-    return _build_test_cases('enveloped', test_files)
+    return _build_test_cases('enveloped', ecdh_wrap_test_vector_dirs)
 
 
 def encrypt_x25519_direct_tests():
-    test_files = [os.path.join(path_examples, x25519_direct_test_vector_dir, file) for file in
-                  os.listdir(x25519_direct_test_vector_dir)]
-    return _build_test_cases('enveloped', test_files)
+    return _build_test_cases('enveloped', x25519_direct_test_vector_dirs)
 
 
 def encrypt_triple_layer_tests():
-    test_files = [os.path.join(path_examples, triple_layer_enc_test_vector_dir, file) for file in
-                  os.listdir(triple_layer_enc_test_vector_dir)]
-    return _build_test_cases('enveloped', test_files)
+    return _build_test_cases('enveloped', triple_layer_enc_test_vector_dirs)
 
 
-def _build_test_cases(key: str, test_files: List[str]):
+def _build_test_cases(key: str, test_dirs: List[str]):
+    test_files = [os.path.join(path_examples, td, file) for td in test_dirs for file in os.listdir(td)]
     fixed_test_cases = []
 
     for file in test_files:
