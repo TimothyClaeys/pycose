@@ -10,14 +10,6 @@ from pycose.cosekey import SymmetricKey
 
 
 class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
-    def __init__(self,
-                 phdr: dict,
-                 uhdr: dict,
-                 payload: bytes,
-                 external_data: bytes = b'',
-                 key: Optional[SymmetricKey] = None):
-        super().__init__(phdr, uhdr, payload, external_data, key)
-
     @property
     def key_bytes(self) -> bytes:
         if self.key is None:
@@ -25,7 +17,10 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
         else:
             return self.key.key_bytes
 
-    def decrypt(self, alg: CoseAlgorithm = None, nonce: bytes = None, key: SymmetricKey = None) -> bytes:
+    def decrypt(self,
+                alg: Optional[CoseAlgorithm] = None,
+                nonce: Optional[bytes] = None,
+                key: Optional[SymmetricKey] = None) -> bytes:
         """ Decrypts the payload. """
         key, alg, nonce = self._get_crypt_params(alg, nonce, key)
 
@@ -40,9 +35,6 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
 
         return crypto.aead_encrypt(key, self._enc_structure, self.payload, alg, nonce)
 
-    def encode(self, tagged: bool = True):
-        raise NotImplementedError("Cannot instantiate abstract class EncCommon")
-
     @property
     def _enc_structure(self) -> bytes:
         enc_structure = [self.context]
@@ -50,10 +42,6 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
         enc_structure = self._base_structure(enc_structure)
         aad = cbor2.dumps(enc_structure)
         return aad
-
-    @abc.abstractmethod
-    def __repr__(self) -> str:
-        raise NotImplementedError()
 
     def _get_crypt_params(self,
                           alg: Optional[CoseAlgorithm],

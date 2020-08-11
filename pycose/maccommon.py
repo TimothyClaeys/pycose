@@ -3,29 +3,24 @@ from typing import Optional, Tuple
 
 import cbor2
 
-from pycose import cosemessage, crypto
+from pycose import cosemessage, crypto, CoseMessage
 from pycose.attributes import CoseAlgorithm, CoseHeaderParam
 from pycose.cosekey import SymmetricKey
 
 
 class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
     @classmethod
-    def from_cose_obj(cls, cose_obj):
+    def from_cose_obj(cls, cose_obj: list) -> CoseMessage:
         msg = super().from_cose_obj(cose_obj)
         msg.auth_tag = cose_obj.pop(0)
         return msg
 
     def __init__(self,
-                 phdr: dict = None,
-                 uhdr: dict = None,
+                 phdr: Optional[dict] = None,
+                 uhdr: Optional[dict] = None,
                  payload: bytes = b'',
                  external_aad: bytes = b'',
-                 key: SymmetricKey = None):
-        if phdr is None:
-            phdr = {}
-        if uhdr is None:
-            uhdr = {}
-
+                 key: Optional[SymmetricKey] = None):
         super().__init__(phdr, uhdr, payload, external_aad, key)
 
         self.auth_tag = b''
@@ -37,23 +32,19 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
         else:
             return self.key.key_bytes
 
-    def verify_auth_tag(self, alg: Optional[CoseAlgorithm] = None, key: Optional[SymmetricKey] = None):
+    def verify_auth_tag(self, alg: Optional[CoseAlgorithm] = None, key: Optional[SymmetricKey] = None) -> bool:
         """ Verifies the authentication tag of a received message. """
 
         to_digest = self._mac_structure
         _alg, _key = self._get_crypt_params(alg, key)
         return crypto.verify_tag_wrapper(_key, self.auth_tag, to_digest, _alg)
 
-    def compute_auth_tag(self, alg: Optional[CoseAlgorithm] = None, key: Optional[SymmetricKey] = None):
+    def compute_auth_tag(self, alg: Optional[CoseAlgorithm] = None, key: Optional[SymmetricKey] = None) -> bytes:
         """ Wrapper function to access the cryptographic primitives. """
 
         _alg, _key = self._get_crypt_params(alg, key)
         self.auth_tag = crypto.calc_tag_wrapper(_key, self._mac_structure, _alg)
         return self.auth_tag
-
-    @abc.abstractmethod
-    def encode(self, tagged: bool = True):
-        raise NotImplementedError("Cannot instantiate abstract class MacCommon")
 
     @property
     def _mac_structure(self) -> bytes:

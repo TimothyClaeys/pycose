@@ -1,5 +1,5 @@
 import abc
-from typing import Type, Optional
+from typing import Type, Optional, Callable, Dict
 
 import cbor2
 
@@ -10,13 +10,13 @@ from pycose.cosekey import CoseKey
 class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
     """ Parent class of all COSE message types. """
 
-    cose_msg_id = {}
+    cose_msg_id: Dict[int, Type['CoseMessage']] = {}
 
     @classmethod
-    def record_cbor_tag(cls, cbor_tag: int):
+    def record_cbor_tag(cls, cbor_tag: int) -> Callable[[Type['CoseMessage']], Type['CoseMessage']]:
         """Decorator to record all the CBOR tags dynamically"""
 
-        def decorator(the_class):
+        def decorator(the_class: Type['CoseMessage']) -> Type['CoseMessage']:
             if not issubclass(the_class, CoseMessage):
                 raise ValueError("Can only decorate subclass of CoseMessage")
             cls.cose_msg_id[cbor_tag] = the_class
@@ -25,7 +25,7 @@ class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
         return decorator
 
     @classmethod
-    def decode(cls, received: bytes):
+    def decode(cls, received: bytes) -> 'CoseMessage':
         """Decode received COSE message based on the CBOR tag."""
 
         try:
@@ -45,7 +45,7 @@ class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
             raise TypeError("Message is not a COSE security message")
 
     @classmethod
-    def from_cose_obj(cls, cose_obj: list):
+    def from_cose_obj(cls, cose_obj: list) -> 'CoseMessage':
         """Returns an initialized COSE message object."""
 
         try:
@@ -62,7 +62,12 @@ class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
 
         return cls(phdr, uhdr, payload)
 
-    def __init__(self, phdr: dict, uhdr: dict, payload: bytes, external_aad: bytes, key: Optional[Type[CoseKey]]):
+    def __init__(self,
+                 phdr: Optional[dict],
+                 uhdr: Optional[dict],
+                 payload: bytes,
+                 external_aad: bytes,
+                 key: Optional[Type[CoseKey]]):
         super(CoseMessage, self).__init__(phdr, uhdr, payload)
         self.external_aad = external_aad
         self.key = key
@@ -98,11 +103,11 @@ class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
         return structure
 
     @abc.abstractmethod
-    def encode(self, tagged: bool = True):
-        raise NotImplementedError("Cannot not instantiate abstract class CoseMessage")
+    def encode(self, tagged: bool = True) -> bytes:
+        raise NotImplementedError
 
     @property
     @abc.abstractmethod
-    def context(self):
+    def context(self) -> str:
         """Getter for the context of the message."""
-        NotImplementedError("Cannot not instantiate abstract class CoseMessage")
+        raise NotImplementedError

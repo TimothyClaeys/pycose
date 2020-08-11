@@ -21,11 +21,11 @@ class Enc0Message(enccommon.EncCommon):
     cbor_tag = 16
 
     def __init__(self,
-                 phdr: dict = None,
-                 uhdr: dict = None,
+                 phdr: Optional[dict] = None,
+                 uhdr: Optional[dict] = None,
                  payload: bytes = b'',
                  external_aad: bytes = b'',
-                 key: SymmetricKey = None):
+                 key: Optional[SymmetricKey] = None):
         if phdr is None:
             phdr = {}
         if uhdr is None:
