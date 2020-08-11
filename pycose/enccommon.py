@@ -10,7 +10,11 @@ from pycose.cosekey import SymmetricKey
 
 
 class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
-    def __init__(self, phdr: dict, uhdr: dict, payload: bytes, external_data: bytes = b'',
+    def __init__(self,
+                 phdr: dict,
+                 uhdr: dict,
+                 payload: bytes,
+                 external_data: bytes = b'',
                  key: Optional[SymmetricKey] = None):
         super().__init__(phdr, uhdr, payload, external_data, key)
 
