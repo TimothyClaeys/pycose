@@ -29,6 +29,7 @@ ecdh_direct_test_vector_dirs = [os.path.join(path_examples, 'ecdh-direct-example
 ecdh_wrap_test_vector_dirs = [os.path.join(path_examples, 'ecdh-wrap-examples')]
 x25519_direct_test_vector_dirs = [os.path.join(path_examples, 'X25519-tests')]
 triple_layer_enc_test_vector_dirs = [os.path.join(path_examples, 'RFC8152')]
+sign1_test_vector_dirs = [os.path.join(path_examples, "sign1-tests")]
 
 algs_to_be_replaced = {
     'A128GCM': CoseAlgorithm.A128GCM,
@@ -65,6 +66,9 @@ algs_to_be_replaced = {
     "ChaCha-Poly1305": CoseAlgorithm.CHACHA20_POLY1305,
     "HKDF-HMAC-SHA-256": CoseAlgorithm.DIRECT_HKDF_SHA_256,
     "HKDF-HMAC-SHA-512": CoseAlgorithm.DIRECT_HKDF_SHA_512,
+    "ES256": CoseAlgorithm.ES256,
+    "ES384": CoseAlgorithm.ES384,
+    "ES512": CoseAlgorithm.ES512,
 }
 
 params_to_be_replaced = {
@@ -136,6 +140,10 @@ def pytest_generate_tests(metafunc):
         test_suite = encrypt_hkdf_hmac_direct_tests()
         ids = [test['title'] for test in test_suite]
         metafunc.parametrize("encrypt_hkdf_hmac_direct_test_input", test_suite, ids=ids)
+    if "sign1_test_input" in metafunc.fixturenames:
+        test_suite = sign1_tests()
+        ids = [test['title'] for test in test_suite]
+        metafunc.parametrize("sign1_test_input", test_suite, ids=ids)
 
 
 def generic_test_setup(generic_test_input: dict) -> tuple:
@@ -191,6 +199,10 @@ def encrypt_hkdf_hmac_direct_tests():
     return _build_test_cases('enveloped', mac_hkdf_hmac_direct_test_vectors_dirs)
 
 
+def sign1_tests():
+    return _build_test_cases('sign0', sign1_test_vector_dirs)
+
+
 def _build_test_cases(key: str, test_dirs: List[str]):
     test_files = [os.path.join(path_examples, td, file) for td in test_dirs for file in os.listdir(td)]
     fixed_test_cases = []
@@ -203,8 +215,16 @@ def _build_test_cases(key: str, test_dirs: List[str]):
             _fix_header_algorithm_names(test_case['input'][key], 'protected')
             _fix_header_algorithm_names(test_case['input'][key], 'unprotected')
 
-            recipients = test_case['input'][key]['recipients']
-            _fix_recipients(recipients)
+            try:
+                recipients = test_case['input'][key]['recipients']
+                _fix_recipients(recipients)
+            except KeyError:
+                pass
+
+            try:
+                _fix_key_object(test_case['input'][key], 'key')
+            except KeyError:
+                pass
 
             fixed_test_cases.append(test_case)
 

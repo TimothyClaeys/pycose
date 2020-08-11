@@ -1,40 +1,60 @@
 import abc
+from typing import Optional, Union, Tuple
 
 from pycose import cosemessage, crypto
+from pycose.attributes import CoseAlgorithm, CoseHeaderParam
+from pycose.cosekey import EC2, OKP
 
 
 class SignCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
-    @classmethod
-    def from_cose_obj(cls, cose_obj):
-        msg = super(SignCommon, cls).from_cose_obj(cose_obj)
-
-        msg.signers = cose_obj.pop(0)
-        return msg
-
-    @property
-    @abc.abstractmethod
-    def key(self):
-        NotImplementedError("Cannot not instantiate abstract class CoseMessage")
-
-    @key.setter
-    @abc.abstractmethod
-    def key(self, new_value):
-        NotImplementedError("Cannot not instantiate abstract class MacCommon")
 
     @property
     @abc.abstractmethod
     def _sig_structure(self):
-        raise NotImplementedError("Cannot instantiate abstract SignCommon class")
+        raise NotImplementedError
 
+    @property
     @abc.abstractmethod
-    def verify_signature(self, alg, curve='P-256', signer=None):
-        raise NotImplementedError("Cannot instantiate abstract SignCommon class")
+    def signature(self):
+        raise NotImplementedError
 
-    def compute_signature(self, alg='ES256', curve='P-256'):
+    @signature.setter
+    @abc.abstractmethod
+    def signature(self, new_signature):
+        raise NotImplementedError
+
+    def verify_signature(self, alg: Optional[CoseAlgorithm] = None, key: Optional[Union[EC2, OKP]] = None) -> bool:
         """
-        pass key, byte-string-to-mac and algorithm found in the common_header_params buckets to the hmac wrapper
-        :return: tag
+        Verifies the signature of a received message
+        :return: True or raises an exception
         """
+        _alg, _key = self._get_crypt_params(alg, key)
+
+        return crypto.ec_verify_wrapper(_key, self._sig_structure, self.signature, _alg)
+
+    def compute_signature(self,
+                          alg: Optional[CoseAlgorithm] = None,
+                          key: Optional[Union[EC2, OKP]] = None):
 
         to_sign = self._sig_structure
-        return crypto.ec_sign_wrapper(self.key, to_sign, alg, curve)
+
+        _alg, _key = self._get_crypt_params(alg, key)
+        return crypto.ec_sign_wrapper(_key, to_sign, _alg)
+
+    def _get_crypt_params(self,
+                          alg: Optional[CoseAlgorithm],
+                          key: Optional[Union[EC2, OKP]]) -> Tuple[CoseAlgorithm, Union[EC2, OKP]]:
+
+        # if nothing is overridden by the function parameters, search in COSE headers
+        _alg = alg if alg is not None else self.phdr.get(CoseHeaderParam.ALG)
+        _alg = _alg if _alg is not None else self.uhdr.get(CoseHeaderParam.ALG)
+
+        if _alg is None:
+            raise AttributeError('No algorithm specified.')
+
+        try:
+            _key = key if key is not None else self.key
+        except AttributeError:
+            raise AttributeError("No key specified.")
+
+        return _alg, _key

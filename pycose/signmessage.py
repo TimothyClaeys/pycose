@@ -21,6 +21,13 @@ class SignMessage(signcommon.SignCommon):
     context = "Signature"
     cbor_tag = 98
 
+    @classmethod
+    def from_cose_obj(cls, cose_obj):
+        msg = super().from_cose_obj(cose_obj)
+
+        msg.signers = cose_obj.pop(0)
+        return msg
+
     def __init__(self, phdr=CoseAttrs(), uhdr=CoseAttrs(), payload=b'', signers=CoseAttrs(), key=b''):
         super(SignMessage, self).__init__(
             copy.deepcopy(phdr),

@@ -1,9 +1,9 @@
-import copy
+from typing import Optional, Union
 
-import cbor
+import cbor2
 
-from pycose import crypto, cosemessage, signcommon
-from pycose.attributes import CoseAttrs
+from pycose import cosemessage, signcommon
+from pycose.cosekey import EC2, OKP, CoseEllipticCurves
 
 
 @cosemessage.CoseMessage.record_cbor_tag(18)
@@ -11,73 +11,76 @@ class Sign1Message(signcommon.SignCommon):
     context = "Signature1"
     cbor_tag = 18
 
-    def __init__(self, phdr=CoseAttrs(), uhdr=CoseAttrs(), payload=b'', signature=b'', key=b''):
-        super(Sign1Message, self).__init__(
-            copy.deepcopy(phdr),
-            copy.deepcopy(uhdr),
-            payload)
-        self._key = key
-        self._signature = signature
+    @classmethod
+    def from_cose_obj(cls, cose_obj):
+        msg = super().from_cose_obj(cose_obj)
+        msg.signature = cose_obj.pop(0)
+        return msg
 
-    @property
-    def key(self):
-        return self._key
+    def __init__(self,
+                 phdr: Optional[dict] = None,
+                 uhdr: Optional[dict] = None,
+                 payload: bytes = b'',
+                 external_aad: bytes = b'',
+                 key: Optional[Union[EC2, OKP]] = None):
+        if phdr is None:
+            phdr = {}
+        if uhdr is None:
+            uhdr = {}
 
-    @key.setter
-    def key(self, new_value):
-        self._key = new_value
+        super().__init__(phdr, uhdr, payload, external_aad, key)
+
+        self.signature = b''
 
     @property
     def signature(self):
         return self._signature
 
     @signature.setter
-    def signature(self, new_value):
-        self._signature = new_value
+    def signature(self, new_signature):
+        if type(new_signature) is not bytes:
+            raise ValueError("signature must be of type 'bytes'")
+        self._signature = new_signature
 
     @property
     def _sig_structure(self):
         """
-        create the sig_structure that needs to be signed
+        Create the sig_structure that needs to be signed
         :return: to_be_signed
         """
-        sig_structure = list()
-        sig_structure.append(self.context)
-
-        # add empty_or_serialized_map
-        if len(self.protected_header) == 0:
-            sig_structure.append(bytes())
-        else:
-            sig_structure.append(self.encoded_protected_header)
-
-        if self.external_aad is None:
-            sig_structure.append(bytes())
-        else:
-            sig_structure.append(self.external_aad)
+        sig_structure = [self.context]
+        sig_structure = self._base_structure(sig_structure)
 
         if self.payload is None:
             raise ValueError("Payload cannot be empty for tag computation")
 
-        if isinstance(self.payload, str):
-            sig_structure.append(bytes(self.payload, 'utf-8'))
-        elif isinstance(self.payload, bytes):
-            sig_structure.append(self.payload)
+        sig_structure.append(self.payload)
 
-        to_be_signed = cbor.dumps(sig_structure)
-        return to_be_signed
+        return cbor2.dumps(sig_structure)
 
-    def verify_signature(self, alg, curve='P-256', signer=None):
-        """
-        Verifies the authentication tag of a received message
-        :return: True or raises an exception
-        """
-        to_sign = self._sig_structure
-        return crypto.ec_verify_wrapper(self.key, to_sign, self.signature, alg, curve)
+    def encode(self,
+               tagged: bool = True,
+               sign: bool = True,
+               alg: Optional[int] = None,
+               curve: Optional[CoseEllipticCurves] = None,
+               key: Optional[Union[EC2, OKP]] = None) -> bytes:
+        """ Encodes the message into a CBOR array with or without a CBOR tag. """
 
-    def encode(self):
-        """
-        Encodes the message into a CBOR array with the appropriate cbor tag attached
-        :return: COSE message
-        """
-        return cbor.dumps(
-            cbor.Tag(self.cbor_tag, [self.encoded_protected_header, self.unprotected_header, self.payload, self.signature]))
+        if sign:
+            message = [self.encode_phdr(), self.encode_uhdr(), self.payload, self.compute_signature(alg, key)]
+        else:
+            message = [self.encode_phdr(), self.encode_uhdr(), self.payload]
+
+        if tagged:
+            res = cbor2.dumps(cbor2.CBORTag(self.cbor_tag, message))
+        else:
+            res = cbor2.dumps(message)
+
+        return res
+
+    def __repr__(self):
+        return f'<COSE_Sign1:\n' \
+               f'\t phdr={self._phdr}\n' \
+               f'\t uhdr={self._uhdr}\n' \
+               f'\t payload={self._payload}\n' \
+               f'\t signature={self.signature}>'
