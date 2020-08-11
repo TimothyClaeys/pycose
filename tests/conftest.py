@@ -12,7 +12,11 @@ from pycose.cosekey import KTY, CoseEllipticCurves, CoseKey, SymmetricKey, EC2
 path_examples = os.path.join(pathlib.Path(__file__).parent.absolute(), 'examples')
 
 mac0_test_vector_dirs = [os.path.join(path_examples, "mac0-tests")]
-mac_test_vector_dirs = [os.path.join(path_examples, "mac-tests")]
+mac_test_vector_dirs = [
+    os.path.join(path_examples, "mac-tests"),
+    os.path.join(path_examples, "hmac-examples"),
+    os.path.join(path_examples, "cbc-mac-examples")]
+mac_hkdf_hmac_direct_test_vectors_dirs = [os.path.join(path_examples, "hkdf-hmac-sha-examples")]
 enc0_test_vector_dirs = [
     os.path.join(path_examples, 'aes-ccm-examples'),
     os.path.join(path_examples, 'aes-gcm-examples'),
@@ -50,7 +54,15 @@ algs_to_be_replaced = {
     "ECDH-ES-A192KW": CoseAlgorithm.ECDH_ES_A192KW,
     "ECDH-ES-A128KW": CoseAlgorithm.ECDH_ES_A128KW,
     "ECDH-SS-A256KW": CoseAlgorithm.ECDH_SS_A256KW,
-    "HS256": CoseAlgorithm.HMAC_256_256
+    "HS256": CoseAlgorithm.HMAC_256_256,
+    "HS384": CoseAlgorithm.HMAC_384_384,
+    "HS512": CoseAlgorithm.HMAC_512_512,
+    "HS256/64": CoseAlgorithm.HMAC_256_64,
+    "AES-MAC-256/64": CoseAlgorithm.AES_MAC_256_64,
+    "AES-MAC-128/64": CoseAlgorithm.AES_MAC_128_64,
+    "AES-MAC-128/128": CoseAlgorithm.AES_MAC_128_128,
+    "AES-MAC-256/128": CoseAlgorithm.AES_MAC_256_128,
+    "ChaCha-Poly1305": CoseAlgorithm.CHACHA20_POLY1305,
 }
 
 params_to_be_replaced = {
@@ -122,6 +134,7 @@ def pytest_generate_tests(metafunc):
 
 def generic_test_setup(generic_test_input: dict) -> tuple:
     try:
+        title = generic_test_input['title']
         test_input = generic_test_input['input']
         test_output = generic_test_input['output']['cbor']
         test_intermediate = generic_test_input['intermediates']
@@ -133,7 +146,7 @@ def generic_test_setup(generic_test_input: dict) -> tuple:
     else:
         fail = False
 
-    return test_input, test_output, test_intermediate, fail
+    return title, test_input, test_output, test_intermediate, fail
 
 
 def mac0_tests():
