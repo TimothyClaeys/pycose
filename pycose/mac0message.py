@@ -53,7 +53,7 @@ class Mac0Message(maccommon.MacCommon):
         return res
 
     def __repr__(self):
-        return f'<COSE_Encrypt0:\n' \
+        return f'<COSE_Mac0:\n' \
                f'\t phdr={self._phdr}\n' \
                f'\t uhdr={self._uhdr}\n' \
                f'\t payload={self._payload}\n' \

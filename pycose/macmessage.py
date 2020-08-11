@@ -80,7 +80,7 @@ class MacMessage(maccommon.MacCommon):
         return message
 
     def __repr__(self) -> str:
-        return f'<COSE_Encrypt:\n' \
+        return f'<COSE_Mac:\n' \
                f'\t phdr={self._phdr}\n' \
                f'\t uhdr={self._uhdr}\n' \
                f'\t payload={self._payload}\n' \
