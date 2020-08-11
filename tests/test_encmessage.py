@@ -17,7 +17,7 @@ def setup_encrypt_tests(encrypt_test_input: dict) -> tuple:
 
 @mark.encoding
 def test_encrypt_encoding(setup_encrypt_tests: tuple) -> None:
-    test_input, test_output, test_intermediate, fail = setup_encrypt_tests
+    _, test_input, test_output, test_intermediate, fail = setup_encrypt_tests
 
     m = EncMessage(
         phdr=test_input['enveloped'].get('protected', {}),
@@ -36,25 +36,23 @@ def test_encrypt_encoding(setup_encrypt_tests: tuple) -> None:
     assert m._enc_structure == unhexlify(test_intermediate['AAD_hex'])
 
     # set up the CEK.
-    m.key = SymmetricKey(k=unhexlify(test_intermediate['CEK_hex']))
+    cek = SymmetricKey(k=unhexlify(test_intermediate['CEK_hex']))
+    m.key = cek
 
     # create the recipients
-    recipients = []
-    recipients_data = test_input["enveloped"].get("recipients")
-    for r_info in recipients_data:
-        phdr = r_info.get('protected', {})
-        uhdr = r_info.get('unprotected', {})
-        if r_info.get('recipients', []):
-            raise NotImplementedError("Cannot deal with this right now.")
+    r_info = test_input['enveloped']['recipients'][0]
+    recipient = CoseRecipient(
+        phdr=r_info.get('protected', {}),
+        uhdr=r_info.get('unprotected', {}),
+        payload=cek.key_bytes
+    )
 
-        rcpt = CoseRecipient(phdr=phdr, uhdr=uhdr, payload=m.key.key_bytes, recipients=[])
-        rcpt.key = SymmetricKey(
-            k=r_info['key'][SymmetricKey.SymPrm.K],
-            kid=r_info["key"][CoseKey.Common.KID]
-        )
-        recipients.append(rcpt)
+    recipient.key = SymmetricKey(
+        k=r_info['key'][SymmetricKey.SymPrm.K],
+        kid=r_info["key"][CoseKey.Common.KID]
+    )
 
-    m.recipients = recipients
+    m.recipients.append(recipient)
 
     # verify encoding (with automatic encryption)
     output = unhexlify(test_output)
@@ -70,7 +68,7 @@ def test_encrypt_encoding(setup_encrypt_tests: tuple) -> None:
 
 @mark.decoding
 def test_encrypt_decoding(setup_encrypt_tests: tuple) -> None:
-    test_input, test_output, test_intermediate, fail = setup_encrypt_tests
+    _, test_input, test_output, test_intermediate, fail = setup_encrypt_tests
 
     if fail:
         skip("invalid test input")
@@ -125,7 +123,7 @@ def setup_encrypt_ecdh_direct_tests(encrypt_ecdh_direct_test_input: dict) -> tup
 @mark.encoding
 @mark.decoding
 def test_encrypt_ecdh_direct_decode_encode(setup_encrypt_ecdh_direct_tests: tuple) -> None:
-    test_input, test_output, test_intermediate, fail = setup_encrypt_ecdh_direct_tests
+    _, test_input, test_output, test_intermediate, fail = setup_encrypt_ecdh_direct_tests
 
     # DECODING
 
@@ -240,7 +238,7 @@ def setup_encrypt_ecdh_wrap_tests(encrypt_ecdh_wrap_test_input: dict) -> tuple:
 
 @mark.decoding
 def test_encrypt_ecdh_wrap_decode(setup_encrypt_ecdh_wrap_tests: tuple):
-    test_input, test_output, test_intermediate, fail = setup_encrypt_ecdh_wrap_tests
+    _, test_input, test_output, test_intermediate, fail = setup_encrypt_ecdh_wrap_tests
     # DECODING
 
     # parse message and test for headers
@@ -342,7 +340,7 @@ def setup_encrypt_x25519_direct_tests(encrypt_x25519_direct_test_input: dict) ->
 
 @mark.decoding
 def test_encrypt_x25519_wrap_decode(setup_encrypt_x25519_direct_tests: tuple) -> None:
-    test_input, test_output, test_intermediate, fail = setup_encrypt_x25519_direct_tests
+    _, test_input, test_output, test_intermediate, fail = setup_encrypt_x25519_direct_tests
     # DECODING
 
     # parse message and test for headers

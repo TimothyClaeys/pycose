@@ -17,7 +17,7 @@ def setup_encrypt0_tests(encrypt0_test_input: dict) -> tuple:
 
 @mark.encoding
 def test_encrypt0_encoding(setup_encrypt0_tests: tuple) -> None:
-    test_input, test_output, test_intermediate, fail = setup_encrypt0_tests
+    _, test_input, test_output, test_intermediate, fail = setup_encrypt0_tests
 
     # initialize a COSE_Encrypt0 message
     enc0 = Enc0Message(
@@ -87,7 +87,7 @@ def test_encrypt0_standalone_encryption(phdr, uhdr, alg, key1, key2, nonce, expe
 
 @mark.decoding
 def test_encrypt0_decoding(setup_encrypt0_tests: tuple) -> None:
-    test_input, test_output, test_intermediate, fail = setup_encrypt0_tests
+    _, test_input, test_output, test_intermediate, fail = setup_encrypt0_tests
 
     if fail:
         skip("invalid test input")
