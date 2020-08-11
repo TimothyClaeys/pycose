@@ -1,5 +1,6 @@
-from binascii import unhexlify
-from typing import Tuple
+from binascii import unhexlify, hexlify
+from hashlib import sha256, sha512, sha384
+from typing import Tuple, Union
 
 import cbor2
 from cryptography.hazmat.backends import default_backend, openssl
@@ -12,15 +13,22 @@ from cryptography.hazmat.primitives.ciphers import algorithms, aead, Cipher, mod
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.primitives.keywrap import aes_key_wrap, aes_key_unwrap
 from dataclasses import dataclass
+from ecdsa import NIST256p, NIST521p, NIST384p, SigningKey
 
 from pycose.attributes import CoseAlgorithm
-from pycose.cosekey import CoseEllipticCurves, SymmetricKey
+from pycose.cosekey import CoseEllipticCurves, SymmetricKey, EC2, OKP
 from pycose.exceptions import *
 
 AESKW = {
     CoseAlgorithm.A128KW,
     CoseAlgorithm.A192KW,
     CoseAlgorithm.A256KW
+}
+
+ECDSA = {
+    CoseAlgorithm.ES256: (NIST256p, sha256),
+    CoseAlgorithm.ES384: (NIST384p, sha384),
+    CoseAlgorithm.ES512: (NIST521p, sha512),
 }
 
 ECDH_HASHES = {
@@ -272,21 +280,17 @@ def hmac_hkdf_key_derivation(alg: CoseAlgorithm,
 
     return derived_key
 
-# def ec_sign_wrapper(key, to_be_signed, algorithm, curve):
-#     if isinstance(key, str):
-#         signer = derive_priv_key(key, ec_curves[curve], hashfunc=hashes_for_ecc[algorithm])
-#     else:
-#         signer = key
-#     return signer.sign_deterministic(to_be_signed, hashfunc=hashes_for_ecc[algorithm])
-#
-#
-# def ec_verify_wrapper(key, to_be_signed, signature, algorithm='ES256', curve='P-256'):
-#     if isinstance(key, str):
-#         signer = derive_priv_key(key, ec_curves[curve], hashfunc=hashes_for_ecc[algorithm])
-#     else:
-#         signer = key
-#     try:
-#         verifier = signer.get_verifying_key()
-#     except AttributeError:
-#         verifier = signer
-#     return verifier.verify(signature, to_be_signed, hashfunc=hashes_for_ecc[algorithm])
+
+def ec_sign_wrapper(key: Union[EC2, OKP], to_be_signed: bytes, algorithm: CoseAlgorithm) -> bytes:
+    if algorithm in ECDSA:
+        crv, hash_func = ECDSA[algorithm]
+        sk = SigningKey.from_secret_exponent(int(hexlify(key.private_bytes), 16), curve=crv)
+
+        return sk.sign_deterministic(to_be_signed, hashfunc=hash_func)
+    else:
+        # TODO: implement EdDSA
+        return
+
+
+def ec_verify_wrapper(key, to_be_signed, signature, algorithm='ES256', curve='P-256'):
+    pass
