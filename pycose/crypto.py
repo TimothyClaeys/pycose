@@ -14,7 +14,7 @@ from cryptography.hazmat.primitives.keywrap import aes_key_wrap, aes_key_unwrap
 from dataclasses import dataclass
 
 from pycose.attributes import CoseAlgorithm
-from pycose.cosekey import CoseEllipticCurves
+from pycose.cosekey import CoseEllipticCurves, SymmetricKey
 from pycose.exceptions import *
 
 AESKW = {
@@ -41,6 +41,11 @@ HMAC = {
     CoseAlgorithm.HMAC_256_256: hashes.SHA256,
     CoseAlgorithm.HMAC_384_384: hashes.SHA384,
     CoseAlgorithm.HMAC_512_512: hashes.SHA512,
+}
+
+HMAC_HASHES = {
+    CoseAlgorithm.DIRECT_HKDF_SHA_256: hashes.SHA256,
+    CoseAlgorithm.DIRECT_HKDF_SHA_512: hashes.SHA512,
 }
 
 AES_CBC_MAC = {
@@ -250,6 +255,22 @@ def x25519_key_derivation(private_key: X25519PrivateKey,
                        backend=openssl.backend).derive(shared_secret)
 
     return shared_secret, derived_key
+
+
+def hmac_hkdf_key_derivation(alg: CoseAlgorithm,
+                             shared_secret: SymmetricKey,
+                             length: int,
+                             salt: bytes = None,
+                             context: bytes = b''):
+    hash_func = HMAC_HASHES[alg]
+
+    derived_key = HKDF(algorithm=hash_func(),
+                       length=length,
+                       salt=salt,
+                       info=context,
+                       backend=openssl.backend).derive(shared_secret.key_bytes)
+
+    return derived_key
 
 # def ec_sign_wrapper(key, to_be_signed, algorithm, curve):
 #     if isinstance(key, str):

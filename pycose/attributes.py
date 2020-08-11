@@ -55,6 +55,10 @@ class CoseAlgorithm(IntEnum):
     ECDH_SS_HKDF_256 = -27
     ECDH_ES_HKDF_512 = -26
     ECDH_ES_HKDF_256 = -25
+    DIRECT_HKDF_AES_256 = -13
+    DIRECT_HKDF_SHA_128 = -12
+    DIRECT_HKDF_SHA_512 = -11
+    DIRECT_HKDF_SHA_256 = -10
     EDDSA = -8
     ES256 = -7
     DIRECT = -6

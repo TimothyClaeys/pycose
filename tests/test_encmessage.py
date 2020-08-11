@@ -356,12 +356,7 @@ def test_encrypt_x25519_wrap_decode(setup_encrypt_x25519_direct_tests: tuple) ->
     md.external_aad = unhexlify(test_input['enveloped'].get('external', b''))
     assert md._enc_structure == unhexlify(test_intermediate['AAD_hex'])
 
-    # verify the receiver and set up the keying material
-    recipients = test_input['enveloped']['recipients']
-    if len(recipients) > 1 or len(recipients) == 0:
-        raise NotImplementedError("Can't deal with this now")
-
-    rcpt = recipients[0]
+    rcpt = test_input['enveloped']['recipients'][0]
     assert md.recipients[0].phdr == rcpt.get('protected', {})
     # do not verify unprotected header since it contains the ephemeral public key of the sender
     # assert m.recipients[0].uhdr == rcpt.get('unprotected', {})
@@ -421,10 +416,65 @@ def setup_encrypt_triple_layer_tests(encrypt_triple_layer_test_input: dict) -> t
 
 @mark.decoding
 def test_encrypt_triple_layer_decode(setup_encrypt_triple_layer_tests: tuple):
+    # TODO: fails because the y coordinate of the third later is 'false' ?
     skip("not implemented")
 
-    # TODO: fails because the y coordinate of the third later is 'false' ?
-    # md = CoseMessage.decode(unhexlify(output))
 
-    # # CHECK FIRST LAYER
-    # assert md.phdr == enveloped.get('protected', {})
+@fixture
+def setup_encrypt_hkdf_hmac_direct_tests(encrypt_hkdf_hmac_direct_test_input: dict) -> tuple:
+    return generic_test_setup(encrypt_hkdf_hmac_direct_test_input)
+
+
+def test_encrypt_hkdf_hmac_direct_decode(setup_encrypt_hkdf_hmac_direct_tests: tuple) -> None:
+    title, test_input, test_output, test_intermediate, fail = setup_encrypt_hkdf_hmac_direct_tests
+
+    # parse message and test for headers
+    md = CoseMessage.decode(unhexlify(test_output))
+    assert md.phdr == test_input['enveloped'].get('protected', {})
+
+    unprotected = test_input['enveloped'].get('unprotected', {})
+    if 'rng_stream' in test_input:
+        unprotected.update({CoseHeaderParam.IV: unhexlify(test_input['rng_stream'][0])})
+    assert md.uhdr == unprotected
+
+    # check for external data and verify internal _enc_structure
+    md.external_aad = unhexlify(test_input['enveloped'].get('external', b''))
+    assert md._enc_structure == unhexlify(test_intermediate['AAD_hex'])
+
+    rcpt = test_input['enveloped']['recipients'][0]
+    assert md.recipients[0].phdr == rcpt.get('protected', {})
+
+    # create HKDF contect
+    v = PartyInfo(
+        identity=md.recipients[0].uhdr.get(CoseHeaderParam.PARTY_V_IDENTITY),
+        nonce=md.recipients[0].uhdr.get(CoseHeaderParam.PARTY_V_NONCE),
+        other=md.recipients[0].uhdr.get(CoseHeaderParam.PARTY_V_OTHER))
+    u = PartyInfo(
+        identity=md.recipients[0].uhdr.get(CoseHeaderParam.PARTY_U_IDENTITY),
+        nonce=md.recipients[0].uhdr.get(CoseHeaderParam.PARTY_U_NONCE),
+        other=md.recipients[0].uhdr.get(CoseHeaderParam.PARTY_U_OTHER))
+    public_data = test_input['enveloped']['recipients'][0].get('unsent', {}).get('pub_other')
+    s = SuppPubInfo(
+        len(test_intermediate['CEK_hex']) * 4,
+        md.recipients[0].encode_phdr(),
+        public_data.encode('utf-8') if public_data is not None else public_data)
+    priv_data = test_input['enveloped']['recipients'][0].get('unsent', {}).get('priv_other')
+    hkdf_context = CoseKDFContext(md.phdr[CoseHeaderParam.ALG],
+                                  u, v, s,
+                                  priv_data.encode('utf') if priv_data is not None else priv_data)
+    hkdf_context_encoded = hkdf_context.encode()
+    assert hkdf_context_encoded == unhexlify(test_intermediate["recipients"][0]['Context_hex'])
+
+    # set shared secret key
+    shared_secret = SymmetricKey(
+        k=CoseKey.base64decode(test_input['enveloped']['recipients'][0]['key'][SymmetricKey.SymPrm.K]))
+
+    kek = md.recipients[0].derive_kek(
+        shared_secret,
+        alg=md.recipients[0].phdr[CoseHeaderParam.ALG],
+        context=hkdf_context,
+        salt=md.recipients[0].uhdr.get(CoseHeaderParam.SALT)
+    )
+
+    assert kek == unhexlify(test_intermediate["CEK_hex"])
+    assert md.decrypt(key=SymmetricKey(k=kek)) == test_input['plaintext'].encode('utf-8')

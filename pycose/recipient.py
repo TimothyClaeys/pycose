@@ -17,7 +17,7 @@ from pycose.attributes import CoseHeaderParam as Hp, CoseAlgorithm
 from pycose.basicstructure import BasicCoseStructure
 from pycose.cosekey import SymmetricKey, EC2, OKP
 from pycose.crypto import key_wrap, CoseKDFContext, KEY_DERIVATION_CURVES, ecdh_key_derivation, key_unwrap, \
-    x25519_key_derivation
+    x25519_key_derivation, hmac_hkdf_key_derivation
 
 
 class CoseRecipient(BasicCoseStructure):
@@ -140,7 +140,7 @@ class CoseRecipient(BasicCoseStructure):
     @classmethod
     def derive_kek(cls, private_key, public_key: Optional[Union[EC2, OKP]] = None, alg: Optional[CoseAlgorithm] = None,
                    context: CoseKDFContext = None, salt: bytes = None, expose_secret: bool = False):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @derive_kek.register(EC2)
     @classmethod
@@ -169,7 +169,20 @@ class CoseRecipient(BasicCoseStructure):
     @classmethod
     def _(cls, private_key: SymmetricKey, public_key=None, alg: Optional[CoseAlgorithm] = None,
           context: CoseKDFContext = None, salt: bytes = None, expose_secret: bool = False):
-        raise NotImplementedError()
+
+        _ = public_key
+
+        kek = hmac_hkdf_key_derivation(
+            alg=alg,
+            shared_secret=private_key,
+            length=int(context.supp_pub_info.key_data_length / 8),
+            salt=salt,
+            context=context.encode())
+
+        if expose_secret:
+            return private_key.private_bytes, kek
+        else:
+            return kek
 
     @derive_kek.register(OKP)
     @classmethod

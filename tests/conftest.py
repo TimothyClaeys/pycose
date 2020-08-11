@@ -63,6 +63,8 @@ algs_to_be_replaced = {
     "AES-MAC-128/128": CoseAlgorithm.AES_MAC_128_128,
     "AES-MAC-256/128": CoseAlgorithm.AES_MAC_256_128,
     "ChaCha-Poly1305": CoseAlgorithm.CHACHA20_POLY1305,
+    "HKDF-HMAC-SHA-256": CoseAlgorithm.DIRECT_HKDF_SHA_256,
+    "HKDF-HMAC-SHA-512": CoseAlgorithm.DIRECT_HKDF_SHA_512,
 }
 
 params_to_be_replaced = {
@@ -130,6 +132,10 @@ def pytest_generate_tests(metafunc):
         test_suite = encrypt_x25519_direct_tests()
         ids = [test['title'] for test in test_suite]
         metafunc.parametrize("encrypt_triple_layer_test_input", test_suite, ids=ids)
+    if "encrypt_hkdf_hmac_direct_test_input" in metafunc.fixturenames:
+        test_suite = encrypt_hkdf_hmac_direct_tests()
+        ids = [test['title'] for test in test_suite]
+        metafunc.parametrize("encrypt_hkdf_hmac_direct_test_input", test_suite, ids=ids)
 
 
 def generic_test_setup(generic_test_input: dict) -> tuple:
@@ -179,6 +185,10 @@ def encrypt_x25519_direct_tests():
 
 def encrypt_triple_layer_tests():
     return _build_test_cases('enveloped', triple_layer_enc_test_vector_dirs)
+
+
+def encrypt_hkdf_hmac_direct_tests():
+    return _build_test_cases('enveloped', mac_hkdf_hmac_direct_test_vectors_dirs)
 
 
 def _build_test_cases(key: str, test_dirs: List[str]):
