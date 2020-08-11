@@ -10,13 +10,13 @@ from pycose.cosekey import CoseKey
 class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
     """ Parent class of all COSE message types. """
 
-    cose_msg_id: Dict[int, Type['CoseMessage']] = {}
+    cose_msg_id = {}
 
     @classmethod
-    def record_cbor_tag(cls, cbor_tag: int) -> Callable[[Type['CoseMessage']], Type['CoseMessage']]:
+    def record_cbor_tag(cls, cbor_tag: int):
         """Decorator to record all the CBOR tags dynamically"""
 
-        def decorator(the_class: Type['CoseMessage']) -> Type['CoseMessage']:
+        def decorator(the_class):
             if not issubclass(the_class, CoseMessage):
                 raise ValueError("Can only decorate subclass of CoseMessage")
             cls.cose_msg_id[cbor_tag] = the_class
@@ -25,7 +25,7 @@ class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
         return decorator
 
     @classmethod
-    def decode(cls, received: bytes) -> 'CoseMessage':
+    def decode(cls, received: bytes):
         """Decode received COSE message based on the CBOR tag."""
 
         try:
@@ -45,7 +45,7 @@ class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
             raise TypeError("Message is not a COSE security message")
 
     @classmethod
-    def from_cose_obj(cls, cose_obj: list) -> 'CoseMessage':
+    def from_cose_obj(cls, cose_obj: list):
         """Returns an initialized COSE message object."""
 
         try:
