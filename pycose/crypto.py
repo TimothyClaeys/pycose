@@ -13,7 +13,7 @@ from cryptography.hazmat.primitives.ciphers import algorithms, aead, Cipher, mod
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.primitives.keywrap import aes_key_wrap, aes_key_unwrap
 from dataclasses import dataclass
-from ecdsa import NIST256p, NIST521p, NIST384p, SigningKey
+from ecdsa import NIST256p, NIST521p, NIST384p, SigningKey, VerifyingKey, ellipticcurve
 
 from pycose.attributes import CoseAlgorithm
 from pycose.cosekey import CoseEllipticCurves, SymmetricKey, EC2, OKP
@@ -292,5 +292,10 @@ def ec_sign_wrapper(key: Union[EC2, OKP], to_be_signed: bytes, algorithm: CoseAl
         return
 
 
-def ec_verify_wrapper(key, to_be_signed, signature, algorithm='ES256', curve='P-256'):
-    pass
+def ec_verify_wrapper(key: Union[EC2, OKP], to_be_signed: bytes, signature: bytes, algorithm: CoseAlgorithm) -> bool:
+    if algorithm in ECDSA:
+        crv, hash_func = ECDSA[algorithm]
+        p = ellipticcurve.Point(curve=crv.curve, x=int(hexlify(key.x), 16), y=int(hexlify(key.y), 16))
+        vk = VerifyingKey.from_public_point(p, crv, hash_func, validate_point=True)
+
+        return vk.verify(signature, to_be_signed)
