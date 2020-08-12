@@ -63,8 +63,8 @@ class CoseRecipient(BasicCoseStructure):
 
         return CoseRecipient(phdr=phdr, uhdr=uhdr, payload=payload, recipients=recipient_list)
 
-    def __init__(self, phdr: Union[dict, None] = None,
-                 uhdr: Union[dict, None] = None,
+    def __init__(self, phdr: Optional[dict] = None,
+                 uhdr: Optional[dict] = None,
                  payload: bytes = b'',
                  key: Optional[SymmetricKey] = None,
                  recipients: Optional[List] = None):

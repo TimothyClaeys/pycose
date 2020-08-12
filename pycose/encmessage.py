@@ -24,11 +24,11 @@ class EncMessage(enccommon.EncCommon):
         return msg
 
     def __init__(self,
-                 phdr: dict = None,
-                 uhdr: dict = None,
+                 phdr: Optional[dict] = None,
+                 uhdr: Optional[dict] = None,
                  payload: bytes = b'',
                  external_aad: bytes = b'',
-                 key: SymmetricKey = None,
+                 key: Optional[SymmetricKey] = None,
                  recipients: Optional[List[CoseRecipient]] = None):
         if phdr is None:
             phdr = {}
@@ -38,7 +38,7 @@ class EncMessage(enccommon.EncCommon):
         super().__init__(phdr, uhdr, payload, external_aad, key)
 
         if recipients is None:
-            self.recipients = []
+            self.recipients = list()
         else:
             self.recipients = recipients
 

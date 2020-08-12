@@ -94,7 +94,7 @@ class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
 
     def _base_structure(self, structure: list) -> list:
         if len(self.phdr) == 0:
-            structure.append(bytes())
+            structure.append(b'')
         else:
             structure.append(self.encode_phdr())
 
