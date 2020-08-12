@@ -1,13 +1,14 @@
-from typing import Optional, Union
+from typing import Optional, Union, Tuple
 
 import cbor2
 
-from pycose import cosemessage, signcommon
-from pycose.cosekey import EC2, OKP, CoseEllipticCurves
+from pycose import cosemessage, crypto
+from pycose.attributes import CoseAlgorithm, CoseHeaderParam
+from pycose.cosekey import EC2, OKP
 
 
 @cosemessage.CoseMessage.record_cbor_tag(18)
-class Sign1Message(signcommon.SignCommon):
+class Sign1Message(cosemessage.CoseMessage):
     context = "Signature1"
     cbor_tag = 18
 
@@ -51,18 +52,50 @@ class Sign1Message(signcommon.SignCommon):
         sig_structure = [self.context]
         sig_structure = self._base_structure(sig_structure)
 
-        if self.payload is None:
-            raise ValueError("Payload cannot be empty for tag computation")
-
         sig_structure.append(self.payload)
 
         return cbor2.dumps(sig_structure)
 
+    def verify_signature(self, alg: Optional[CoseAlgorithm] = None, key: Optional[Union[EC2, OKP]] = None) -> bool:
+        """
+        Verifies the signature of a received message
+        :return: True or raises an exception
+        """
+        _alg, _key = self._get_crypt_params(alg, key)
+
+        return crypto.ec_verify_wrapper(_key, self._sig_structure, self.signature, _alg)
+
+    def compute_signature(self,
+                          alg: Optional[CoseAlgorithm] = None,
+                          key: Optional[Union[EC2, OKP]] = None):
+
+        to_sign = self._sig_structure
+
+        _alg, _key = self._get_crypt_params(alg, key)
+        return crypto.ec_sign_wrapper(_key, to_sign, _alg)
+
+    def _get_crypt_params(self,
+                          alg: Optional[CoseAlgorithm],
+                          key: Optional[Union[EC2, OKP]]) -> Tuple[CoseAlgorithm, Union[EC2, OKP]]:
+
+        # if nothing is overridden by the function parameters, search in COSE headers
+        _alg = alg if alg is not None else self.phdr.get(CoseHeaderParam.ALG)
+        _alg = _alg if _alg is not None else self.uhdr.get(CoseHeaderParam.ALG)
+
+        if _alg is None:
+            raise AttributeError('No algorithm specified.')
+
+        try:
+            _key = key if key is not None else self.key
+        except AttributeError:
+            raise AttributeError("No key specified.")
+
+        return _alg, _key
+
     def encode(self,
                tagged: bool = True,
                sign: bool = True,
-               alg: Optional[int] = None,
-               curve: Optional[CoseEllipticCurves] = None,
+               alg: Optional[CoseAlgorithm] = None,
                key: Optional[Union[EC2, OKP]] = None) -> bytes:
         """ Encodes the message into a CBOR array with or without a CBOR tag. """
 
