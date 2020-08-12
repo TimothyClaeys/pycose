@@ -1,7 +1,7 @@
 from typing import Optional, Union
 
 from pycose import crypto
-from pycose.attributes import CoseAlgorithm
+from pycose.attributes import CoseAlgorithm, CoseHeaderParam
 from pycose.basicstructure import BasicCoseStructure
 from pycose.cosekey import EC2, OKP
 
@@ -47,5 +47,19 @@ class CoseSignature(BasicCoseStructure):
         pass
 
 
+@BasicCoseStructure.record_hdr_value_parser(CoseHeaderParam.COUNTER_SIGNATURE)
 class CounterSignature(CoseSignature):
     context = "CounterSignature"
+
+    @classmethod
+    def decode(cls, cose_signature_obj: list):
+        return super().from_signature_obj(cose_signature_obj)
+
+
+@BasicCoseStructure.record_hdr_value_parser(CoseHeaderParam.COUNTER_SIGNATURE0)
+class CounterSignature0(CoseSignature):
+    context = "CounterSignature0"
+
+    @classmethod
+    def decode(cls, cose_signature_obj: list):
+        return super().from_signature_obj(cose_signature_obj)

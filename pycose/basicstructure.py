@@ -3,13 +3,23 @@ from typing import Dict, Union, Any, Optional
 
 import cbor2
 
-from pycose.attributes import CoseHeaderParam as Hp, CoseAlgorithm as Alg
-from pycose.cosekey import CoseKey
-from pycose.cosesignature import CounterSignature
+from pycose.attributes import CoseHeaderParam as Hp, CoseAlgorithm as Alg, CoseHeaderParam
 
 
 class BasicCoseStructure(metaclass=abc.ABCMeta):
     """ Basic COSE information buckets. """
+
+    COSE_HDR_PARSER = {}
+
+    @classmethod
+    def record_hdr_value_parser(cls, hdr_param: CoseHeaderParam):
+        """Decorator to record all the CBOR tags dynamically"""
+
+        def decorator(func):
+            cls.COSE_HDR_PARSER[hdr_param] = func
+            return func
+
+        return decorator
 
     @classmethod
     def from_cose_obj(cls, cose_obj: list):
@@ -98,14 +108,8 @@ class BasicCoseStructure(metaclass=abc.ABCMeta):
 
         if key == Hp.ALG:
             return Alg(value)
-        elif key in {Hp.EPHEMERAL_KEY, Hp.STATIC_KEY}:
-            # TODO: what to do with Hp.STATIC_KEY_ID
-            return CoseKey.decode(value)
-        elif key == Hp.COUNTER_SIGNATURE:
-            return CounterSignature.from_cose_obj(value)
-        elif key == Hp.COUNTER_SIGNATURE0:
-            # TODO: check how to parse counter_signature0 structures
-            pass
+        elif key in cls.COSE_HDR_PARSER:
+            return cls.COSE_HDR_PARSER[key].decode(value)
         else:
             return value
 

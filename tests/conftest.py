@@ -32,6 +32,7 @@ x25519_direct_test_vector_dirs = [os.path.join(path_examples, 'X25519-tests')]
 triple_layer_enc_test_vector_dirs = [os.path.join(path_examples, 'RFC8152')]
 sign1_test_vector_dirs = [os.path.join(path_examples, "sign1-tests")]
 sign_test_vector_dirs = [os.path.join(path_examples, "sign-tests")]
+countersign_test_vector_dirs = [os.path.join(path_examples, 'countersign')]
 
 algs_to_be_replaced = {
     'A128GCM': CoseAlgorithm.A128GCM,

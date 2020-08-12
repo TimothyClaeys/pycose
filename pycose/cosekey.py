@@ -6,7 +6,8 @@ from typing import List, Union, Dict, Optional, Tuple
 
 import dataclasses as dc
 
-from pycose.attributes import CoseAlgorithm
+from pycose.attributes import CoseAlgorithm, CoseHeaderParam
+from pycose.basicstructure import BasicCoseStructure
 
 
 @unique
@@ -56,6 +57,8 @@ class EllipticCurveKeys(IntEnum):
 
 
 @dc.dataclass
+@BasicCoseStructure.record_hdr_value_parser(CoseHeaderParam.STATIC_KEY)
+@BasicCoseStructure.record_hdr_value_parser(CoseHeaderParam.EPHEMERAL_KEY)
 class CoseKey(metaclass=ABCMeta):
     _kty: Optional[KTY]
     _kid: Optional[Union[int, bytes]]
@@ -82,7 +85,7 @@ class CoseKey(metaclass=ABCMeta):
 
         def decorator(the_class):
             if not issubclass(the_class, CoseKey):
-                raise ValueError("Can only decorate subclass of CoseMessage")
+                raise ValueError("Can only decorate subclass of CoseKey")
             cls.KTY[kty_id] = the_class
             return the_class
 
