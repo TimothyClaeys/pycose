@@ -2,12 +2,13 @@ import json
 import os
 import pathlib
 from binascii import unhexlify
-from typing import List
+from typing import List, Type, Union
 
 from pytest import skip
 
 from pycose.attributes import CoseHeaderParam, CoseAlgorithm
-from pycose.cosekey import KTY, CoseEllipticCurves, CoseKey, SymmetricKey, EC2
+from pycose.cosekey import KTY, CoseEllipticCurves, CoseKey, SymmetricKey, EC2, KeyOps, OKP
+from pycose.exceptions import CoseInvalidKey
 
 path_examples = os.path.join(pathlib.Path(__file__).parent.absolute(), 'examples')
 
@@ -289,3 +290,36 @@ def _fix_header_attribute_names(data: dict, key) -> None:
     if CoseHeaderParam.PARTIAL_IV in header_dict and type(header_dict[CoseHeaderParam.PARTIAL_IV]) == str:
         header_dict[CoseHeaderParam.PARTIAL_IV] = unhexlify(header_dict[CoseHeaderParam.PARTIAL_IV].encode('utf-8'))
     data[key] = header_dict
+
+
+def create_cose_key(key_type: Type[CoseKey],
+                    input_data: dict,
+                    usage: KeyOps = None,
+                    **kwargs) -> Union[EC2, SymmetricKey, OKP]:
+    if key_type == EC2:
+        key = EC2(
+            kid=input_data.get(CoseKey.Common.KID),
+            key_ops=usage,
+            crv=kwargs.get('crv'),
+            x=CoseKey.base64decode(input_data.get(EC2.EC2Prm.X)),
+            y=CoseKey.base64decode(input_data.get(EC2.EC2Prm.Y)),
+            d=CoseKey.base64decode(input_data.get(EC2.EC2Prm.D)),
+        )
+    elif key_type == SymmetricKey:
+        key = SymmetricKey(
+            kid=input_data.get(CoseKey.Common.KID),
+            key_ops=usage,
+            k=CoseKey.base64decode(input_data.get(SymmetricKey.SymPrm.K))
+        )
+    elif key_type == OKP:
+        key = OKP(
+            kid=input_data.get(CoseKey.Common.KID),
+            key_ops=usage,
+            crv=kwargs.get('crv'),
+            x=CoseKey.base64decode(input_data.get(OKP.OKPPrm.X)),
+            d=CoseKey.base64decode(input_data.get(OKP.OKPPrm.D)),
+        )
+    else:
+        raise CoseInvalidKey
+
+    return key
