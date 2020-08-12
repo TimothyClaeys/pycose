@@ -8,3 +8,7 @@ class CoseUnsupportedEnc(Exception):
 
 class CoseInvalidTag(Exception):
     pass
+
+
+class CoseInvalidKey(Exception):
+    pass
