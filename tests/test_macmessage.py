@@ -3,10 +3,10 @@ from binascii import unhexlify
 from pytest import fixture, mark, skip
 
 from pycose import CoseMessage
-from pycose.cosekey import SymmetricKey, CoseKey
+from pycose.cosekey import SymmetricKey, CoseKey, KeyOps
 from pycose.macmessage import MacMessage
 from pycose.recipient import CoseRecipient
-from tests.conftest import generic_test_setup
+from tests.conftest import generic_test_setup, create_cose_key
 
 
 @fixture
@@ -27,13 +27,10 @@ def test_mac_direct_encoding(setup_mac_tests: tuple) -> None:
 
     assert mac._mac_structure == unhexlify(test_intermediate["ToMac_hex"])
 
-    recipient = test_input["mac"]["recipients"][0]
-
-    key = SymmetricKey(
-        k=CoseKey.base64decode(recipient["key"][SymmetricKey.SymPrm.K]),
-        kid=recipient["key"][CoseKey.Common.KID])
+    key = create_cose_key(SymmetricKey, test_input['mac']["recipients"][0]["key"], usage=KeyOps.MAC_CREATE)
     assert key.key_bytes == unhexlify(test_intermediate["CEK_hex"])
 
+    recipient = test_input["mac"]["recipients"][0]
     recipient = CoseRecipient(
         phdr=recipient.get('protected', {}),
         uhdr=recipient.get('unprotected', {}),
@@ -67,11 +64,7 @@ def test_mac_direct_decoding(setup_mac_tests: tuple) -> None:
     cose_msg.external_aad = unhexlify(test_input['mac'].get("external", b''))
     assert cose_msg._mac_structure == unhexlify(test_intermediate['ToMac_hex'])
 
-    recipient = test_input["mac"]["recipients"][0]
-
-    key = SymmetricKey(
-        k=CoseKey.base64decode(recipient["key"][SymmetricKey.SymPrm.K]),
-        kid=recipient["key"][CoseKey.Common.KID])
+    key = create_cose_key(SymmetricKey, test_input['mac']["recipients"][0]["key"], usage=KeyOps.MAC_VERIFY)
     assert key.key_bytes == unhexlify(test_intermediate["CEK_hex"])
 
     # verify recipients
