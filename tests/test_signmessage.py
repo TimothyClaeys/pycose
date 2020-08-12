@@ -27,16 +27,15 @@ def test_sign_encoding(setup_sign_tests: tuple) -> None:
 
     signer = test_input["sign"]['signers'][0]
     signer = CoseSignature(
-        cose_sign_msg=sign,
         phdr=signer.get('protected'),
         uhdr=signer.get('unprotected'),
         external_aad=unhexlify(signer.get("external", b'')),
         key=signer_key
     )
 
-    sign.signatures.append(signer)
+    sign.cose_signatures.append(signer)
 
-    assert signer._sig_structure == unhexlify(test_intermediate['signers'][0]["ToBeSign_hex"])
+    assert sign._sig_structure(signer) == unhexlify(test_intermediate['signers'][0]["ToBeSign_hex"])
 
     # verify encoding (with automatic tag computation)
     if fail:
@@ -46,7 +45,7 @@ def test_sign_encoding(setup_sign_tests: tuple) -> None:
 
 
 @mark.decoding
-def test_sign_encoding(setup_sign_tests: tuple) -> None:
+def test_sign_decoding(setup_sign_tests: tuple) -> None:
     _, test_input, test_output, test_intermediate, fail = setup_sign_tests
 
     if fail:
@@ -58,15 +57,14 @@ def test_sign_encoding(setup_sign_tests: tuple) -> None:
     assert cose_msg.uhdr == test_input['sign'].get('unprotected', {})
     assert cose_msg.payload == test_input.get('plaintext', "").encode('utf-8')
 
-    assert len(cose_msg.signatures) == 1
-    assert cose_msg.signatures[0].phdr == test_input['sign']['signers'][0].get('protected', {})
-    assert cose_msg.signatures[0].uhdr == test_input['sign']['signers'][0].get('unprotected', {})
+    assert len(cose_msg.cose_signatures) == 1
+    assert cose_msg.cose_signatures[0].phdr == test_input['sign']['signers'][0].get('protected', {})
+    assert cose_msg.cose_signatures[0].uhdr == test_input['sign']['signers'][0].get('unprotected', {})
 
     # set up potential external data and keys
-    cose_msg.signatures[0].external_aad = unhexlify(test_input['sign']['signers'][0].get('external', b''))
-    cose_msg.signatures[0].key = create_cose_key(EC2, test_input['sign']['signers'][0]['key'], KeyOps.SIGN)
+    cose_msg.cose_signatures[0].external_aad = unhexlify(test_input['sign']['signers'][0].get('external', b''))
+    cose_msg.cose_signatures[0].key = create_cose_key(EC2, test_input['sign']['signers'][0]['key'], KeyOps.SIGN)
 
-    assert cose_msg.signatures[0]._sig_structure == unhexlify(test_intermediate['signers'][0]["ToBeSign_hex"])
-    assert cose_msg.signatures[0].verify_signature()
-
-
+    assert cose_msg._sig_structure(cose_msg.cose_signatures[0]) == unhexlify(
+        test_intermediate['signers'][0]["ToBeSign_hex"])
+    assert cose_msg.verify_signature(cose_msg.cose_signatures[0])

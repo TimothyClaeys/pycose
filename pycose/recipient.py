@@ -2,8 +2,6 @@ import sys
 from binascii import hexlify
 from typing import Union, List, Optional, Any, Tuple
 
-import cbor2
-from cbor2 import CBORDecodeEOF
 from cryptography.hazmat.backends import openssl
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PublicKey, X25519PrivateKey
@@ -40,28 +38,20 @@ class CoseRecipient(BasicCoseStructure):
 
     @classmethod
     def from_recipient_obj(cls, recipient_obj: list):
-        try:
-            phdr = BasicCoseStructure.parse_cose_hdr(cbor2.loads(recipient_obj.pop(0)))
-        except (IndexError, CBORDecodeEOF):
-            phdr = {}
+        msg = super().from_cose_obj(recipient_obj)
 
         try:
-            uhdr = BasicCoseStructure.parse_cose_hdr(recipient_obj.pop(0))
+            msg.payload = recipient_obj.pop(0)
         except IndexError:
-            uhdr = {}
-
-        try:
-            payload = recipient_obj.pop(0)
-        except IndexError:
-            payload = b''
+            msg.payload = b''
 
         try:
             recipient_list = recipient_obj.pop(0)
-            recipient_list = [CoseRecipient.from_recipient_obj(r) for r in recipient_list]
+            msg.recipient_list = [CoseRecipient.from_recipient_obj(r) for r in recipient_list]
         except IndexError:
-            recipient_list = None
+            msg.recipient_list = None
 
-        return CoseRecipient(phdr=phdr, uhdr=uhdr, payload=payload, recipients=recipient_list)
+        return msg
 
     def __init__(self, phdr: Optional[dict] = None,
                  uhdr: Optional[dict] = None,
@@ -154,6 +144,8 @@ class CoseRecipient(BasicCoseStructure):
         except KeyError:
             raise ValueError(f'Invalid curve: {public_key.crv}')
 
+        # TODO: implement checks for the COSE_keys, correct curve, correct key operation, ..
+        # TODO: move this logic to the crypto.py file
         d = ec.derive_private_key(int(hexlify(private_key.private_bytes), 16), crv, openssl.backend)
         p = ec.EllipticCurvePublicNumbers(
             int(hexlify(public_key.x), 16), int(hexlify(public_key.y), 16), crv).public_key(openssl.backend)
@@ -172,6 +164,7 @@ class CoseRecipient(BasicCoseStructure):
 
         _ = public_key
 
+        # TODO: implement checks for the COSE_keys, correct curve, correct key operation, ..
         kek = hmac_hkdf_key_derivation(
             alg=alg,
             shared_secret=private_key,
@@ -190,6 +183,8 @@ class CoseRecipient(BasicCoseStructure):
           context: CoseKDFContext = None, salt: bytes = None, expose_secret: bool = False):
         _ = salt
 
+        # TODO: move this logic to the crypto.py file
+        # TODO: implement checks for the COSE_keys, correct curve, correct key operation, ..
         p = X25519PublicKey.from_public_bytes(public_key.public_bytes)
         d = X25519PrivateKey.from_private_bytes(private_key.private_bytes)
 

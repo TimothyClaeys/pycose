@@ -5,10 +5,25 @@ import cbor2
 
 from pycose.attributes import CoseHeaderParam as Hp, CoseAlgorithm as Alg
 from pycose.cosekey import CoseKey
+from pycose.cosesignature import CounterSignature
 
 
 class BasicCoseStructure(metaclass=abc.ABCMeta):
     """ Basic COSE information buckets. """
+
+    @classmethod
+    def from_cose_obj(cls, cose_obj: list):
+        try:
+            phdr = cls.parse_cose_hdr(cbor2.loads(cose_obj.pop(0)))
+        except (ValueError, EOFError):
+            phdr = {}
+
+        try:
+            uhdr = cls.parse_cose_hdr(cose_obj.pop(0))
+        except ValueError:
+            uhdr = {}
+
+        return cls(phdr, uhdr)
 
     def __init__(self, phdr: Optional[dict] = None, uhdr: Optional[dict] = None, payload: bytes = b''):
         if phdr is None:
@@ -51,16 +66,6 @@ class BasicCoseStructure(metaclass=abc.ABCMeta):
             raise TypeError("unprotected header should be of type 'dict'")
         self._uhdr = new_uhdr.copy()
 
-    @property
-    def payload(self) -> bytes:
-        return self._payload
-
-    @payload.setter
-    def payload(self, new_payload: bytes) -> None:
-        if type(new_payload) is not bytes:
-            raise TypeError("payload should be of type 'bytes'")
-        self._payload = new_payload  # can be plaintext or ciphertext
-
     def phdr_update(self, phdr_params: dict) -> None:
         if type(phdr_params) is not dict:
             raise TypeError("protected header should be of type 'dict'")
@@ -87,14 +92,20 @@ class BasicCoseStructure(metaclass=abc.ABCMeta):
         return {(Hp(k) if Hp.has_value(k) else k): cls._parse_hdr_value(k, v) for k, v in hdr.items()}
 
     @classmethod
-    def _parse_hdr_value(cls, key: Union[Hp, bytes], value: Union[Hp, bytes, dict]) -> Any:
+    def _parse_hdr_value(cls, key: Union[Hp, bytes], value: Any) -> Any:
         if not Hp.has_value(key):
             return value
 
         if key == Hp.ALG:
             return Alg(value)
-        elif key == Hp.EPHEMERAL_KEY:
+        elif key in {Hp.EPHEMERAL_KEY, Hp.STATIC_KEY}:
+            # TODO: what to do with Hp.STATIC_KEY_ID
             return CoseKey.decode(value)
+        elif key == Hp.COUNTER_SIGNATURE:
+            return CounterSignature.from_cose_obj(value)
+        elif key == Hp.COUNTER_SIGNATURE0:
+            # TODO: check how to parse counter_signature0 structures
+            pass
         else:
             return value
 

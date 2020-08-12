@@ -74,24 +74,6 @@ class Sign1Message(cosemessage.CoseMessage):
         _alg, _key = self._get_crypt_params(alg, key)
         return crypto.ec_sign_wrapper(_key, to_sign, _alg)
 
-    def _get_crypt_params(self,
-                          alg: Optional[CoseAlgorithm],
-                          key: Optional[Union[EC2, OKP]]) -> Tuple[CoseAlgorithm, Union[EC2, OKP]]:
-
-        # if nothing is overridden by the function parameters, search in COSE headers
-        _alg = alg if alg is not None else self.phdr.get(CoseHeaderParam.ALG)
-        _alg = _alg if _alg is not None else self.uhdr.get(CoseHeaderParam.ALG)
-
-        if _alg is None:
-            raise AttributeError('No algorithm specified.')
-
-        try:
-            _key = key if key is not None else self.key
-        except AttributeError:
-            raise AttributeError("No key specified.")
-
-        return _alg, _key
-
     def encode(self,
                tagged: bool = True,
                sign: bool = True,
@@ -110,6 +92,24 @@ class Sign1Message(cosemessage.CoseMessage):
             res = cbor2.dumps(message)
 
         return res
+
+    def _get_crypt_params(self,
+                          alg: Optional[CoseAlgorithm],
+                          key: Optional[Union[EC2, OKP]]) -> Tuple[CoseAlgorithm, Union[EC2, OKP]]:
+
+        # if nothing is overridden by the function parameters, search in COSE headers
+        _alg = alg if alg is not None else self.phdr.get(CoseHeaderParam.ALG)
+        _alg = _alg if _alg is not None else self.uhdr.get(CoseHeaderParam.ALG)
+
+        if _alg is None:
+            raise AttributeError('No algorithm specified.')
+
+        try:
+            _key = key if key is not None else self.key
+        except AttributeError:
+            raise AttributeError("No key specified.")
+
+        return _alg, _key
 
     def __repr__(self):
         return f'<COSE_Sign1:\n' \

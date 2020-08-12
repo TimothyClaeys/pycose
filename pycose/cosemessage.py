@@ -1,5 +1,5 @@
 import abc
-from typing import Type, Optional, Callable, Dict
+from typing import Type, Optional
 
 import cbor2
 
@@ -10,7 +10,7 @@ from pycose.cosekey import CoseKey
 class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
     """ Parent class of all COSE message types. """
 
-    cose_msg_id = {}
+    COSE_MSG_ID = {}
 
     @classmethod
     def record_cbor_tag(cls, cbor_tag: int):
@@ -19,7 +19,7 @@ class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
         def decorator(the_class):
             if not issubclass(the_class, CoseMessage):
                 raise ValueError("Can only decorate subclass of CoseMessage")
-            cls.cose_msg_id[cbor_tag] = the_class
+            cls.COSE_MSG_ID[cbor_tag] = the_class
             return the_class
 
         return decorator
@@ -38,7 +38,7 @@ class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
 
         if isinstance(cose_obj, list):
             try:
-                return cls.cose_msg_id[cbor_tag].from_cose_obj(cose_obj)
+                return cls.COSE_MSG_ID[cbor_tag].from_cose_obj(cose_obj)
             except KeyError as e:
                 raise KeyError("CBOR tag is not recognized", e)
         else:
@@ -47,20 +47,9 @@ class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
     @classmethod
     def from_cose_obj(cls, cose_obj: list):
         """Returns an initialized COSE message object."""
-
-        try:
-            phdr = BasicCoseStructure.parse_cose_hdr(cbor2.loads(cose_obj.pop(0)))
-        except (ValueError, EOFError):
-            phdr = {}
-
-        try:
-            uhdr = BasicCoseStructure.parse_cose_hdr(cose_obj.pop(0))
-        except ValueError:
-            uhdr = {}
-
-        payload = cose_obj.pop(0)
-
-        return cls(phdr, uhdr, payload)
+        msg = super().from_cose_obj(cose_obj)
+        msg.payload = cose_obj.pop(0)
+        return msg
 
     def __init__(self,
                  phdr: Optional[dict],
@@ -68,7 +57,8 @@ class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
                  payload: bytes,
                  external_aad: bytes,
                  key: Optional[Type[CoseKey]]):
-        super(CoseMessage, self).__init__(phdr, uhdr, payload)
+        super().__init__(phdr, uhdr)
+        self.payload = payload
         self.external_aad = external_aad
         self.key = key
 
@@ -81,6 +71,16 @@ class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
         if type(new_external_aad) is not bytes:
             raise TypeError("external_aad must be of type 'bytes'")
         self._external_aad = new_external_aad
+
+    @property
+    def payload(self) -> bytes:
+        return self._payload
+
+    @payload.setter
+    def payload(self, new_payload: bytes) -> None:
+        if type(new_payload) is not bytes:
+            raise TypeError("payload should be of type 'bytes'")
+        self._payload = new_payload  # can be plaintext or ciphertext
 
     @property
     def key(self) -> Optional[Type[CoseKey]]:

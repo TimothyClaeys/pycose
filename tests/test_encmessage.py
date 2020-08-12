@@ -7,7 +7,8 @@ from pycose.attributes import CoseHeaderParam, CoseAlgorithm
 from pycose.cosekey import SymmetricKey, KeyOps, CoseKey, EC2, KTY, OKP
 from pycose.crypto import PartyInfo, SuppPubInfo, CoseKDFContext
 from pycose.recipient import CoseRecipient
-from tests.conftest import generic_test_setup
+from tests.conftest import generic_test_setup, extract_protected_header, extract_unprotected_header, \
+    extract_unsent_nonce, create_cose_key
 
 
 @fixture
@@ -20,50 +21,41 @@ def test_encrypt_encoding(setup_encrypt_tests: tuple) -> None:
     _, test_input, test_output, test_intermediate, fail = setup_encrypt_tests
 
     m = EncMessage(
-        phdr=test_input['enveloped'].get('protected', {}),
-        uhdr=test_input['enveloped'].get('unprotected', {}),
+        phdr=extract_protected_header(test_input, 'enveloped'),
+        uhdr=extract_unprotected_header(test_input, 'enveloped'),
         payload=test_input['plaintext'].encode('utf-8'),
         external_aad=unhexlify(test_input['enveloped'].get('external', b'')))
 
-    nonce = None
-    if 'rng_stream' in test_input:
-        m.uhdr_update({CoseHeaderParam.IV: unhexlify(test_input['rng_stream'][0])})
-    else:
-        if 'unsent' in test_input['enveloped']:
-            nonce = unhexlify(test_input['enveloped']['unsent']['IV_hex'])
+    nonce = extract_unsent_nonce(test_input, 'enveloped')
 
     # check for external data and verify internal _enc_structure
     assert m._enc_structure == unhexlify(test_intermediate['AAD_hex'])
 
     # set up the CEK.
-    cek = SymmetricKey(k=unhexlify(test_intermediate['CEK_hex']))
-    m.key = cek
+    m.key = create_cose_key(SymmetricKey, test_input['enveloped']['recipients'][0]['key'], usage=KeyOps.ENCRYPT)
+    assert m.key.key_bytes == unhexlify(test_intermediate['CEK_hex'])
 
     # create the recipients
     r_info = test_input['enveloped']['recipients'][0]
     recipient = CoseRecipient(
         phdr=r_info.get('protected', {}),
         uhdr=r_info.get('unprotected', {}),
-        payload=cek.key_bytes
-    )
-
-    recipient.key = SymmetricKey(
-        k=r_info['key'][SymmetricKey.SymPrm.K],
-        kid=r_info["key"][CoseKey.Common.KID]
+        payload=m.key.key_bytes,
+        key=m.key
     )
 
     m.recipients.append(recipient)
 
     # verify encoding (with automatic encryption)
-    output = unhexlify(test_output)
     if fail:
-        assert m.encode(encrypt=True, nonce=nonce) != output
+        assert m.encode(encrypt=True, nonce=nonce) != unhexlify(test_output)
     else:
         # (1) test encoding without specifying recipient crypto params
-        assert m.encode(encrypt=True, nonce=nonce) == output
+        assert m.encode(encrypt=True, nonce=nonce) == unhexlify(test_output)
 
         # (2)
-        assert m.encode(encrypt=True, nonce=nonce, crypto_params=((True, CoseAlgorithm.DIRECT, None, None),)) == output
+        assert m.encode(encrypt=True, nonce=nonce,
+                        crypto_params=((True, CoseAlgorithm.DIRECT, None, None),)) == unhexlify(test_output)
 
 
 @mark.decoding
@@ -77,25 +69,12 @@ def test_encrypt_decoding(setup_encrypt_tests: tuple) -> None:
     msg = CoseMessage.decode(unhexlify(test_output))
 
     # verify parsed protected header
-    assert msg.phdr == test_input['enveloped'].get('protected', {})
+    assert msg.phdr == extract_protected_header(test_input, 'enveloped')
+    assert msg.uhdr == extract_unprotected_header(test_input, 'enveloped')
 
-    # verify parsed unprotected header
-    unprotected = test_input['enveloped'].get('unprotected', {})
+    nonce = extract_unsent_nonce(test_input, 'enveloped')
 
-    nonce = None
-    if 'rng_stream' in test_input:
-        unprotected.update({CoseHeaderParam.IV: unhexlify(test_input['rng_stream'][0])})
-    else:
-        if 'unsent' in test_input['enveloped']:
-            nonce = unhexlify(test_input['enveloped']['unsent']['IV_hex'])
-
-    assert msg.uhdr == unprotected
-
-    key = test_input['enveloped'].get("recipients")[0].get("key")
-    key = SymmetricKey(
-        kid=key[CoseKey.Common.KID],
-        key_ops=KeyOps.DECRYPT,
-        k=CoseKey.base64decode(key[SymmetricKey.SymPrm.K]))
+    key = create_cose_key(SymmetricKey, test_input['enveloped']["recipients"][0]["key"], usage=KeyOps.DECRYPT)
     assert key.key_bytes == unhexlify(test_intermediate['CEK_hex'])
 
     # look for external data and verify internal enc_structure
@@ -103,9 +82,9 @@ def test_encrypt_decoding(setup_encrypt_tests: tuple) -> None:
     assert msg._enc_structure == unhexlify(test_intermediate['AAD_hex'])
 
     # verify recipients
-    for r1, r2 in zip(msg.recipients, test_input['enveloped']['recipients']):
-        assert r1.phdr == r2.get('protected', {})
-        assert r1.uhdr == r2.get('unprotected', {})
+    assert len(msg.recipients) == 1
+    assert msg.recipients[0].phdr == test_input['enveloped']['recipients'][0].get('protected', {})
+    assert msg.recipients[0].uhdr == test_input['enveloped']['recipients'][0].get('unprotected', {})
 
     # (1) verify decryption
     nonce = nonce if nonce is not None else unhexlify(test_input['rng_stream'][0].encode('utf-8'))
@@ -129,12 +108,8 @@ def test_encrypt_ecdh_direct_decode_encode(setup_encrypt_ecdh_direct_tests: tupl
 
     # parse message and test for headers
     md = CoseMessage.decode(unhexlify(test_output))
-    assert md.phdr == test_input['enveloped'].get('protected', {})
-
-    unprotected = test_input['enveloped'].get('unprotected', {})
-    if 'rng_stream' in test_input:
-        unprotected.update({CoseHeaderParam.IV: unhexlify(test_input['rng_stream'][1])})
-    assert md.uhdr == unprotected
+    assert md.phdr == extract_protected_header(test_input, 'enveloped')
+    assert md.uhdr == extract_unprotected_header(test_input, 'enveloped', 1)
 
     # check for external data and verify internal _enc_structure
     md.external_aad = unhexlify(test_input['enveloped'].get('external', b''))

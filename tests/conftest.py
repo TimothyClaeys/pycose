@@ -2,7 +2,7 @@ import json
 import os
 import pathlib
 from binascii import unhexlify
-from typing import List, Type, Union
+from typing import List, Type, Union, Optional
 
 from pytest import skip
 
@@ -341,3 +341,21 @@ def create_cose_key(key_type: Type[CoseKey],
         raise CoseInvalidKey
 
     return key
+
+
+def extract_protected_header(test_input: dict, key: str) -> dict:
+    return test_input[key].get('protected', {})
+
+
+def extract_unprotected_header(test_input: dict, key: str, rng_index=0) -> dict:
+    base = test_input[key].get('unprotected', {})
+
+    if key == 'encrypted' or key == 'enveloped':
+        if 'rng_stream' in test_input:
+            base.update({CoseHeaderParam.IV: unhexlify(test_input['rng_stream'][rng_index])})
+    return base
+
+
+def extract_unsent_nonce(test_input: dict, key: str) -> Optional[bytes]:
+    if 'unsent' in test_input[key]:
+        return unhexlify(test_input[key]['unsent']['IV_hex'])

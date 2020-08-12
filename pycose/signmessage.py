@@ -10,99 +10,30 @@ from itertools import zip_longest
 from typing import Optional, Union, List, Tuple
 
 import cbor2
-from cbor2 import CBORDecodeEOF
 
-from pycose import cosemessage
-from pycose.attributes import CoseAlgorithm
-from pycose.basicstructure import BasicCoseStructure
+from pycose import cosemessage, crypto
+from pycose.attributes import CoseAlgorithm, CoseHeaderParam
 from pycose.cosekey import OKP, EC2
-from pycose.sign1message import Sign1Message
-
-
-class CoseSignature(Sign1Message):
-    context = "Signature"
-
-    @classmethod
-    def from_signature_obj(cls, signature_list: list, msg: 'SignMessage'):
-
-        try:
-            phdr = BasicCoseStructure.parse_cose_hdr(cbor2.loads(signature_list.pop(0)))
-        except (IndexError, CBORDecodeEOF):
-            phdr = {}
-
-        try:
-            uhdr = BasicCoseStructure.parse_cose_hdr(signature_list.pop(0))
-        except IndexError:
-            uhdr = {}
-
-        try:
-            signature = signature_list.pop(0)
-        except IndexError:
-            signature = None
-
-        return CoseSignature(msg, phdr, uhdr, signature)
-
-    def __init__(self,
-                 cose_sign_msg: 'SignMessage',
-                 phdr: Optional[dict],
-                 uhdr: Optional[dict],
-                 signature: Optional[bytes] = b'',
-                 external_aad: Optional[bytes] = b'',
-                 key: Optional[Union[EC2, OKP]] = None):
-        super().__init__(phdr=phdr, uhdr=uhdr, payload=b'', external_aad=external_aad, key=key)
-        self.cose_sign_msg = cose_sign_msg
-        self.signature = signature
-
-    def encode(self,
-               sign: bool = True,
-               alg: Optional[CoseAlgorithm] = None,
-               key: Optional[Union[EC2, OKP]] = None, **kwargs) -> list:
-
-        if sign:
-            message = [self.encode_phdr(), self.encode_uhdr(), self.compute_signature(alg, key)]
-        else:
-            message = [self.encode_phdr(), self.encode_uhdr()]
-
-        # tagging is not supported for COSE_signature objects
-        return message
-
-    @property
-    def _sig_structure(self):
-        """
-        create the sig_structure that needs to be signed
-        :return: to_be_signed
-        """
-        sig_structure = [
-            self.context,
-            self.cose_sign_msg.encode_phdr(),
-            self.encode_phdr(),
-            self._external_aad,
-            self.cose_sign_msg.payload
-        ]
-
-        return cbor2.dumps(sig_structure)
-
-
-class CounterSignature(CoseSignature):
-    context = "CounterSignature"
+from pycose.cosesignature import CoseSignature
 
 
 @cosemessage.CoseMessage.record_cbor_tag(98)
 class SignMessage(cosemessage.CoseMessage):
     cbor_tag = 98
+    context = "Signature"
 
     @classmethod
     def from_cose_obj(cls, cose_obj):
         msg = super().from_cose_obj(cose_obj)
 
-        msg.signatures = [CoseSignature.from_signature_obj(r, msg) for r in cose_obj.pop(0)]
+        msg.cose_signatures = [CoseSignature.from_signature_obj(r) for r in cose_obj.pop(0)]
         return msg
 
     def __init__(self,
                  phdr: Optional[dict] = None,
                  uhdr: Optional[dict] = None,
                  payload: bytes = b'',
-                 signatures: Optional[List[CoseSignature]] = None):
+                 cose_signatures: Optional[List[CoseSignature]] = None):
         if phdr is None:
             phdr = {}
         if uhdr is None:
@@ -110,10 +41,30 @@ class SignMessage(cosemessage.CoseMessage):
 
         super().__init__(phdr, uhdr, payload, b'', None)
 
-        if signatures is None:
-            self.signatures = list()
+        if cose_signatures is None:
+            self.cose_signatures = list()
         else:
-            self.signatures = signatures
+            self.cose_signatures = cose_signatures
+
+    def _sig_structure(self, cose_signature):
+        _sig_structure = [
+            cose_signature.context,
+            self.encode_phdr(),
+            cose_signature.encode_phdr(),
+            cose_signature.external_aad,
+            self.payload
+        ]
+
+        return cbor2.dumps(_sig_structure)
+
+    def verify_signature(self,
+                         cose_signature: Optional[CoseSignature],
+                         alg: Optional[CoseAlgorithm] = None,
+                         key: Optional[Union[EC2, OKP]] = None) -> bool:
+
+        _alg, _key = SignMessage._get_crypt_params(cose_signature, alg, key)
+
+        return crypto.ec_verify_wrapper(_key, self._sig_structure(cose_signature), cose_signature.signature, _alg)
 
     def encode(self,
                tagged: bool = True,
@@ -127,12 +78,20 @@ class SignMessage(cosemessage.CoseMessage):
 
         message = [self.encode_phdr(), self.encode_uhdr(), self.payload]
 
-        if len(sign_params) > len(self.signatures):
+        if len(sign_params) > len(self.cose_signatures):
             raise ValueError("sign_params to long")
 
         signers = list()
-        for signature, param in zip_longest(self.signatures, sign_params, fillvalue=((True, None, None),)):
-            signers.append(signature.encode(*param))
+        for cose_signature, param in zip_longest(self.cose_signatures, sign_params, fillvalue=((True, None, None),)):
+            sign, alg, key = param
+            _alg, _key = SignMessage._get_crypt_params(cose_signature, alg, key)
+
+            if sign:
+                signature = CoseSignature.compute_signature(self._sig_structure(cose_signature), _alg, _key)
+            else:
+                signature = None
+
+            signers.append(cose_signature.encode(signature))
 
         message.append(signers)
 
@@ -143,13 +102,28 @@ class SignMessage(cosemessage.CoseMessage):
 
         return message
 
+    @classmethod
+    def _get_crypt_params(cls,
+                          cose_signature: Optional[CoseSignature],
+                          alg: Optional[CoseAlgorithm],
+                          key: Optional[Union[EC2, OKP]]) -> Tuple[CoseAlgorithm, Union[EC2, OKP]]:
+
+        try:
+            _key = key if key is not None else cose_signature.key
+        except AttributeError:
+            raise AttributeError("No key specified.")
+
+        _alg = alg if alg is not None else cose_signature.phdr.get(CoseHeaderParam.ALG)
+        _alg = _alg if _alg is not None else cose_signature.uhdr.get(CoseHeaderParam.ALG)
+
+        if _alg is None:
+            raise AttributeError('No algorithm specified.')
+
+        return _alg, _key
+
     def __repr__(self):
         return f'<COSE_Sign:\n' \
                f'\t phdr={self._phdr}\n' \
                f'\t uhdr={self._uhdr}\n' \
                f'\t payload={self._payload}\n' \
-               f'\t signatures={self.signatures}>'
-
-    @property
-    def context(self) -> str:
-        raise NotImplementedError
+               f'\t signatures={self.cose_signatures}>'
