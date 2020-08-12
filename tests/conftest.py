@@ -31,6 +31,7 @@ ecdh_wrap_test_vector_dirs = [os.path.join(path_examples, 'ecdh-wrap-examples')]
 x25519_direct_test_vector_dirs = [os.path.join(path_examples, 'X25519-tests')]
 triple_layer_enc_test_vector_dirs = [os.path.join(path_examples, 'RFC8152')]
 sign1_test_vector_dirs = [os.path.join(path_examples, "sign1-tests")]
+sign_test_vector_dirs = [os.path.join(path_examples, "sign-tests")]
 
 algs_to_be_replaced = {
     'A128GCM': CoseAlgorithm.A128GCM,
@@ -145,6 +146,10 @@ def pytest_generate_tests(metafunc):
         test_suite = sign1_tests()
         ids = [test['title'] for test in test_suite]
         metafunc.parametrize("sign1_test_input", test_suite, ids=ids)
+    if "sign_test_input" in metafunc.fixturenames:
+        test_suite = sign_tests()
+        ids = [test['title'] for test in test_suite]
+        metafunc.parametrize("sign_test_input", test_suite, ids=ids)
 
 
 def generic_test_setup(generic_test_input: dict) -> tuple:
@@ -204,6 +209,10 @@ def sign1_tests():
     return _build_test_cases('sign0', sign1_test_vector_dirs)
 
 
+def sign_tests():
+    return _build_test_cases('sign', sign_test_vector_dirs)
+
+
 def _build_test_cases(key: str, test_dirs: List[str]):
     test_files = [os.path.join(path_examples, td, file) for td in test_dirs for file in os.listdir(td)]
     fixed_test_cases = []
@@ -219,6 +228,12 @@ def _build_test_cases(key: str, test_dirs: List[str]):
             try:
                 recipients = test_case['input'][key]['recipients']
                 _fix_recipients(recipients)
+            except KeyError:
+                pass
+
+            try:
+                signers = test_case['input'][key]['signers']
+                _fix_recipients(signers)
             except KeyError:
                 pass
 
@@ -247,6 +262,9 @@ def _fix_recipients(recipients: dict) -> None:
 
         if 'recipients' in r_info:
             _fix_recipients(r_info['recipients'])
+
+        if 'signers' in r_info:
+            _fix_recipients(r_info['signers'])
 
 
 def _fix_key_object(data: dict, key: str) -> None:
