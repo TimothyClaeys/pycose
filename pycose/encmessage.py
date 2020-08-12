@@ -60,7 +60,7 @@ class EncMessage(enccommon.EncCommon):
             message = [self.encode_phdr(), self.encode_uhdr(), self.payload]
 
         if len(self.recipients) > 0:
-            message.append(CoseRecipient.recusive_encode(self.recipients, crypto_params))
+            message.append(CoseRecipient.recursive_encode(self.recipients, crypto_params))
 
         if tagged:
             message = cbor2.dumps(cbor2.CBORTag(self.cbor_tag, message))

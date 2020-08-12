@@ -22,7 +22,7 @@ from pycose.crypto import key_wrap, CoseKDFContext, KEY_DERIVATION_CURVES, ecdh_
 
 class CoseRecipient(BasicCoseStructure):
     @classmethod
-    def recusive_encode(
+    def recursive_encode(
             cls,
             recipients: List['CoseRecipient'],
             crypto_params:
@@ -94,7 +94,7 @@ class CoseRecipient(BasicCoseStructure):
 
         # recursively encode/encrypt the recipients
         if len(self.recipients) > 0:
-            recipients = CoseRecipient.recusive_encode(self.recipients, crypto_params)
+            recipients = CoseRecipient.recursive_encode(self.recipients, crypto_params)
             recipient.append(recipients)
 
         return recipient
