@@ -1,18 +1,49 @@
 import abc
-from typing import Dict, Union, Any, Optional
+from enum import IntEnum, unique
+from typing import Optional
 
 import cbor2
 
-from pycose.attributes import CoseHeaderParam as Hp, CoseAlgorithm as Alg, CoseHeaderParam
+
+@unique
+class HeaderKeys(IntEnum):
+    """ COSE header parameters """
+    # Common Parameters
+    RESERVED = 0
+    ALG = 1
+    CRIT = 2
+    CONTENT_TYPE = 3
+    KID = 4
+    IV = 5
+    PARTIAL_IV = 6
+    COUNTER_SIGNATURE = 7
+    COUNTER_SIGNATURE0 = 9
+    KID_CONTEXT = 10
+
+    # Elliptic Curve Key identifiers
+    EPHEMERAL_KEY = -1
+    STATIC_KEY = - 2
+    STATIC_KEY_ID = -3
+
+    # HKDF Algorithm Parameters
+    SALT = -20
+
+    # Context Algorithm Parameters
+    PARTY_U_IDENTITY = -21
+    PARTY_U_NONCE = -22
+    PARTY_U_OTHER = -23
+    PARTY_V_IDENTITY = -24
+    PARTY_V_NONCE = -25
+    PARTY_V_OTHER = -26
 
 
-class BasicCoseStructure(metaclass=abc.ABCMeta):
+class CoseBase(metaclass=abc.ABCMeta):
     """ Basic COSE information buckets. """
 
     COSE_HDR_PARSER = {}
 
     @classmethod
-    def record_hdr_value_parser(cls, hdr_param: CoseHeaderParam):
+    def record_hdr_value_parser(cls, hdr_param: HeaderKeys):
         """Decorator to record all the CBOR tags dynamically"""
 
         def decorator(func):
@@ -24,12 +55,12 @@ class BasicCoseStructure(metaclass=abc.ABCMeta):
     @classmethod
     def from_cose_obj(cls, cose_obj: list):
         try:
-            phdr = cls.parse_cose_hdr(cbor2.loads(cose_obj.pop(0)))
+            phdr = cbor2.loads(cose_obj.pop(0))
         except (ValueError, EOFError):
             phdr = {}
 
         try:
-            uhdr = cls.parse_cose_hdr(cose_obj.pop(0))
+            uhdr = cose_obj.pop(0)
         except ValueError:
             uhdr = {}
 
@@ -96,22 +127,6 @@ class BasicCoseStructure(metaclass=abc.ABCMeta):
     def encode_uhdr(self) -> dict:
         """ Encode the unprotected header. """
         return self._uhdr
-
-    @classmethod
-    def parse_cose_hdr(cls, hdr: Dict[Union[Hp, bytes], Any]) -> Dict[Union[Hp, bytes], Any]:
-        return {(Hp(k) if Hp.has_value(k) else k): cls._parse_hdr_value(k, v) for k, v in hdr.items()}
-
-    @classmethod
-    def _parse_hdr_value(cls, key: Union[Hp, bytes], value: Any) -> Any:
-        if not Hp.has_value(key):
-            return value
-
-        if key == Hp.ALG:
-            return Alg(value)
-        elif key in cls.COSE_HDR_PARSER:
-            return cls.COSE_HDR_PARSER[key].decode(value)
-        else:
-            return value
 
     @abc.abstractmethod
     def __repr__(self) -> str:

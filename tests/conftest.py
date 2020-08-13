@@ -6,7 +6,8 @@ from typing import List, Type, Union, Optional
 
 from pytest import skip
 
-from pycose.attributes import CoseHeaderParam, CoseAlgorithm
+from pycose.attributes import CoseAlgorithm
+from pycose.cosebase import HeaderKeys
 from pycose.cosekey import KTY, CoseEllipticCurves, CoseKey, SymmetricKey, EC2, KeyOps, OKP
 from pycose.exceptions import CoseInvalidKey
 
@@ -75,10 +76,10 @@ algs_to_be_replaced = {
 }
 
 params_to_be_replaced = {
-    'ctyp': CoseHeaderParam.CONTENT_TYPE,
-    'kid': CoseHeaderParam.KID,
-    'alg': CoseHeaderParam.ALG,
-    'partialIV_hex': CoseHeaderParam.PARTIAL_IV,
+    'ctyp': HeaderKeys.CONTENT_TYPE,
+    'kid': HeaderKeys.KID,
+    'alg': HeaderKeys.ALG,
+    'partialIV_hex': HeaderKeys.PARTIAL_IV,
 }
 
 key_param_to_be_replaced = {
@@ -291,7 +292,7 @@ def _fix_header_algorithm_names(data: dict, key) -> None:
     header_dict = {k: (v if v not in algs_to_be_replaced else algs_to_be_replaced[v]) for k, v in header_dict.items()}
 
     if temp is not None:
-        header_dict[CoseHeaderParam.EPHEMERAL_KEY] = temp
+        header_dict[HeaderKeys.EPHEMERAL_KEY] = temp
     data[key] = header_dict
 
 
@@ -304,10 +305,10 @@ def _fix_header_attribute_names(data: dict, key) -> None:
     header_dict = {(k if k not in params_to_be_replaced else params_to_be_replaced[k]): v for k, v in
                    header_dict.items()}
 
-    if CoseHeaderParam.KID in header_dict and type(header_dict[CoseHeaderParam.KID]) == str:
-        header_dict[CoseHeaderParam.KID] = header_dict[CoseHeaderParam.KID].encode('utf-8')
-    if CoseHeaderParam.PARTIAL_IV in header_dict and type(header_dict[CoseHeaderParam.PARTIAL_IV]) == str:
-        header_dict[CoseHeaderParam.PARTIAL_IV] = unhexlify(header_dict[CoseHeaderParam.PARTIAL_IV].encode('utf-8'))
+    if HeaderKeys.KID in header_dict and type(header_dict[HeaderKeys.KID]) == str:
+        header_dict[HeaderKeys.KID] = header_dict[HeaderKeys.KID].encode('utf-8')
+    if HeaderKeys.PARTIAL_IV in header_dict and type(header_dict[HeaderKeys.PARTIAL_IV]) == str:
+        header_dict[HeaderKeys.PARTIAL_IV] = unhexlify(header_dict[HeaderKeys.PARTIAL_IV].encode('utf-8'))
     data[key] = header_dict
 
 
@@ -353,7 +354,7 @@ def extract_unprotected_header(test_input: dict, key: str, rng_index=0) -> dict:
 
     if key == 'encrypted' or key == 'enveloped':
         if 'rng_stream' in test_input:
-            base.update({CoseHeaderParam.IV: unhexlify(test_input['rng_stream'][rng_index])})
+            base.update({HeaderKeys.IV: unhexlify(test_input['rng_stream'][rng_index])})
     return base
 
 

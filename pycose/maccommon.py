@@ -4,11 +4,18 @@ from typing import Optional, Tuple
 import cbor2
 
 from pycose import cosemessage, crypto, CoseMessage
-from pycose.attributes import CoseAlgorithm, CoseHeaderParam
+from pycose.attributes import CoseAlgorithm
+from pycose.cosebase import HeaderKeys
 from pycose.cosekey import SymmetricKey
 
 
 class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
+    @property
+    @abc.abstractmethod
+    def context(self) -> str:
+        """Getter for the context of the message."""
+        raise NotImplementedError
+
     @classmethod
     def from_cose_obj(cls, cose_obj: list) -> CoseMessage:
         msg = super().from_cose_obj(cose_obj)
@@ -64,8 +71,8 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
                           alg: Optional[CoseAlgorithm],
                           key: Optional[SymmetricKey]) -> Tuple[CoseAlgorithm, bytes]:
         # if nothing is overridden by the function parameters, search in COSE headers
-        _alg = alg if alg is not None else self.phdr.get(CoseHeaderParam.ALG)
-        _alg = _alg if _alg is not None else self.uhdr.get(CoseHeaderParam.ALG)
+        _alg = alg if alg is not None else self.phdr.get(HeaderKeys.ALG)
+        _alg = _alg if _alg is not None else self.uhdr.get(HeaderKeys.ALG)
 
         if _alg is None:
             raise AttributeError('No algorithm specified.')

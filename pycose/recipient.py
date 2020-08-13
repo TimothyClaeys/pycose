@@ -6,19 +6,21 @@ from cryptography.hazmat.backends import openssl
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PublicKey, X25519PrivateKey
 
+from pycose import CoseMessage
+from pycose.cosebase import HeaderKeys
+
 if sys.version_info.minor < 8:
     from singledispatchmethod import singledispatchmethod
 else:
     from functools import singledispatchmethod
 
-from pycose.attributes import CoseHeaderParam as Hp, CoseAlgorithm
-from pycose.basicstructure import BasicCoseStructure
+from pycose.attributes import CoseAlgorithm
 from pycose.cosekey import SymmetricKey, EC2, OKP
 from pycose.crypto import key_wrap, CoseKDFContext, KEY_DERIVATION_CURVES, ecdh_key_derivation, key_unwrap, \
     x25519_key_derivation, hmac_hkdf_key_derivation
 
 
-class CoseRecipient(BasicCoseStructure):
+class CoseRecipient(CoseMessage):
     @classmethod
     def recursive_encode(
             cls,
@@ -41,11 +43,6 @@ class CoseRecipient(BasicCoseStructure):
         msg = super().from_cose_obj(recipient_obj)
 
         try:
-            msg.payload = recipient_obj.pop(0)
-        except IndexError:
-            msg.payload = b''
-
-        try:
             recipient_list = recipient_obj.pop(0)
             msg.recipient_list = [CoseRecipient.from_recipient_obj(r) for r in recipient_list]
         except IndexError:
@@ -58,9 +55,8 @@ class CoseRecipient(BasicCoseStructure):
                  payload: bytes = b'',
                  key: Optional[SymmetricKey] = None,
                  recipients: Optional[List] = None):
-        super().__init__(phdr=phdr, uhdr=uhdr, payload=payload)
+        super().__init__(phdr=phdr, uhdr=uhdr, payload=payload, key=key)
 
-        self.key = key
         self.recipients = [] if recipients is None else recipients
 
     @property
@@ -91,8 +87,8 @@ class CoseRecipient(BasicCoseStructure):
 
     def encrypt(self, alg: Optional[CoseAlgorithm] = None, key: Optional[SymmetricKey] = None) -> bytes:
         """ Do key wrapping. """
-        _alg = alg if alg is not None else self.phdr.get(Hp.ALG)
-        _alg = _alg if _alg is not None else self.uhdr.get(Hp.ALG)
+        _alg = alg if alg is not None else self.phdr.get(HeaderKeys.ALG)
+        _alg = _alg if _alg is not None else self.uhdr.get(HeaderKeys.ALG)
 
         if _alg is None:
             raise AttributeError('No algorithm specified.')
@@ -109,8 +105,8 @@ class CoseRecipient(BasicCoseStructure):
 
     def decrypt(self, alg: Optional[CoseAlgorithm] = None, key: Optional[SymmetricKey] = None) -> bytes:
         """ Do key wrapping. """
-        _alg = alg if alg is not None else self.phdr.get(Hp.ALG)
-        _alg = _alg if _alg is not None else self.uhdr.get(Hp.ALG)
+        _alg = alg if alg is not None else self.phdr.get(HeaderKeys.ALG)
+        _alg = _alg if _alg is not None else self.uhdr.get(HeaderKeys.ALG)
 
         if _alg is None:
             raise AttributeError('No algorithm specified.')

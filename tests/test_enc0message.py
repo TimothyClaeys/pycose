@@ -4,7 +4,8 @@ from binascii import unhexlify, hexlify
 from pytest import mark, fixture, skip
 
 from pycose import CoseMessage
-from pycose.attributes import CoseHeaderParam, CoseAlgorithm
+from pycose.attributes import CoseAlgorithm
+from pycose.cosebase import HeaderKeys
 from pycose.cosekey import SymmetricKey, CoseKey, KeyOps
 from pycose.enc0message import Enc0Message
 from tests.conftest import generic_test_setup, create_cose_key, extract_protected_header, extract_unprotected_header
@@ -81,16 +82,16 @@ def test_encrypt0_decoding(setup_encrypt0_tests: tuple) -> None:
 
 @mark.parametrize("phdr, uhdr, payload, key",
                   [
-                      ({CoseHeaderParam.ALG: CoseAlgorithm.A128GCM},
-                       {CoseHeaderParam.IV: unhexlify(b'89F52F65A1C580933B5261A72F')},
+                      ({HeaderKeys.ALG: CoseAlgorithm.A128GCM},
+                       {HeaderKeys.IV: unhexlify(b'89F52F65A1C580933B5261A72F')},
                        b'',
                        SymmetricKey(kid=b'you_know', k=os.urandom(16))),
-                      ({CoseHeaderParam.ALG: CoseAlgorithm.A192GCM},
-                       {CoseHeaderParam.IV: unhexlify(b'89F52F65A1C580933B5261A72F')},
+                      ({HeaderKeys.ALG: CoseAlgorithm.A192GCM},
+                       {HeaderKeys.IV: unhexlify(b'89F52F65A1C580933B5261A72F')},
                        os.urandom(50),
                        SymmetricKey(kid=b'you_know', k=os.urandom(16))),
-                      ({CoseHeaderParam.ALG: CoseAlgorithm.A256GCM},
-                       {CoseHeaderParam.IV: unhexlify(b'89F52F65A1C580933B5261A72F')},
+                      ({HeaderKeys.ALG: CoseAlgorithm.A256GCM},
+                       {HeaderKeys.IV: unhexlify(b'89F52F65A1C580933B5261A72F')},
                        os.urandom(100),
                        SymmetricKey(kid=b'you_know', k=os.urandom(16)))
                   ], ids=['test_encode_decode_1', 'test_encode_decode_2', 'test_encode_decode_3'])
@@ -116,8 +117,8 @@ def test_encode_decode_encrypt0(phdr, uhdr, payload, key):
 
 @mark.parametrize("phdr, uhdr, alg, key1, key2, nonce, expected",
                   [
-                      ({CoseHeaderParam.ALG: CoseAlgorithm.AES_CCM_16_64_128},
-                       {CoseHeaderParam.IV: unhexlify(b'89F52F65A1C580933B5261A72F')},
+                      ({HeaderKeys.ALG: CoseAlgorithm.AES_CCM_16_64_128},
+                       {HeaderKeys.IV: unhexlify(b'89F52F65A1C580933B5261A72F')},
                        None,
                        SymmetricKey(
                            kid=b'our-secret',
@@ -126,7 +127,7 @@ def test_encode_decode_encrypt0(phdr, uhdr, payload, key):
                        None,
                        None,
                        b'6899DA0A132BD2D2B9B10915743EE1F7B92A4680E7C51BDBC1B320EA',),
-                      ({CoseHeaderParam.ALG: CoseAlgorithm.AES_CCM_16_64_128},
+                      ({HeaderKeys.ALG: CoseAlgorithm.AES_CCM_16_64_128},
                        {},
                        None,
                        SymmetricKey(

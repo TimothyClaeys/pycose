@@ -12,7 +12,8 @@ from typing import Optional, Union, List, Tuple
 import cbor2
 
 from pycose import cosemessage, crypto
-from pycose.attributes import CoseAlgorithm, CoseHeaderParam
+from pycose.attributes import CoseAlgorithm
+from pycose.cosebase import HeaderKeys
 from pycose.cosekey import OKP, EC2
 from pycose.cosesignature import CoseSignature
 
@@ -113,8 +114,8 @@ class SignMessage(cosemessage.CoseMessage):
         except AttributeError:
             raise AttributeError("No key specified.")
 
-        _alg = alg if alg is not None else cose_signature.phdr.get(CoseHeaderParam.ALG)
-        _alg = _alg if _alg is not None else cose_signature.uhdr.get(CoseHeaderParam.ALG)
+        _alg = alg if alg is not None else cose_signature.phdr.get(HeaderKeys.ALG)
+        _alg = _alg if _alg is not None else cose_signature.uhdr.get(HeaderKeys.ALG)
 
         if _alg is None:
             raise AttributeError('No algorithm specified.')

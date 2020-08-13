@@ -3,7 +3,8 @@ from binascii import unhexlify
 from pytest import fixture, mark, skip
 
 from pycose import EncMessage, CoseMessage
-from pycose.attributes import CoseHeaderParam, CoseAlgorithm
+from pycose.attributes import CoseAlgorithm
+from pycose.cosebase import HeaderKeys
 from pycose.cosekey import SymmetricKey, KeyOps, CoseKey, EC2, KTY, OKP
 from pycose.crypto import PartyInfo, SuppPubInfo, CoseKDFContext
 from pycose.recipient import CoseRecipient
@@ -145,14 +146,14 @@ def test_encrypt_ecdh_direct_decode_encode(setup_encrypt_ecdh_direct_tests: tupl
     else:
         # ephemeral key pair
         # verify if it is really ephemeral and that we are only using EC2 CoseKeys
-        assert CoseHeaderParam.EPHEMERAL_KEY in md.recipients[0].uhdr
-        assert md.recipients[0].uhdr[CoseHeaderParam.EPHEMERAL_KEY][CoseKey.Common.KTY] == KTY.EC2
+        assert HeaderKeys.EPHEMERAL_KEY in md.recipients[0].uhdr
+        assert md.recipients[0].uhdr[HeaderKeys.EPHEMERAL_KEY][CoseKey.Common.KTY] == KTY.EC2
 
         # create CoseKey object for the sender key
         sender_key = EC2(
-            crv=md.recipients[0].uhdr[CoseHeaderParam.EPHEMERAL_KEY][EC2.EC2Prm.CRV],
-            x=md.recipients[0].uhdr[CoseHeaderParam.EPHEMERAL_KEY][EC2.EC2Prm.X],
-            y=md.recipients[0].uhdr[CoseHeaderParam.EPHEMERAL_KEY][EC2.EC2Prm.Y]
+            crv=md.recipients[0].uhdr[HeaderKeys.EPHEMERAL_KEY][EC2.EC2Prm.CRV],
+            x=md.recipients[0].uhdr[HeaderKeys.EPHEMERAL_KEY][EC2.EC2Prm.X],
+            y=md.recipients[0].uhdr[HeaderKeys.EPHEMERAL_KEY][EC2.EC2Prm.Y]
         )
 
         u = PartyInfo()
@@ -160,10 +161,10 @@ def test_encrypt_ecdh_direct_decode_encode(setup_encrypt_ecdh_direct_tests: tupl
     # create context KDF
     v = PartyInfo()
     s = SuppPubInfo(len(test_intermediate['CEK_hex']) * 4, md.recipients[0].encode_phdr())
-    kdf_ctx = CoseKDFContext(md.phdr[CoseHeaderParam.ALG], u, v, s)
+    kdf_ctx = CoseKDFContext(md.phdr[HeaderKeys.ALG], u, v, s)
     assert kdf_ctx.encode() == unhexlify(test_intermediate['recipients'][0]['Context_hex'])
 
-    secret, kek = CoseRecipient.derive_kek(receiver_static_key, sender_key, md.recipients[0].phdr[CoseHeaderParam.ALG],
+    secret, kek = CoseRecipient.derive_kek(receiver_static_key, sender_key, md.recipients[0].phdr[HeaderKeys.ALG],
                                            kdf_ctx, expose_secret=True)
     assert secret == unhexlify(test_intermediate['recipients'][0]['Secret_hex'])
     assert kek == unhexlify(test_intermediate['CEK_hex'])
@@ -178,7 +179,7 @@ def test_encrypt_ecdh_direct_decode_encode(setup_encrypt_ecdh_direct_tests: tupl
                     payload=test_input['plaintext'].encode('utf-8'))
 
     if 'rng_stream' in test_input:
-        me.uhdr_update({CoseHeaderParam.IV: unhexlify(test_input['rng_stream'][1])})
+        me.uhdr_update({HeaderKeys.IV: unhexlify(test_input['rng_stream'][1])})
 
     # Set up recipients and keys
     recipients = test_input['enveloped'].get('recipients', [])
@@ -188,12 +189,12 @@ def test_encrypt_ecdh_direct_decode_encode(setup_encrypt_ecdh_direct_tests: tupl
 
     if 'sender_key' in rcpt:
         r1 = CoseRecipient(phdr=rcpt.get('protected', {}))
-        r1.uhdr_update({CoseHeaderParam.STATIC_KEY: sender_key.encode('crv', 'x', 'y')})
+        r1.uhdr_update({HeaderKeys.STATIC_KEY: sender_key.encode('crv', 'x', 'y')})
         r1.uhdr_update(rcpt.get('unprotected', {}))
-        r1.uhdr_update({CoseHeaderParam.PARTY_U_NONCE: unhexlify(test_input['rng_stream'][0])})
+        r1.uhdr_update({HeaderKeys.PARTY_U_NONCE: unhexlify(test_input['rng_stream'][0])})
     else:
         r1 = CoseRecipient(phdr=rcpt.get('protected', {}))
-        r1.uhdr_update({CoseHeaderParam.EPHEMERAL_KEY: sender_key.encode('crv', 'x', 'y')})
+        r1.uhdr_update({HeaderKeys.EPHEMERAL_KEY: sender_key.encode('crv', 'x', 'y')})
         r1.uhdr_update(rcpt.get('unprotected', {}))
 
     # append the first and only recipient
@@ -222,7 +223,7 @@ def test_encrypt_ecdh_wrap_decode(setup_encrypt_ecdh_wrap_tests: tuple):
 
     unprotected = test_input['enveloped'].get('unprotected', {})
     if 'rng_stream' in test_input:
-        unprotected.update({CoseHeaderParam.IV: unhexlify(test_input['rng_stream'][1])})
+        unprotected.update({HeaderKeys.IV: unhexlify(test_input['rng_stream'][1])})
     assert md.uhdr == unprotected
 
     # check for external data and verify internal _enc_structure
@@ -257,25 +258,25 @@ def test_encrypt_ecdh_wrap_decode(setup_encrypt_ecdh_wrap_tests: tuple):
     else:
         # ephemeral key pair
         # verify if it is really ephemeral and that we are only using EC2 CoseKeys
-        assert CoseHeaderParam.EPHEMERAL_KEY in md.recipients[0].uhdr
-        assert md.recipients[0].uhdr[CoseHeaderParam.EPHEMERAL_KEY][CoseKey.Common.KTY] == KTY.EC2
+        assert HeaderKeys.EPHEMERAL_KEY in md.recipients[0].uhdr
+        assert md.recipients[0].uhdr[HeaderKeys.EPHEMERAL_KEY][CoseKey.Common.KTY] == KTY.EC2
 
         # create CoseKey object for the sender key
         sender_key = EC2(
-            crv=md.recipients[0].uhdr[CoseHeaderParam.EPHEMERAL_KEY][EC2.EC2Prm.CRV],
-            x=md.recipients[0].uhdr[CoseHeaderParam.EPHEMERAL_KEY][EC2.EC2Prm.X],
-            y=md.recipients[0].uhdr[CoseHeaderParam.EPHEMERAL_KEY][EC2.EC2Prm.Y]
+            crv=md.recipients[0].uhdr[HeaderKeys.EPHEMERAL_KEY][EC2.EC2Prm.CRV],
+            x=md.recipients[0].uhdr[HeaderKeys.EPHEMERAL_KEY][EC2.EC2Prm.X],
+            y=md.recipients[0].uhdr[HeaderKeys.EPHEMERAL_KEY][EC2.EC2Prm.Y]
         )
 
     # create context KDF
     v = PartyInfo()
     u = PartyInfo()
     s = SuppPubInfo(len(test_intermediate['recipients'][0]['KEK_hex']) * 4, md.recipients[0].encode_phdr())
-    if md.recipients[0].phdr[CoseHeaderParam.ALG] in {CoseAlgorithm.ECDH_ES_A192KW, CoseAlgorithm.ECDH_SS_A192KW}:
+    if md.recipients[0].phdr[HeaderKeys.ALG] in {CoseAlgorithm.ECDH_ES_A192KW, CoseAlgorithm.ECDH_SS_A192KW}:
         kdf_ctx = CoseKDFContext(CoseAlgorithm.A192KW, u, v, s)
-    elif md.recipients[0].phdr[CoseHeaderParam.ALG] in {CoseAlgorithm.ECDH_ES_A128KW, CoseAlgorithm.ECDH_SS_A128KW}:
+    elif md.recipients[0].phdr[HeaderKeys.ALG] in {CoseAlgorithm.ECDH_ES_A128KW, CoseAlgorithm.ECDH_SS_A128KW}:
         kdf_ctx = CoseKDFContext(CoseAlgorithm.A128KW, u, v, s)
-    elif md.recipients[0].phdr[CoseHeaderParam.ALG] in {CoseAlgorithm.ECDH_ES_A256KW, CoseAlgorithm.ECDH_SS_A256KW}:
+    elif md.recipients[0].phdr[HeaderKeys.ALG] in {CoseAlgorithm.ECDH_ES_A256KW, CoseAlgorithm.ECDH_SS_A256KW}:
         kdf_ctx = CoseKDFContext(CoseAlgorithm.A256KW, u, v, s)
     else:
         raise ValueError("Missed an algorithm?")
@@ -285,7 +286,7 @@ def test_encrypt_ecdh_wrap_decode(setup_encrypt_ecdh_wrap_tests: tuple):
     secret, kek = CoseRecipient.derive_kek(
         receiver_static_key,
         sender_key,
-        md.recipients[0].phdr[CoseHeaderParam.ALG],
+        md.recipients[0].phdr[HeaderKeys.ALG],
         kdf_ctx,
         expose_secret=True
     )
@@ -324,7 +325,7 @@ def test_encrypt_x25519_wrap_decode(setup_encrypt_x25519_direct_tests: tuple) ->
 
     unprotected = test_input['enveloped'].get('unprotected', {})
     if 'rng_stream' in test_input:
-        unprotected.update({CoseHeaderParam.IV: unhexlify(test_input['rng_stream'][1])})
+        unprotected.update({HeaderKeys.IV: unhexlify(test_input['rng_stream'][1])})
     assert md.uhdr == unprotected
 
     # check for external data and verify internal _enc_structure
@@ -354,25 +355,25 @@ def test_encrypt_x25519_wrap_decode(setup_encrypt_x25519_direct_tests: tuple) ->
     else:
         # ephemeral key pair
         # verify if it is really ephemeral and that we are only using EC2 CoseKeys
-        assert CoseHeaderParam.EPHEMERAL_KEY in md.recipients[0].uhdr
-        assert md.recipients[0].uhdr[CoseHeaderParam.EPHEMERAL_KEY][CoseKey.Common.KTY] == KTY.OKP
+        assert HeaderKeys.EPHEMERAL_KEY in md.recipients[0].uhdr
+        assert md.recipients[0].uhdr[HeaderKeys.EPHEMERAL_KEY][CoseKey.Common.KTY] == KTY.OKP
 
         # create CoseKey object for the sender key
         sender_key = OKP(
-            crv=md.recipients[0].uhdr[CoseHeaderParam.EPHEMERAL_KEY][OKP.OKPPrm.CRV],
-            x=md.recipients[0].uhdr[CoseHeaderParam.EPHEMERAL_KEY][OKP.OKPPrm.X],
+            crv=md.recipients[0].uhdr[HeaderKeys.EPHEMERAL_KEY][OKP.OKPPrm.CRV],
+            x=md.recipients[0].uhdr[HeaderKeys.EPHEMERAL_KEY][OKP.OKPPrm.X],
         )
         u = PartyInfo()
 
     # create context KDF
     s = SuppPubInfo(len(test_intermediate['CEK_hex']) * 4, md.recipients[0].encode_phdr())
-    kdf_ctx = CoseKDFContext(md.phdr[CoseHeaderParam.ALG], u, PartyInfo(), s)
+    kdf_ctx = CoseKDFContext(md.phdr[HeaderKeys.ALG], u, PartyInfo(), s)
     assert kdf_ctx.encode() == unhexlify(test_intermediate['recipients'][0]['Context_hex'])
 
     secret, kek = CoseRecipient.derive_kek(
         receiver_static_key,
         sender_key,
-        md.recipients[0].phdr[CoseHeaderParam.ALG],
+        md.recipients[0].phdr[HeaderKeys.ALG],
         kdf_ctx,
         expose_secret=True
     )
@@ -409,7 +410,7 @@ def test_encrypt_hkdf_hmac_direct_decode(setup_encrypt_hkdf_hmac_direct_tests: t
 
     unprotected = test_input['enveloped'].get('unprotected', {})
     if 'rng_stream' in test_input:
-        unprotected.update({CoseHeaderParam.IV: unhexlify(test_input['rng_stream'][0])})
+        unprotected.update({HeaderKeys.IV: unhexlify(test_input['rng_stream'][0])})
     assert md.uhdr == unprotected
 
     # check for external data and verify internal _enc_structure
@@ -421,20 +422,20 @@ def test_encrypt_hkdf_hmac_direct_decode(setup_encrypt_hkdf_hmac_direct_tests: t
 
     # create HKDF contect
     v = PartyInfo(
-        identity=md.recipients[0].uhdr.get(CoseHeaderParam.PARTY_V_IDENTITY),
-        nonce=md.recipients[0].uhdr.get(CoseHeaderParam.PARTY_V_NONCE),
-        other=md.recipients[0].uhdr.get(CoseHeaderParam.PARTY_V_OTHER))
+        identity=md.recipients[0].uhdr.get(HeaderKeys.PARTY_V_IDENTITY),
+        nonce=md.recipients[0].uhdr.get(HeaderKeys.PARTY_V_NONCE),
+        other=md.recipients[0].uhdr.get(HeaderKeys.PARTY_V_OTHER))
     u = PartyInfo(
-        identity=md.recipients[0].uhdr.get(CoseHeaderParam.PARTY_U_IDENTITY),
-        nonce=md.recipients[0].uhdr.get(CoseHeaderParam.PARTY_U_NONCE),
-        other=md.recipients[0].uhdr.get(CoseHeaderParam.PARTY_U_OTHER))
+        identity=md.recipients[0].uhdr.get(HeaderKeys.PARTY_U_IDENTITY),
+        nonce=md.recipients[0].uhdr.get(HeaderKeys.PARTY_U_NONCE),
+        other=md.recipients[0].uhdr.get(HeaderKeys.PARTY_U_OTHER))
     public_data = test_input['enveloped']['recipients'][0].get('unsent', {}).get('pub_other')
     s = SuppPubInfo(
         len(test_intermediate['CEK_hex']) * 4,
         md.recipients[0].encode_phdr(),
         public_data.encode('utf-8') if public_data is not None else public_data)
     priv_data = test_input['enveloped']['recipients'][0].get('unsent', {}).get('priv_other')
-    hkdf_context = CoseKDFContext(md.phdr[CoseHeaderParam.ALG],
+    hkdf_context = CoseKDFContext(md.phdr[HeaderKeys.ALG],
                                   u, v, s,
                                   priv_data.encode('utf') if priv_data is not None else priv_data)
     hkdf_context_encoded = hkdf_context.encode()
@@ -446,9 +447,9 @@ def test_encrypt_hkdf_hmac_direct_decode(setup_encrypt_hkdf_hmac_direct_tests: t
 
     kek = md.recipients[0].derive_kek(
         shared_secret,
-        alg=md.recipients[0].phdr[CoseHeaderParam.ALG],
+        alg=md.recipients[0].phdr[HeaderKeys.ALG],
         context=hkdf_context,
-        salt=md.recipients[0].uhdr.get(CoseHeaderParam.SALT)
+        salt=md.recipients[0].uhdr.get(HeaderKeys.SALT)
     )
 
     assert kek == unhexlify(test_intermediate["CEK_hex"])

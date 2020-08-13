@@ -3,11 +3,11 @@ from typing import Type, Optional
 
 import cbor2
 
-from pycose.basicstructure import BasicCoseStructure
+from pycose.cosebase import CoseBase
 from pycose.cosekey import CoseKey
 
 
-class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
+class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
     """ Parent class of all COSE message types. """
 
     COSE_MSG_ID = {}
@@ -52,11 +52,11 @@ class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
         return msg
 
     def __init__(self,
-                 phdr: Optional[dict],
-                 uhdr: Optional[dict],
-                 payload: bytes,
-                 external_aad: bytes,
-                 key: Optional[Type[CoseKey]]):
+                 phdr: Optional[dict] = None,
+                 uhdr: Optional[dict] = None,
+                 payload: bytes = b'',
+                 external_aad: bytes = b'',
+                 key: Optional[Type[CoseKey]] = None):
         super().__init__(phdr, uhdr)
         self.payload = payload
         self.external_aad = external_aad
@@ -106,8 +106,3 @@ class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
     def encode(self, tagged: bool = True) -> bytes:
         raise NotImplementedError
 
-    @property
-    @abc.abstractmethod
-    def context(self) -> str:
-        """Getter for the context of the message."""
-        raise NotImplementedError

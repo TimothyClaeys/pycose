@@ -5,11 +5,18 @@ import cbor2
 
 from pycose import cosemessage
 from pycose import crypto
-from pycose.attributes import CoseHeaderParam, CoseAlgorithm
+from pycose.attributes import CoseAlgorithm
+from pycose.cosebase import HeaderKeys
 from pycose.cosekey import SymmetricKey
 
 
 class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
+    @property
+    @abc.abstractmethod
+    def context(self) -> str:
+        """Getter for the context of the message."""
+        raise NotImplementedError
+
     @property
     def key_bytes(self) -> bytes:
         if self.key is None:
@@ -53,12 +60,12 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
             raise AttributeError("No key specified.")
 
         # search in protected headers
-        _alg = alg if alg is not None else self.phdr.get(CoseHeaderParam.ALG)
-        _nonce = nonce if nonce is not None else self.phdr.get(CoseHeaderParam.IV)
+        _alg = alg if alg is not None else self.phdr.get(HeaderKeys.ALG)
+        _nonce = nonce if nonce is not None else self.phdr.get(HeaderKeys.IV)
 
         # search in unprotected headers
-        _alg = _alg if _alg is not None else self.uhdr.get(CoseHeaderParam.ALG)
-        _nonce = _nonce if _nonce is not None else self.uhdr.get(CoseHeaderParam.IV)
+        _alg = _alg if _alg is not None else self.uhdr.get(HeaderKeys.ALG)
+        _nonce = _nonce if _nonce is not None else self.uhdr.get(HeaderKeys.IV)
 
         if _alg is None:
             raise AttributeError('No algorithm specified.')
