@@ -1,7 +1,7 @@
 from typing import Optional, Union
 
 from pycose import crypto
-from pycose.attributes import CoseAlgorithm
+from pycose.algorithms import AlgorithmIDs
 from pycose.cosebase import CoseBase
 from pycose.keys.ec import EC2
 from pycose.keys.okp import OKP
@@ -30,7 +30,7 @@ class CoseSignature(CoseBase):
     @classmethod
     def compute_signature(cls,
                           to_sign: bytes,
-                          alg: Optional[CoseAlgorithm] = None,
+                          alg: Optional[AlgorithmIDs] = None,
                           key: Optional[Union[EC2, OKP]] = None):
 
         return crypto.ec_sign_wrapper(key, to_sign, alg)

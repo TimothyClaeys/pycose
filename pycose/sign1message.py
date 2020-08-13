@@ -3,7 +3,7 @@ from typing import Optional, Union, Tuple
 import cbor2
 
 from pycose import cosemessage, crypto
-from pycose.attributes import CoseAlgorithm
+from pycose.algorithms import AlgorithmIDs
 from pycose.cosebase import HeaderKeys
 from pycose.keys.ec import EC2
 from pycose.keys.okp import OKP
@@ -58,7 +58,7 @@ class Sign1Message(cosemessage.CoseMessage):
 
         return cbor2.dumps(sig_structure)
 
-    def verify_signature(self, alg: Optional[CoseAlgorithm] = None, key: Optional[Union[EC2, OKP]] = None) -> bool:
+    def verify_signature(self, alg: Optional[AlgorithmIDs] = None, key: Optional[Union[EC2, OKP]] = None) -> bool:
         """
         Verifies the signature of a received message
         :return: True or raises an exception
@@ -68,7 +68,7 @@ class Sign1Message(cosemessage.CoseMessage):
         return crypto.ec_verify_wrapper(_key, self._sig_structure, self.signature, _alg)
 
     def compute_signature(self,
-                          alg: Optional[CoseAlgorithm] = None,
+                          alg: Optional[AlgorithmIDs] = None,
                           key: Optional[Union[EC2, OKP]] = None):
 
         to_sign = self._sig_structure
@@ -79,7 +79,7 @@ class Sign1Message(cosemessage.CoseMessage):
     def encode(self,
                tagged: bool = True,
                sign: bool = True,
-               alg: Optional[CoseAlgorithm] = None,
+               alg: Optional[AlgorithmIDs] = None,
                key: Optional[Union[EC2, OKP]] = None) -> bytes:
         """ Encodes the message into a CBOR array with or without a CBOR tag. """
 
@@ -96,8 +96,8 @@ class Sign1Message(cosemessage.CoseMessage):
         return res
 
     def _get_crypt_params(self,
-                          alg: Optional[CoseAlgorithm],
-                          key: Optional[Union[EC2, OKP]]) -> Tuple[CoseAlgorithm, Union[EC2, OKP]]:
+                          alg: Optional[AlgorithmIDs],
+                          key: Optional[Union[EC2, OKP]]) -> Tuple[AlgorithmIDs, Union[EC2, OKP]]:
 
         # if nothing is overridden by the function parameters, search in COSE headers
         _alg = alg if alg is not None else self.phdr.get(HeaderKeys.ALG)

@@ -12,11 +12,11 @@ from typing import Optional, Union, List, Tuple
 import cbor2
 
 from pycose import cosemessage, crypto
-from pycose.attributes import CoseAlgorithm
+from pycose.algorithms import AlgorithmIDs
 from pycose.cosebase import HeaderKeys
-from pycose.cosesignature import CoseSignature
 from pycose.keys.ec import EC2
 from pycose.keys.okp import OKP
+from pycose.signer import CoseSignature
 
 
 @cosemessage.CoseMessage.record_cbor_tag(98)
@@ -61,7 +61,7 @@ class SignMessage(cosemessage.CoseMessage):
 
     def verify_signature(self,
                          cose_signature: Optional[CoseSignature],
-                         alg: Optional[CoseAlgorithm] = None,
+                         alg: Optional[AlgorithmIDs] = None,
                          key: Optional[Union[EC2, OKP]] = None) -> bool:
 
         _alg, _key = SignMessage._get_crypt_params(cose_signature, alg, key)
@@ -70,9 +70,9 @@ class SignMessage(cosemessage.CoseMessage):
 
     def encode(self,
                tagged: bool = True,
-               alg: Optional[CoseAlgorithm] = None,
+               alg: Optional[AlgorithmIDs] = None,
                key: Optional[Union[EC2, OKP]] = None,
-               sign_params: Tuple[Tuple[bool, Optional[CoseAlgorithm], Optional[Union[EC2, OKP]]]] = None) -> bytes:
+               sign_params: Tuple[Tuple[bool, Optional[AlgorithmIDs], Optional[Union[EC2, OKP]]]] = None) -> bytes:
         """ Encodes the message as a CBOR array """
 
         if sign_params is None:
@@ -107,8 +107,8 @@ class SignMessage(cosemessage.CoseMessage):
     @classmethod
     def _get_crypt_params(cls,
                           cose_signature: Optional[CoseSignature],
-                          alg: Optional[CoseAlgorithm],
-                          key: Optional[Union[EC2, OKP]]) -> Tuple[CoseAlgorithm, Union[EC2, OKP]]:
+                          alg: Optional[AlgorithmIDs],
+                          key: Optional[Union[EC2, OKP]]) -> Tuple[AlgorithmIDs, Union[EC2, OKP]]:
 
         try:
             _key = key if key is not None else cose_signature.key

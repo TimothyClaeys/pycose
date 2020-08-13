@@ -2,7 +2,6 @@ from binascii import unhexlify, hexlify
 from hashlib import sha256, sha512, sha384
 from typing import Tuple, Union
 
-import cbor2
 from cryptography.hazmat.backends import default_backend, openssl
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import hmac
@@ -12,72 +11,71 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, X
 from cryptography.hazmat.primitives.ciphers import algorithms, aead, Cipher, modes
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.primitives.keywrap import aes_key_wrap, aes_key_unwrap
-from dataclasses import dataclass
 from ecdsa import NIST256p, NIST521p, NIST384p, SigningKey, VerifyingKey, ellipticcurve
 
-from pycose.attributes import CoseAlgorithm
-from pycose.keys.cosekey import EllipticCurveTypes
+from pycose.algorithms import AlgorithmIDs
 from pycose.exceptions import *
+from pycose.keys.cosekey import EllipticCurveTypes
 from pycose.keys.ec import EC2
 from pycose.keys.okp import OKP
 from pycose.keys.symmetric import SymmetricKey
 
 AESKW = {
-    CoseAlgorithm.A128KW,
-    CoseAlgorithm.A192KW,
-    CoseAlgorithm.A256KW
+    AlgorithmIDs.A128KW,
+    AlgorithmIDs.A192KW,
+    AlgorithmIDs.A256KW
 }
 
 ECDSA = {
-    CoseAlgorithm.ES256: (NIST256p, sha256),
-    CoseAlgorithm.ES384: (NIST384p, sha384),
-    CoseAlgorithm.ES512: (NIST521p, sha512),
+    AlgorithmIDs.ES256: (NIST256p, sha256),
+    AlgorithmIDs.ES384: (NIST384p, sha384),
+    AlgorithmIDs.ES512: (NIST521p, sha512),
 }
 
 ECDH_HASHES = {
-    CoseAlgorithm.ECDH_SS_HKDF_512: hashes.SHA512,
-    CoseAlgorithm.ECDH_SS_HKDF_256: hashes.SHA256,
-    CoseAlgorithm.ECDH_ES_HKDF_256: hashes.SHA256,
-    CoseAlgorithm.ECDH_ES_HKDF_512: hashes.SHA512,
-    CoseAlgorithm.ECDH_ES_A128KW: hashes.SHA256,
-    CoseAlgorithm.ECDH_SS_A128KW: hashes.SHA256,
-    CoseAlgorithm.ECDH_ES_A192KW: hashes.SHA256,
-    CoseAlgorithm.ECDH_SS_A192KW: hashes.SHA256,
-    CoseAlgorithm.ECDH_ES_A256KW: hashes.SHA256,
-    CoseAlgorithm.ECDH_SS_A256KW: hashes.SHA256,
+    AlgorithmIDs.ECDH_SS_HKDF_512: hashes.SHA512,
+    AlgorithmIDs.ECDH_SS_HKDF_256: hashes.SHA256,
+    AlgorithmIDs.ECDH_ES_HKDF_256: hashes.SHA256,
+    AlgorithmIDs.ECDH_ES_HKDF_512: hashes.SHA512,
+    AlgorithmIDs.ECDH_ES_A128KW: hashes.SHA256,
+    AlgorithmIDs.ECDH_SS_A128KW: hashes.SHA256,
+    AlgorithmIDs.ECDH_ES_A192KW: hashes.SHA256,
+    AlgorithmIDs.ECDH_SS_A192KW: hashes.SHA256,
+    AlgorithmIDs.ECDH_ES_A256KW: hashes.SHA256,
+    AlgorithmIDs.ECDH_SS_A256KW: hashes.SHA256,
 }
 
 HMAC = {
-    CoseAlgorithm.HMAC_256_64: hashes.SHA256,
-    CoseAlgorithm.HMAC_256_256: hashes.SHA256,
-    CoseAlgorithm.HMAC_384_384: hashes.SHA384,
-    CoseAlgorithm.HMAC_512_512: hashes.SHA512,
+    AlgorithmIDs.HMAC_256_64: hashes.SHA256,
+    AlgorithmIDs.HMAC_256_256: hashes.SHA256,
+    AlgorithmIDs.HMAC_384_384: hashes.SHA384,
+    AlgorithmIDs.HMAC_512_512: hashes.SHA512,
 }
 
 HMAC_HASHES = {
-    CoseAlgorithm.DIRECT_HKDF_SHA_256: hashes.SHA256,
-    CoseAlgorithm.DIRECT_HKDF_SHA_512: hashes.SHA512,
+    AlgorithmIDs.DIRECT_HKDF_SHA_256: hashes.SHA256,
+    AlgorithmIDs.DIRECT_HKDF_SHA_512: hashes.SHA512,
 }
 
 AES_CBC_MAC = {
-    CoseAlgorithm.AES_MAC_256_64: algorithms.AES,
-    CoseAlgorithm.AES_MAC_128_64: algorithms.AES,
-    CoseAlgorithm.AES_MAC_256_128: algorithms.AES,
-    CoseAlgorithm.AES_MAC_128_128: algorithms.AES,
+    AlgorithmIDs.AES_MAC_256_64: algorithms.AES,
+    AlgorithmIDs.AES_MAC_128_64: algorithms.AES,
+    AlgorithmIDs.AES_MAC_256_128: algorithms.AES,
+    AlgorithmIDs.AES_MAC_128_128: algorithms.AES,
 }
 
 AEAD = {
-    CoseAlgorithm.A128GCM: (aead.AESGCM, 16),
-    CoseAlgorithm.A192GCM: (aead.AESGCM, 16),
-    CoseAlgorithm.A256GCM: (aead.AESGCM, 16),
-    CoseAlgorithm.AES_CCM_16_64_128: (aead.AESCCM, 8),
-    CoseAlgorithm.AES_CCM_16_64_256: (aead.AESCCM, 8),
-    CoseAlgorithm.AES_CCM_64_64_128: (aead.AESCCM, 8),
-    CoseAlgorithm.AES_CCM_64_64_256: (aead.AESCCM, 8),
-    CoseAlgorithm.AES_CCM_16_128_128: (aead.AESCCM, 16),
-    CoseAlgorithm.AES_CCM_16_128_256: (aead.AESCCM, 16),
-    CoseAlgorithm.AES_CCM_64_128_256: (aead.AESCCM, 16),
-    CoseAlgorithm.AES_CCM_64_128_128: (aead.AESCCM, 16),
+    AlgorithmIDs.A128GCM: (aead.AESGCM, 16),
+    AlgorithmIDs.A192GCM: (aead.AESGCM, 16),
+    AlgorithmIDs.A256GCM: (aead.AESGCM, 16),
+    AlgorithmIDs.AES_CCM_16_64_128: (aead.AESCCM, 8),
+    AlgorithmIDs.AES_CCM_16_64_256: (aead.AESCCM, 8),
+    AlgorithmIDs.AES_CCM_64_64_128: (aead.AESCCM, 8),
+    AlgorithmIDs.AES_CCM_64_64_256: (aead.AESCCM, 8),
+    AlgorithmIDs.AES_CCM_16_128_128: (aead.AESCCM, 16),
+    AlgorithmIDs.AES_CCM_16_128_256: (aead.AESCCM, 16),
+    AlgorithmIDs.AES_CCM_64_128_256: (aead.AESCCM, 16),
+    AlgorithmIDs.AES_CCM_64_128_128: (aead.AESCCM, 16),
 }
 
 KEY_DERIVATION_CURVES = {
@@ -85,61 +83,6 @@ KEY_DERIVATION_CURVES = {
     EllipticCurveTypes.P_384: SECP384R1,
     EllipticCurveTypes.P_521: SECP521R1,
 }
-
-
-@dataclass
-class PartyInfo:
-    identity: bytes = None
-    nonce: bytes = None
-    other: bytes = None
-
-    def encode(self):
-        return [self.identity, self.nonce, self.other]
-
-
-@dataclass
-class SuppPubInfo:
-    _key_data_length: int
-    protected: bytes
-    other: bytes = None
-
-    @property
-    def key_data_length(self):
-        return self._key_data_length
-
-    @key_data_length.setter
-    def key_data_length(self, new_length):
-        if new_length in [128, 192, 256]:
-            self._key_data_length = new_length
-        else:
-            raise ValueError(f"Not a valid key length: {new_length}")
-
-    def __post__init__(self):
-        if self._key_data_length not in [128, 192, 256]:
-            raise ValueError(f"Not a valid key length: {self._key_data_length}")
-
-    def encode(self):
-        info = [self.key_data_length, self.protected]
-        if self.other is not None:
-            info.append(self.other)
-
-        return info
-
-
-@dataclass
-class CoseKDFContext:
-    algorithm_id: int
-    party_u_info: PartyInfo
-    party_v_info: PartyInfo
-    supp_pub_info: SuppPubInfo
-    supp_priv_info: bytes = None
-
-    def encode(self):
-        context = \
-            [self.algorithm_id, self.party_u_info.encode(), self.party_v_info.encode(), self.supp_pub_info.encode()]
-        if self.supp_priv_info is not None:
-            context.append(self.supp_priv_info)
-        return cbor2.dumps(context)
 
 
 def aead_encrypt(key, aad, plaintext, algorithm, nonce):
@@ -178,7 +121,7 @@ def key_unwrap(kek: bytes, wrapped_key: bytes) -> bytes:
     return aes_key_unwrap(kek, wrapped_key, openssl.backend)
 
 
-def calc_tag_wrapper(key: bytes, to_be_maced: bytes, algorithm: CoseAlgorithm) -> bytes:
+def calc_tag_wrapper(key: bytes, to_be_maced: bytes, algorithm: AlgorithmIDs) -> bytes:
     """
     Wrapper function for the supported hmac in COSE
     :param key: key for computation of the hmac
@@ -203,7 +146,7 @@ def calc_tag_wrapper(key: bytes, to_be_maced: bytes, algorithm: CoseAlgorithm) -
         ciphertext = encryptor.update(to_be_maced) + encryptor.finalize()
         if padded:
             ciphertext = ciphertext[:-8]
-        if algorithm in {CoseAlgorithm.AES_MAC_256_64, CoseAlgorithm.AES_MAC_128_64}:
+        if algorithm in {AlgorithmIDs.AES_MAC_256_64, AlgorithmIDs.AES_MAC_128_64}:
             # truncate the result to the first 64 bits
             digest = ciphertext[-8:]
         else:
@@ -215,7 +158,7 @@ def calc_tag_wrapper(key: bytes, to_be_maced: bytes, algorithm: CoseAlgorithm) -
             h.update(to_be_maced)
             digest = h.finalize()
 
-            if algorithm == CoseAlgorithm.HMAC_256_64:
+            if algorithm == AlgorithmIDs.HMAC_256_64:
                 # truncate the result to the first 64 bits
                 digest = digest[:8]
 
@@ -234,7 +177,7 @@ def verify_tag_wrapper(key, tag, to_be_maced, algorithm):
 
 def ecdh_key_derivation(private_key: EllipticCurvePrivateKey,
                         public_key: EllipticCurvePublicKey,
-                        alg: CoseAlgorithm,
+                        alg: AlgorithmIDs,
                         length: int,
                         context: bytes = b'') -> Tuple[bytes, bytes]:
     shared_key = private_key.exchange(ECDH(), public_key)
@@ -252,7 +195,7 @@ def ecdh_key_derivation(private_key: EllipticCurvePrivateKey,
 
 def x25519_key_derivation(private_key: X25519PrivateKey,
                           public_key: X25519PublicKey,
-                          alg: CoseAlgorithm,
+                          alg: AlgorithmIDs,
                           length: int,
                           context: bytes = b'') -> Tuple[bytes, bytes]:
     shared_secret = private_key.exchange(public_key)
@@ -268,7 +211,7 @@ def x25519_key_derivation(private_key: X25519PrivateKey,
     return shared_secret, derived_key
 
 
-def hmac_hkdf_key_derivation(alg: CoseAlgorithm,
+def hmac_hkdf_key_derivation(alg: AlgorithmIDs,
                              shared_secret: SymmetricKey,
                              length: int,
                              salt: bytes = None,
@@ -284,7 +227,7 @@ def hmac_hkdf_key_derivation(alg: CoseAlgorithm,
     return derived_key
 
 
-def ec_sign_wrapper(key: Union[EC2, OKP], to_be_signed: bytes, algorithm: CoseAlgorithm) -> bytes:
+def ec_sign_wrapper(key: Union[EC2, OKP], to_be_signed: bytes, algorithm: AlgorithmIDs) -> bytes:
     if algorithm in ECDSA:
         crv, hash_func = ECDSA[algorithm]
         sk = SigningKey.from_secret_exponent(int(hexlify(key.private_bytes), 16), curve=crv)
@@ -295,7 +238,7 @@ def ec_sign_wrapper(key: Union[EC2, OKP], to_be_signed: bytes, algorithm: CoseAl
         return
 
 
-def ec_verify_wrapper(key: Union[EC2, OKP], to_be_signed: bytes, signature: bytes, algorithm: CoseAlgorithm) -> bool:
+def ec_verify_wrapper(key: Union[EC2, OKP], to_be_signed: bytes, signature: bytes, algorithm: AlgorithmIDs) -> bool:
     if algorithm in ECDSA:
         crv, hash_func = ECDSA[algorithm]
         p = ellipticcurve.Point(curve=crv.curve, x=int(hexlify(key.x), 16), y=int(hexlify(key.y), 16))

@@ -3,14 +3,13 @@ from binascii import unhexlify
 from pytest import fixture, mark, skip
 
 from pycose import EncMessage, CoseMessage
-from pycose.attributes import CoseAlgorithm
+from pycose.algorithms import AlgorithmIDs
 from pycose.cosebase import HeaderKeys
 from pycose.keys.cosekey import KeyOps, CoseKey, KTY
-from pycose.crypto import PartyInfo, SuppPubInfo, CoseKDFContext
 from pycose.keys.ec import EC2
 from pycose.keys.okp import OKP
 from pycose.keys.symmetric import SymmetricKey
-from pycose.recipient import CoseRecipient
+from pycose.recipient import CoseRecipient, SuppPubInfo, PartyInfo, CoseKDFContext
 from tests.conftest import generic_test_setup, extract_protected_header, extract_unprotected_header, \
     extract_unsent_nonce, create_cose_key
 
@@ -59,7 +58,7 @@ def test_encrypt_encoding(setup_encrypt_tests: tuple) -> None:
 
         # (2)
         assert m.encode(encrypt=True, nonce=nonce,
-                        crypto_params=((True, CoseAlgorithm.DIRECT, None, None),)) == unhexlify(test_output)
+                        crypto_params=((True, AlgorithmIDs.DIRECT, None, None),)) == unhexlify(test_output)
 
 
 @mark.decoding
@@ -275,12 +274,12 @@ def test_encrypt_ecdh_wrap_decode(setup_encrypt_ecdh_wrap_tests: tuple):
     v = PartyInfo()
     u = PartyInfo()
     s = SuppPubInfo(len(test_intermediate['recipients'][0]['KEK_hex']) * 4, md.recipients[0].encode_phdr())
-    if md.recipients[0].phdr[HeaderKeys.ALG] in {CoseAlgorithm.ECDH_ES_A192KW, CoseAlgorithm.ECDH_SS_A192KW}:
-        kdf_ctx = CoseKDFContext(CoseAlgorithm.A192KW, u, v, s)
-    elif md.recipients[0].phdr[HeaderKeys.ALG] in {CoseAlgorithm.ECDH_ES_A128KW, CoseAlgorithm.ECDH_SS_A128KW}:
-        kdf_ctx = CoseKDFContext(CoseAlgorithm.A128KW, u, v, s)
-    elif md.recipients[0].phdr[HeaderKeys.ALG] in {CoseAlgorithm.ECDH_ES_A256KW, CoseAlgorithm.ECDH_SS_A256KW}:
-        kdf_ctx = CoseKDFContext(CoseAlgorithm.A256KW, u, v, s)
+    if md.recipients[0].phdr[HeaderKeys.ALG] in {AlgorithmIDs.ECDH_ES_A192KW, AlgorithmIDs.ECDH_SS_A192KW}:
+        kdf_ctx = CoseKDFContext(AlgorithmIDs.A192KW, u, v, s)
+    elif md.recipients[0].phdr[HeaderKeys.ALG] in {AlgorithmIDs.ECDH_ES_A128KW, AlgorithmIDs.ECDH_SS_A128KW}:
+        kdf_ctx = CoseKDFContext(AlgorithmIDs.A128KW, u, v, s)
+    elif md.recipients[0].phdr[HeaderKeys.ALG] in {AlgorithmIDs.ECDH_ES_A256KW, AlgorithmIDs.ECDH_SS_A256KW}:
+        kdf_ctx = CoseKDFContext(AlgorithmIDs.A256KW, u, v, s)
     else:
         raise ValueError("Missed an algorithm?")
 

@@ -4,7 +4,7 @@ from binascii import unhexlify, hexlify
 from pytest import mark, fixture, skip
 
 from pycose import CoseMessage
-from pycose.attributes import CoseAlgorithm
+from pycose.algorithms import AlgorithmIDs
 from pycose.cosebase import HeaderKeys
 from pycose.enc0message import Enc0Message
 from pycose.keys.cosekey import CoseKey, KeyOps
@@ -83,15 +83,15 @@ def test_encrypt0_decoding(setup_encrypt0_tests: tuple) -> None:
 
 @mark.parametrize("phdr, uhdr, payload, key",
                   [
-                      ({HeaderKeys.ALG: CoseAlgorithm.A128GCM},
+                      ({HeaderKeys.ALG: AlgorithmIDs.A128GCM},
                        {HeaderKeys.IV: unhexlify(b'89F52F65A1C580933B5261A72F')},
                        b'',
                        SymmetricKey(kid=b'you_know', k=os.urandom(16))),
-                      ({HeaderKeys.ALG: CoseAlgorithm.A192GCM},
+                      ({HeaderKeys.ALG: AlgorithmIDs.A192GCM},
                        {HeaderKeys.IV: unhexlify(b'89F52F65A1C580933B5261A72F')},
                        os.urandom(50),
                        SymmetricKey(kid=b'you_know', k=os.urandom(16))),
-                      ({HeaderKeys.ALG: CoseAlgorithm.A256GCM},
+                      ({HeaderKeys.ALG: AlgorithmIDs.A256GCM},
                        {HeaderKeys.IV: unhexlify(b'89F52F65A1C580933B5261A72F')},
                        os.urandom(100),
                        SymmetricKey(kid=b'you_know', k=os.urandom(16)))
@@ -118,7 +118,7 @@ def test_encode_decode_encrypt0(phdr, uhdr, payload, key):
 
 @mark.parametrize("phdr, uhdr, alg, key1, key2, nonce, expected",
                   [
-                      ({HeaderKeys.ALG: CoseAlgorithm.AES_CCM_16_64_128},
+                      ({HeaderKeys.ALG: AlgorithmIDs.AES_CCM_16_64_128},
                        {HeaderKeys.IV: unhexlify(b'89F52F65A1C580933B5261A72F')},
                        None,
                        SymmetricKey(
@@ -128,7 +128,7 @@ def test_encode_decode_encrypt0(phdr, uhdr, payload, key):
                        None,
                        None,
                        b'6899DA0A132BD2D2B9B10915743EE1F7B92A4680E7C51BDBC1B320EA',),
-                      ({HeaderKeys.ALG: CoseAlgorithm.AES_CCM_16_64_128},
+                      ({HeaderKeys.ALG: AlgorithmIDs.AES_CCM_16_64_128},
                        {},
                        None,
                        SymmetricKey(

@@ -6,7 +6,7 @@ from typing import List, Union, Dict, Optional
 
 import dataclasses as dc
 
-from pycose.attributes import CoseAlgorithm
+from pycose.algorithms import AlgorithmIDs
 
 
 @unique
@@ -31,6 +31,8 @@ class KeyOps(IntEnum):
     MAC_VERIFY = 10
 
 
+
+
 @unique
 class EllipticCurveTypes(IntEnum):
     RESERVED = 0
@@ -48,7 +50,7 @@ class EllipticCurveTypes(IntEnum):
 class CoseKey(metaclass=ABCMeta):
     _kty: Optional[KTY]
     _kid: Optional[Union[int, bytes]]
-    _alg: Optional[CoseAlgorithm]
+    _alg: Optional[AlgorithmIDs]
     _key_ops: Optional[KeyOps]
     _base_iv: Optional[bytes]
 
@@ -87,7 +89,7 @@ class CoseKey(metaclass=ABCMeta):
         for k, v in cose_key_obj.items():
             if k in values:
                 if k == cls.Common.ALG:
-                    v = CoseAlgorithm(v)
+                    v = AlgorithmIDs(v)
                 elif k == cls.Common.KTY:
                     v = KTY(v)
                 elif k == cls.Common.KEY_OPS:
@@ -137,13 +139,13 @@ class CoseKey(metaclass=ABCMeta):
         self._kty = new_kty
 
     @property
-    def alg(self) -> Optional[CoseAlgorithm]:
+    def alg(self) -> Optional[AlgorithmIDs]:
         return self._alg
 
     @alg.setter
-    def alg(self, new_alg: CoseAlgorithm) -> None:
+    def alg(self, new_alg: AlgorithmIDs) -> None:
         if new_alg is not None:
-            _ = CoseAlgorithm(new_alg)  # check if the new value is a known COSE Algorithm
+            _ = AlgorithmIDs(new_alg)  # check if the new value is a known COSE Algorithm
         self._alg = new_alg
 
     @property

@@ -4,7 +4,7 @@ from typing import Optional, Tuple
 import cbor2
 
 from pycose import cosemessage, crypto, CoseMessage
-from pycose.attributes import CoseAlgorithm
+from pycose.algorithms import AlgorithmIDs
 from pycose.cosebase import HeaderKeys
 from pycose.keys.symmetric import SymmetricKey
 
@@ -39,14 +39,14 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
         else:
             return self.key.key_bytes
 
-    def verify_auth_tag(self, alg: Optional[CoseAlgorithm] = None, key: Optional[SymmetricKey] = None) -> bool:
+    def verify_auth_tag(self, alg: Optional[AlgorithmIDs] = None, key: Optional[SymmetricKey] = None) -> bool:
         """ Verifies the authentication tag of a received message. """
 
         to_digest = self._mac_structure
         _alg, _key = self._get_crypt_params(alg, key)
         return crypto.verify_tag_wrapper(_key, self.auth_tag, to_digest, _alg)
 
-    def compute_auth_tag(self, alg: Optional[CoseAlgorithm] = None, key: Optional[SymmetricKey] = None) -> bytes:
+    def compute_auth_tag(self, alg: Optional[AlgorithmIDs] = None, key: Optional[SymmetricKey] = None) -> bytes:
         """ Wrapper function to access the cryptographic primitives. """
 
         _alg, _key = self._get_crypt_params(alg, key)
@@ -68,8 +68,8 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
         return cbor2.dumps(mac_structure)
 
     def _get_crypt_params(self,
-                          alg: Optional[CoseAlgorithm],
-                          key: Optional[SymmetricKey]) -> Tuple[CoseAlgorithm, bytes]:
+                          alg: Optional[AlgorithmIDs],
+                          key: Optional[SymmetricKey]) -> Tuple[AlgorithmIDs, bytes]:
         # if nothing is overridden by the function parameters, search in COSE headers
         _alg = alg if alg is not None else self.phdr.get(HeaderKeys.ALG)
         _alg = _alg if _alg is not None else self.uhdr.get(HeaderKeys.ALG)

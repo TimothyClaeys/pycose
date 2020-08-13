@@ -5,7 +5,7 @@ import cbor2
 
 from pycose import cosemessage
 from pycose import crypto
-from pycose.attributes import CoseAlgorithm
+from pycose.algorithms import AlgorithmIDs
 from pycose.cosebase import HeaderKeys
 from pycose.keys.symmetric import SymmetricKey
 
@@ -25,7 +25,7 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
             return self.key.key_bytes
 
     def decrypt(self,
-                alg: Optional[CoseAlgorithm] = None,
+                alg: Optional[AlgorithmIDs] = None,
                 nonce: Optional[bytes] = None,
                 key: Optional[SymmetricKey] = None) -> bytes:
         """ Decrypts the payload. """
@@ -34,7 +34,7 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
         return crypto.aead_decrypt(key, self._enc_structure, self.payload, alg, nonce)
 
     def encrypt(self,
-                alg: Optional[CoseAlgorithm] = None,
+                alg: Optional[AlgorithmIDs] = None,
                 nonce: Optional[bytes] = None,
                 key: Optional[SymmetricKey] = None) -> bytes:
         """ Encrypts the payload. """
@@ -51,9 +51,9 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
         return aad
 
     def _get_crypt_params(self,
-                          alg: Optional[CoseAlgorithm],
+                          alg: Optional[AlgorithmIDs],
                           nonce: Optional[bytes],
-                          key: Optional[SymmetricKey]) -> Tuple[bytes, CoseAlgorithm, bytes]:
+                          key: Optional[SymmetricKey]) -> Tuple[bytes, AlgorithmIDs, bytes]:
         try:
             _key = key.key_bytes if key is not None else self.key_bytes
         except AttributeError:

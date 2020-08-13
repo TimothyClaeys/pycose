@@ -2,21 +2,20 @@ from binascii import unhexlify
 
 from pytest import mark
 
-from pycose.attributes import CoseAlgorithm
+from pycose.algorithms import AlgorithmIDs
 from pycose.cosebase import HeaderKeys
 from pycose.keys.cosekey import CoseKey, EllipticCurveTypes
-from pycose.crypto import CoseKDFContext, PartyInfo, SuppPubInfo
 from pycose.keys.ec import EC2
-from pycose.recipient import CoseRecipient
+from pycose.recipient import CoseRecipient, PartyInfo, SuppPubInfo, CoseKDFContext
 
 
 @mark.parametrize("phdr, uhdr, alg, peer_key, eph_private_key, encoded_phdr, encoded_uhdr, cek, rcpt",
                   [
-                      ({HeaderKeys.ALG: CoseAlgorithm.ECDH_ES_HKDF_256},
+                      ({HeaderKeys.ALG: AlgorithmIDs.ECDH_ES_HKDF_256},
                        {
                            HeaderKeys.KID: "meriadoc.brandybuck@buckland.example".encode('utf-8')
                        },
-                       CoseAlgorithm.A128GCM,
+                       AlgorithmIDs.A128GCM,
                        EC2(crv=EllipticCurveTypes.P_256,
                            x=CoseKey.base64decode('Ze2loSV3wrroKUN_4zhwGhCqo3Xhu1td4QjeQ5wIVR0'),
                            y=CoseKey.base64decode('HlLtdXARY_f55A3fnzQbPcm6hgr34Mp8p-nuzQCE0Zw')),

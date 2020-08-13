@@ -2,11 +2,14 @@ import sys
 from binascii import hexlify
 from typing import Union, List, Optional, Any, Tuple
 
+import cbor2
 from cryptography.hazmat.backends import openssl
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PublicKey, X25519PrivateKey
+from dataclasses import dataclass
 
 from pycose import CoseMessage
+from pycose.algorithms import AlgorithmIDs
 from pycose.cosebase import HeaderKeys
 from pycose.keys.ec import EC2
 from pycose.keys.okp import OKP
@@ -17,9 +20,63 @@ if sys.version_info.minor < 8:
 else:
     from functools import singledispatchmethod
 
-from pycose.attributes import CoseAlgorithm
-from pycose.crypto import key_wrap, CoseKDFContext, KEY_DERIVATION_CURVES, ecdh_key_derivation, key_unwrap, \
+from pycose.crypto import key_wrap, KEY_DERIVATION_CURVES, ecdh_key_derivation, key_unwrap, \
     x25519_key_derivation, hmac_hkdf_key_derivation
+
+
+@dataclass
+class PartyInfo:
+    identity: bytes = None
+    nonce: bytes = None
+    other: bytes = None
+
+    def encode(self):
+        return [self.identity, self.nonce, self.other]
+
+
+@dataclass
+class SuppPubInfo:
+    _key_data_length: int
+    protected: bytes
+    other: bytes = None
+
+    @property
+    def key_data_length(self):
+        return self._key_data_length
+
+    @key_data_length.setter
+    def key_data_length(self, new_length):
+        if new_length in [128, 192, 256]:
+            self._key_data_length = new_length
+        else:
+            raise ValueError(f"Not a valid key length: {new_length}")
+
+    def __post__init__(self):
+        if self._key_data_length not in [128, 192, 256]:
+            raise ValueError(f"Not a valid key length: {self._key_data_length}")
+
+    def encode(self):
+        info = [self.key_data_length, self.protected]
+        if self.other is not None:
+            info.append(self.other)
+
+        return info
+
+
+@dataclass
+class CoseKDFContext:
+    algorithm_id: int
+    party_u_info: PartyInfo
+    party_v_info: PartyInfo
+    supp_pub_info: SuppPubInfo
+    supp_priv_info: bytes = None
+
+    def encode(self):
+        context = \
+            [self.algorithm_id, self.party_u_info.encode(), self.party_v_info.encode(), self.supp_pub_info.encode()]
+        if self.supp_priv_info is not None:
+            context.append(self.supp_priv_info)
+        return cbor2.dumps(context)
 
 
 class CoseRecipient(CoseMessage):
@@ -28,7 +85,7 @@ class CoseRecipient(CoseMessage):
             cls,
             recipients: List['CoseRecipient'],
             crypto_params:
-            Tuple[Tuple[bool, Optional[CoseAlgorithm], Optional[SymmetricKey], Optional[Tuple[Any]]]] = None) -> list:
+            Tuple[Tuple[bool, Optional[AlgorithmIDs], Optional[SymmetricKey], Optional[Tuple[Any]]]] = None) -> list:
         """ Recursively encode/encrypt the recipients """
         if crypto_params is None:
             recipients = [r.encode() for r in recipients]
@@ -69,10 +126,10 @@ class CoseRecipient(CoseMessage):
 
     def encode(self,
                encrypt: bool = True,
-               alg: Optional[CoseAlgorithm] = None,
+               alg: Optional[AlgorithmIDs] = None,
                key: Optional[SymmetricKey] = None,
                crypto_params:
-               List[Tuple[bool, Union[CoseAlgorithm, None], Union[SymmetricKey, None], List[Any]]] = None) -> list:
+               List[Tuple[bool, Union[AlgorithmIDs, None], Union[SymmetricKey, None], List[Any]]] = None) -> list:
 
         if encrypt:
             recipient = [self.encode_phdr(), self.encode_uhdr(), self.encrypt(alg, key)]
@@ -86,7 +143,7 @@ class CoseRecipient(CoseMessage):
 
         return recipient
 
-    def encrypt(self, alg: Optional[CoseAlgorithm] = None, key: Optional[SymmetricKey] = None) -> bytes:
+    def encrypt(self, alg: Optional[AlgorithmIDs] = None, key: Optional[SymmetricKey] = None) -> bytes:
         """ Do key wrapping. """
         _alg = alg if alg is not None else self.phdr.get(HeaderKeys.ALG)
         _alg = _alg if _alg is not None else self.uhdr.get(HeaderKeys.ALG)
@@ -94,7 +151,7 @@ class CoseRecipient(CoseMessage):
         if _alg is None:
             raise AttributeError('No algorithm specified.')
 
-        if CoseAlgorithm.ECDH_SS_HKDF_512 <= _alg <= CoseAlgorithm.ECDH_ES_HKDF_256 or _alg == CoseAlgorithm.DIRECT:
+        if AlgorithmIDs.ECDH_SS_HKDF_512 <= _alg <= AlgorithmIDs.ECDH_ES_HKDF_256 or _alg == AlgorithmIDs.DIRECT:
             return b''
 
         try:
@@ -104,7 +161,7 @@ class CoseRecipient(CoseMessage):
 
         return key_wrap(_key, self.payload)
 
-    def decrypt(self, alg: Optional[CoseAlgorithm] = None, key: Optional[SymmetricKey] = None) -> bytes:
+    def decrypt(self, alg: Optional[AlgorithmIDs] = None, key: Optional[SymmetricKey] = None) -> bytes:
         """ Do key wrapping. """
         _alg = alg if alg is not None else self.phdr.get(HeaderKeys.ALG)
         _alg = _alg if _alg is not None else self.uhdr.get(HeaderKeys.ALG)
@@ -112,8 +169,8 @@ class CoseRecipient(CoseMessage):
         if _alg is None:
             raise AttributeError('No algorithm specified.')
 
-        if not (CoseAlgorithm.ECDH_SS_A256KW <= _alg <= CoseAlgorithm.ECDH_ES_HKDF_256 or CoseAlgorithm.ECDH_ES_A128KW
-                or CoseAlgorithm.A256KW <= _alg <= CoseAlgorithm.A128KW):
+        if not (AlgorithmIDs.ECDH_SS_A256KW <= _alg <= AlgorithmIDs.ECDH_ES_HKDF_256 or AlgorithmIDs.ECDH_ES_A128KW
+                or AlgorithmIDs.A256KW <= _alg <= AlgorithmIDs.A128KW):
             raise ValueError("algorithm is not a key wrapping algorithm")
 
         try:
@@ -125,13 +182,13 @@ class CoseRecipient(CoseMessage):
 
     @singledispatchmethod
     @classmethod
-    def derive_kek(cls, private_key, public_key: Optional[Union[EC2, OKP]] = None, alg: Optional[CoseAlgorithm] = None,
+    def derive_kek(cls, private_key, public_key: Optional[Union[EC2, OKP]] = None, alg: Optional[AlgorithmIDs] = None,
                    context: CoseKDFContext = None, salt: bytes = None, expose_secret: bool = False):
         raise NotImplementedError
 
     @derive_kek.register(EC2)
     @classmethod
-    def _(cls, private_key: EC2, public_key: EC2 = None, alg: Optional[CoseAlgorithm] = None,
+    def _(cls, private_key: EC2, public_key: EC2 = None, alg: Optional[AlgorithmIDs] = None,
           context: CoseKDFContext = None,
           salt: bytes = None, expose_secret: bool = False):
         _ = salt
@@ -156,7 +213,7 @@ class CoseRecipient(CoseMessage):
 
     @derive_kek.register(SymmetricKey)
     @classmethod
-    def _(cls, private_key: SymmetricKey, public_key=None, alg: Optional[CoseAlgorithm] = None,
+    def _(cls, private_key: SymmetricKey, public_key=None, alg: Optional[AlgorithmIDs] = None,
           context: CoseKDFContext = None, salt: bytes = None, expose_secret: bool = False):
 
         _ = public_key
@@ -176,7 +233,7 @@ class CoseRecipient(CoseMessage):
 
     @derive_kek.register(OKP)
     @classmethod
-    def _(cls, private_key: OKP, public_key: OKP = None, alg: Optional[CoseAlgorithm] = None,
+    def _(cls, private_key: OKP, public_key: OKP = None, alg: Optional[AlgorithmIDs] = None,
           context: CoseKDFContext = None, salt: bytes = None, expose_secret: bool = False):
         _ = salt
 

@@ -14,7 +14,7 @@ from typing import Optional, List, Union, Tuple, Any
 import cbor2
 
 from pycose import cosemessage, maccommon
-from pycose.attributes import CoseAlgorithm
+from pycose.algorithms import AlgorithmIDs
 from pycose.keys.symmetric import SymmetricKey
 from pycose.recipient import CoseRecipient
 
@@ -56,10 +56,10 @@ class MacMessage(maccommon.MacCommon):
     def encode(self,
                tagged: bool = True,
                mac: bool = True,
-               alg: Optional[CoseAlgorithm] = None,
+               alg: Optional[AlgorithmIDs] = None,
                key: Optional[SymmetricKey] = None,
                crypto_params:
-               Tuple[Tuple[bool, Union[CoseAlgorithm, None], Union[SymmetricKey, None], Union[Tuple[Any], None]]] = None
+               Tuple[Tuple[bool, Union[AlgorithmIDs, None], Union[SymmetricKey, None], Union[Tuple[Any], None]]] = None
                ) -> bytes:
         """ Encodes the message as a CBOR array """
 
