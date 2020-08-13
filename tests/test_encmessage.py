@@ -5,8 +5,11 @@ from pytest import fixture, mark, skip
 from pycose import EncMessage, CoseMessage
 from pycose.attributes import CoseAlgorithm
 from pycose.cosebase import HeaderKeys
-from pycose.cosekey import SymmetricKey, KeyOps, CoseKey, EC2, KTY, OKP
+from pycose.keys.cosekey import KeyOps, CoseKey, KTY
 from pycose.crypto import PartyInfo, SuppPubInfo, CoseKDFContext
+from pycose.keys.ec import EC2
+from pycose.keys.okp import OKP
+from pycose.keys.symmetric import SymmetricKey
 from pycose.recipient import CoseRecipient
 from tests.conftest import generic_test_setup, extract_protected_header, extract_unprotected_header, \
     extract_unsent_nonce, create_cose_key

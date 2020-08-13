@@ -2,7 +2,8 @@ from binascii import unhexlify
 
 import pytest
 
-from pycose.cosekey import EC2, EllipticCurveKeys, CoseKey, KTY
+from pycose.keys.cosekey import EllipticCurveKeys, CoseKey, KTY
+from pycose.keys.ec import EC2
 
 
 @pytest.mark.parametrize("crv, x, y, expected",

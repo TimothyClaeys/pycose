@@ -4,8 +4,9 @@ from pytest import mark
 
 from pycose.attributes import CoseAlgorithm
 from pycose.cosebase import HeaderKeys
-from pycose.cosekey import CoseKey, EC2, CoseEllipticCurves
+from pycose.keys.cosekey import CoseKey, CoseEllipticCurves
 from pycose.crypto import CoseKDFContext, PartyInfo, SuppPubInfo
+from pycose.keys.ec import EC2
 from pycose.recipient import CoseRecipient
 
 

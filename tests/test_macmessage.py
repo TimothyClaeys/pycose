@@ -3,7 +3,8 @@ from binascii import unhexlify
 from pytest import fixture, mark, skip
 
 from pycose import CoseMessage
-from pycose.cosekey import SymmetricKey, CoseKey, KeyOps
+from pycose.keys.cosekey import KeyOps
+from pycose.keys.symmetric import SymmetricKey
 from pycose.macmessage import MacMessage
 from pycose.recipient import CoseRecipient
 from tests.conftest import generic_test_setup, create_cose_key

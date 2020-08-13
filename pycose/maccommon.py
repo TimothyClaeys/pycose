@@ -6,7 +6,7 @@ import cbor2
 from pycose import cosemessage, crypto, CoseMessage
 from pycose.attributes import CoseAlgorithm
 from pycose.cosebase import HeaderKeys
-from pycose.cosekey import SymmetricKey
+from pycose.keys.symmetric import SymmetricKey
 
 
 class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):

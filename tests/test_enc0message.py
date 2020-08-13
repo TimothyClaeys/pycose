@@ -6,8 +6,9 @@ from pytest import mark, fixture, skip
 from pycose import CoseMessage
 from pycose.attributes import CoseAlgorithm
 from pycose.cosebase import HeaderKeys
-from pycose.cosekey import SymmetricKey, CoseKey, KeyOps
 from pycose.enc0message import Enc0Message
+from pycose.keys.cosekey import CoseKey, KeyOps
+from pycose.keys.symmetric import SymmetricKey
 from tests.conftest import generic_test_setup, create_cose_key, extract_protected_header, extract_unprotected_header
 
 

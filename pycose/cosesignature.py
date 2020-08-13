@@ -3,7 +3,8 @@ from typing import Optional, Union
 from pycose import crypto
 from pycose.attributes import CoseAlgorithm
 from pycose.cosebase import CoseBase
-from pycose.cosekey import EC2, OKP
+from pycose.keys.ec import EC2
+from pycose.keys.okp import OKP
 
 
 class CoseSignature(CoseBase):

@@ -16,8 +16,11 @@ from dataclasses import dataclass
 from ecdsa import NIST256p, NIST521p, NIST384p, SigningKey, VerifyingKey, ellipticcurve
 
 from pycose.attributes import CoseAlgorithm
-from pycose.cosekey import CoseEllipticCurves, SymmetricKey, EC2, OKP
+from pycose.keys.cosekey import CoseEllipticCurves
 from pycose.exceptions import *
+from pycose.keys.ec import EC2
+from pycose.keys.okp import OKP
+from pycose.keys.symmetric import SymmetricKey
 
 AESKW = {
     CoseAlgorithm.A128KW,

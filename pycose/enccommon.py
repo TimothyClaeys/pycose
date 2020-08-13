@@ -7,7 +7,7 @@ from pycose import cosemessage
 from pycose import crypto
 from pycose.attributes import CoseAlgorithm
 from pycose.cosebase import HeaderKeys
-from pycose.cosekey import SymmetricKey
+from pycose.keys.symmetric import SymmetricKey
 
 
 class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):

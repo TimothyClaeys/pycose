@@ -4,7 +4,7 @@ from typing import Type, Optional
 import cbor2
 
 from pycose.cosebase import CoseBase
-from pycose.cosekey import CoseKey
+from pycose.keys.cosekey import CoseKey
 
 
 class CoseMessage(CoseBase, metaclass=abc.ABCMeta):

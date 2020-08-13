@@ -8,8 +8,11 @@ from pytest import skip
 
 from pycose.attributes import CoseAlgorithm
 from pycose.cosebase import HeaderKeys
-from pycose.cosekey import KTY, CoseEllipticCurves, CoseKey, SymmetricKey, EC2, KeyOps, OKP
+from pycose.keys.cosekey import KTY, CoseEllipticCurves, CoseKey, KeyOps
 from pycose.exceptions import CoseInvalidKey
+from pycose.keys.ec import EC2
+from pycose.keys.okp import OKP
+from pycose.keys.symmetric import SymmetricKey
 
 path_examples = os.path.join(pathlib.Path(__file__).parent.absolute(), 'examples')
 

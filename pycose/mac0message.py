@@ -12,7 +12,7 @@ from typing import Optional
 import cbor2
 
 from pycose import cosemessage, maccommon
-from pycose.cosekey import SymmetricKey
+from pycose.keys.symmetric import SymmetricKey
 
 
 @cosemessage.CoseMessage.record_cbor_tag(17)

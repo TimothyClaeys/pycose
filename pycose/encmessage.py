@@ -4,7 +4,7 @@ import cbor2
 
 from pycose import cosemessage, enccommon
 from pycose.attributes import CoseAlgorithm
-from pycose.cosekey import SymmetricKey
+from pycose.keys.symmetric import SymmetricKey
 from pycose.recipient import CoseRecipient
 
 

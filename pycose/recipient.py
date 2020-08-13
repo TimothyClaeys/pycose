@@ -8,6 +8,9 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PublicKey, X2
 
 from pycose import CoseMessage
 from pycose.cosebase import HeaderKeys
+from pycose.keys.ec import EC2
+from pycose.keys.okp import OKP
+from pycose.keys.symmetric import SymmetricKey
 
 if sys.version_info.minor < 8:
     from singledispatchmethod import singledispatchmethod
@@ -15,7 +18,6 @@ else:
     from functools import singledispatchmethod
 
 from pycose.attributes import CoseAlgorithm
-from pycose.cosekey import SymmetricKey, EC2, OKP
 from pycose.crypto import key_wrap, CoseKDFContext, KEY_DERIVATION_CURVES, ecdh_key_derivation, key_unwrap, \
     x25519_key_derivation, hmac_hkdf_key_derivation
 
@@ -26,8 +28,7 @@ class CoseRecipient(CoseMessage):
             cls,
             recipients: List['CoseRecipient'],
             crypto_params:
-            Tuple[Tuple[bool, Union[CoseAlgorithm, None], Union[SymmetricKey, None], Union[Tuple[Any], None]]] = None
-    ) -> list:
+            Tuple[Tuple[bool, Optional[CoseAlgorithm], Optional[SymmetricKey], Optional[Tuple[Any]]]] = None) -> list:
         """ Recursively encode/encrypt the recipients """
         if crypto_params is None:
             recipients = [r.encode() for r in recipients]

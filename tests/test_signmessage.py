@@ -3,7 +3,8 @@ from binascii import unhexlify
 from pytest import fixture, mark, skip
 
 from pycose import CoseMessage
-from pycose.cosekey import EC2, KeyOps
+from pycose.keys.cosekey import KeyOps
+from pycose.keys.ec import EC2
 from pycose.signmessage import SignMessage, CoseSignature
 from tests.conftest import generic_test_setup, create_cose_key
 

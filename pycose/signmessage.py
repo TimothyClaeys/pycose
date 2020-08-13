@@ -14,8 +14,9 @@ import cbor2
 from pycose import cosemessage, crypto
 from pycose.attributes import CoseAlgorithm
 from pycose.cosebase import HeaderKeys
-from pycose.cosekey import OKP, EC2
 from pycose.cosesignature import CoseSignature
+from pycose.keys.ec import EC2
+from pycose.keys.okp import OKP
 
 
 @cosemessage.CoseMessage.record_cbor_tag(98)
