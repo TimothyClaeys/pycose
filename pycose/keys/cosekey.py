@@ -32,7 +32,7 @@ class KeyOps(IntEnum):
 
 
 @unique
-class CoseEllipticCurves(IntEnum):
+class EllipticCurveTypes(IntEnum):
     RESERVED = 0
     P_256 = 1
     P_384 = 2
@@ -42,17 +42,6 @@ class CoseEllipticCurves(IntEnum):
     ED25519 = 6
     ED448 = 7
     SECP256K1 = 8
-
-
-@unique
-class EllipticCurveKeys(IntEnum):
-    P_256 = 1
-    P_384 = 2
-    P_521 = 3
-    X25519 = 4
-    X448 = 5
-    ED25519 = 6
-    ED448 = 7
 
 
 @dc.dataclass

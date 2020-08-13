@@ -8,7 +8,7 @@ from pytest import skip
 
 from pycose.attributes import CoseAlgorithm
 from pycose.cosebase import HeaderKeys
-from pycose.keys.cosekey import KTY, CoseEllipticCurves, CoseKey, KeyOps
+from pycose.keys.cosekey import KTY, EllipticCurveTypes, CoseKey, KeyOps
 from pycose.exceptions import CoseInvalidKey
 from pycose.keys.ec import EC2
 from pycose.keys.okp import OKP
@@ -101,11 +101,11 @@ key_param_to_be_replaced = {
 key_attr_to_be_replaced = {
     "EC": KTY.EC2,
     "OKP": KTY.OKP,
-    "P-256": CoseEllipticCurves.P_256,
-    "P-384": CoseEllipticCurves.P_384,
-    "P-521": CoseEllipticCurves.P_521,
-    "X25519": CoseEllipticCurves.X25519,
-    "X448": CoseEllipticCurves.X448,
+    "P-256": EllipticCurveTypes.P_256,
+    "P-384": EllipticCurveTypes.P_384,
+    "P-521": EllipticCurveTypes.P_521,
+    "X25519": EllipticCurveTypes.X25519,
+    "X448": EllipticCurveTypes.X448,
     "oct": KTY.SYMMETRIC,
 }
 

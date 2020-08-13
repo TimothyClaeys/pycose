@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from ecdsa import NIST256p, NIST521p, NIST384p, SigningKey, VerifyingKey, ellipticcurve
 
 from pycose.attributes import CoseAlgorithm
-from pycose.keys.cosekey import CoseEllipticCurves
+from pycose.keys.cosekey import EllipticCurveTypes
 from pycose.exceptions import *
 from pycose.keys.ec import EC2
 from pycose.keys.okp import OKP
@@ -81,9 +81,9 @@ AEAD = {
 }
 
 KEY_DERIVATION_CURVES = {
-    CoseEllipticCurves.P_256: SECP256R1,
-    CoseEllipticCurves.P_384: SECP384R1,
-    CoseEllipticCurves.P_521: SECP521R1,
+    EllipticCurveTypes.P_256: SECP256R1,
+    EllipticCurveTypes.P_384: SECP384R1,
+    EllipticCurveTypes.P_521: SECP521R1,
 }
 
 

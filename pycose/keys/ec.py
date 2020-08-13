@@ -4,13 +4,13 @@ from typing import Optional, Tuple
 import dataclasses
 from dataclasses import dataclass
 
-from pycose.keys.cosekey import CoseKey, KTY, CoseEllipticCurves, EllipticCurveKeys
+from pycose.keys.cosekey import CoseKey, KTY, EllipticCurveTypes
 
 
 @CoseKey.record_kty(KTY.EC2)
 @dataclass(init=False)
 class EC2(CoseKey):
-    _crv: Optional[CoseEllipticCurves] = None
+    _crv: Optional[EllipticCurveTypes] = None
     _x: Optional[bytes] = None
     _y: Optional[bytes] = None
     _d: Optional[bytes] = None
@@ -41,13 +41,13 @@ class EC2(CoseKey):
         self.d = d
 
     @property
-    def crv(self) -> Optional[CoseEllipticCurves]:
+    def crv(self) -> Optional[EllipticCurveTypes]:
         return self._crv
 
     @crv.setter
-    def crv(self, new_crv: Optional[CoseEllipticCurves]) -> None:
+    def crv(self, new_crv: Optional[EllipticCurveTypes]) -> None:
         if new_crv is not None:
-            _ = CoseEllipticCurves(new_crv)
+            _ = EllipticCurveTypes(new_crv)
         self._crv = new_crv
 
     @property
@@ -90,7 +90,7 @@ class EC2(CoseKey):
         for k, v in cose_key_obj.items():
             if k in values:
                 if k == cls.EC2Prm.CRV:
-                    v = EllipticCurveKeys(v)
+                    v = EllipticCurveTypes(v)
                 else:
                     # store key coordinates as bytes
                     v = v
