@@ -4,4 +4,3 @@ ecdsa>=0.15
 pytest==6.0.1
 dataclasses>=0.7 ;python_version <= '3.6'
 singledispatchmethod>=1.0 ;python_version <= '3.7'
-pycose~=0.1.3
