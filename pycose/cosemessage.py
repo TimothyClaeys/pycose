@@ -46,7 +46,8 @@ class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
 
     @classmethod
     def from_cose_obj(cls, cose_obj: list):
-        """Returns an initialized COSE message object."""
+        """ Returns an initialized COSE message object. """
+
         msg = super().from_cose_obj(cose_obj)
         msg.payload = cose_obj.pop(0)
         return msg
@@ -55,12 +56,10 @@ class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
                  phdr: Optional[dict] = None,
                  uhdr: Optional[dict] = None,
                  payload: bytes = b'',
-                 external_aad: bytes = b'',
-                 key: Optional[Type[CoseKey]] = None):
+                 external_aad: bytes = b''):
         super().__init__(phdr, uhdr)
         self.payload = payload
         self.external_aad = external_aad
-        self.key = key
 
     @property
     def external_aad(self) -> bytes:
@@ -81,16 +80,6 @@ class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
         if type(new_payload) is not bytes:
             raise TypeError("payload should be of type 'bytes'")
         self._payload = new_payload  # can be plaintext or ciphertext
-
-    @property
-    def key(self) -> Optional[Type[CoseKey]]:
-        return self._key
-
-    @key.setter
-    def key(self, new_key: Optional[Type[CoseKey]]) -> None:
-        if not issubclass(type(new_key), CoseKey) and new_key is not None:
-            raise TypeError("key must be of type 'bytes'")
-        self._key = new_key
 
     def _base_structure(self, structure: list) -> list:
         if len(self.phdr) == 0:

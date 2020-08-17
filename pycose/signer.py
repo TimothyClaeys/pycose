@@ -1,6 +1,5 @@
 from typing import Optional, Union
 
-from pycose import crypto
 from pycose.algorithms import AlgorithmIDs
 from pycose.cosebase import CoseBase
 from pycose.keys.ec import EC2
@@ -21,19 +20,20 @@ class CoseSignature(CoseBase):
                  uhdr: Optional[dict],
                  signature: Optional[bytes] = b'',
                  external_aad: Optional[bytes] = b'',
-                 key: Optional[Union[EC2, OKP]] = None):
+                 private_key: Optional[Union[EC2, OKP]] = None,
+                 public_key: Optional[Union[EC2, OKP]] = None):
         super().__init__(phdr=phdr, uhdr=uhdr)
+
         self.external_aad = external_aad
-        self.key = key
+        self.private_key = private_key
+        self.public_key = public_key
         self.signature = signature
 
-    @classmethod
-    def compute_signature(cls,
+    def compute_signature(self,
                           to_sign: bytes,
-                          alg: Optional[AlgorithmIDs] = None,
-                          key: Optional[Union[EC2, OKP]] = None):
+                          alg: Optional[AlgorithmIDs] = None):
+        pass
 
-        return crypto.ec_sign_wrapper(key, to_sign, alg)
 
     def encode(self, signature: Optional[bytes]) -> list:
 

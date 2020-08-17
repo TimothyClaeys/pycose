@@ -31,8 +31,6 @@ class KeyOps(IntEnum):
     MAC_VERIFY = 10
 
 
-
-
 @unique
 class EllipticCurveTypes(IntEnum):
     RESERVED = 0

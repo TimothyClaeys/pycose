@@ -3,9 +3,10 @@ from typing import Optional, Tuple
 
 import cbor2
 
-from pycose import cosemessage, crypto, CoseMessage
+from pycose import cosemessage, CoseMessage
 from pycose.algorithms import AlgorithmIDs
 from pycose.cosebase import HeaderKeys
+from pycose.exceptions import CoseIllegalKeyType
 from pycose.keys.symmetric import SymmetricKey
 
 
@@ -28,29 +29,45 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
                  payload: bytes = b'',
                  external_aad: bytes = b'',
                  key: Optional[SymmetricKey] = None):
-        super().__init__(phdr, uhdr, payload, external_aad, key)
+        super().__init__(phdr, uhdr, payload, external_aad)
 
+        self.key = key
         self.auth_tag = b''
 
     @property
-    def key_bytes(self) -> bytes:
-        if self.key is None:
-            raise AttributeError('COSE_Key is not set')
-        else:
-            return self.key.key_bytes
+    def key(self):
+        return self._key
 
-    def verify_auth_tag(self, alg: Optional[AlgorithmIDs] = None, key: Optional[SymmetricKey] = None) -> bool:
+    @key.setter
+    def key(self, new_key):
+        if isinstance(new_key, SymmetricKey):
+            self._key = new_key
+        else:
+            raise CoseIllegalKeyType(f"Expected type {type(SymmetricKey)}, instead got {type(new_key)}")
+
+    def verify_tag(self, alg: Optional[AlgorithmIDs] = None, key: Optional[SymmetricKey] = None) -> bool:
         """ Verifies the authentication tag of a received message. """
 
         to_digest = self._mac_structure
-        _alg, _key = self._get_crypt_params(alg, key)
-        return crypto.verify_tag_wrapper(_key, self.auth_tag, to_digest, _alg)
 
-    def compute_auth_tag(self, alg: Optional[AlgorithmIDs] = None, key: Optional[SymmetricKey] = None) -> bytes:
+        if key is not None:
+            self.key = key
+
+        if self.key is None:
+            raise ValueError("COSE Key cannot be None")
+
+        return self.key.verify_tag_wrapper(self.auth_tag, to_digest, alg)
+
+    def compute_tag(self, alg: Optional[AlgorithmIDs] = None, key: Optional[SymmetricKey] = None) -> bytes:
         """ Wrapper function to access the cryptographic primitives. """
 
-        _alg, _key = self._get_crypt_params(alg, key)
-        self.auth_tag = crypto.calc_tag_wrapper(_key, self._mac_structure, _alg)
+        if key is not None:
+            self.key = key
+
+        if self.key is None:
+            raise ValueError("COSE Key cannot be None")
+
+        self.auth_tag = self.key.calc_tag_wrapper(self._mac_structure, alg)
         return self.auth_tag
 
     @property
@@ -67,19 +84,3 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
         mac_structure.append(self.payload)
         return cbor2.dumps(mac_structure)
 
-    def _get_crypt_params(self,
-                          alg: Optional[AlgorithmIDs],
-                          key: Optional[SymmetricKey]) -> Tuple[AlgorithmIDs, bytes]:
-        # if nothing is overridden by the function parameters, search in COSE headers
-        _alg = alg if alg is not None else self.phdr.get(HeaderKeys.ALG)
-        _alg = _alg if _alg is not None else self.uhdr.get(HeaderKeys.ALG)
-
-        if _alg is None:
-            raise AttributeError('No algorithm specified.')
-
-        try:
-            _key = key.key_bytes if key is not None else self.key_bytes
-        except AttributeError:
-            raise AttributeError("No key specified.")
-
-        return _alg, _key

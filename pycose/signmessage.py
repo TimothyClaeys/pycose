@@ -11,7 +11,7 @@ from typing import Optional, Union, List, Tuple
 
 import cbor2
 
-from pycose import cosemessage, crypto
+from pycose import cosemessage
 from pycose.algorithms import AlgorithmIDs
 from pycose.cosebase import HeaderKeys
 from pycose.keys.ec import EC2
@@ -41,7 +41,7 @@ class SignMessage(cosemessage.CoseMessage):
         if uhdr is None:
             uhdr = {}
 
-        super().__init__(phdr, uhdr, payload, b'', None)
+        super().__init__(phdr, uhdr, payload, b'')
 
         if cose_signatures is None:
             self.cose_signatures = list()
@@ -58,15 +58,6 @@ class SignMessage(cosemessage.CoseMessage):
         ]
 
         return cbor2.dumps(_sig_structure)
-
-    def verify_signature(self,
-                         cose_signature: Optional[CoseSignature],
-                         alg: Optional[AlgorithmIDs] = None,
-                         key: Optional[Union[EC2, OKP]] = None) -> bool:
-
-        _alg, _key = SignMessage._get_crypt_params(cose_signature, alg, key)
-
-        return crypto.ec_verify_wrapper(_key, self._sig_structure(cose_signature), cose_signature.signature, _alg)
 
     def encode(self,
                tagged: bool = True,
@@ -86,10 +77,9 @@ class SignMessage(cosemessage.CoseMessage):
         signers = list()
         for cose_signature, param in zip_longest(self.cose_signatures, sign_params, fillvalue=((True, None, None),)):
             sign, alg, key = param
-            _alg, _key = SignMessage._get_crypt_params(cose_signature, alg, key)
 
             if sign:
-                signature = CoseSignature.compute_signature(self._sig_structure(cose_signature), _alg, _key)
+                signature = CoseSignature.compute_signature(self._sig_structure(cose_signature), alg, key)
             else:
                 signature = None
 
@@ -103,25 +93,6 @@ class SignMessage(cosemessage.CoseMessage):
             message = cbor2.dumps(message)
 
         return message
-
-    @classmethod
-    def _get_crypt_params(cls,
-                          cose_signature: Optional[CoseSignature],
-                          alg: Optional[AlgorithmIDs],
-                          key: Optional[Union[EC2, OKP]]) -> Tuple[AlgorithmIDs, Union[EC2, OKP]]:
-
-        try:
-            _key = key if key is not None else cose_signature.key
-        except AttributeError:
-            raise AttributeError("No key specified.")
-
-        _alg = alg if alg is not None else cose_signature.phdr.get(HeaderKeys.ALG)
-        _alg = _alg if _alg is not None else cose_signature.uhdr.get(HeaderKeys.ALG)
-
-        if _alg is None:
-            raise AttributeError('No algorithm specified.')
-
-        return _alg, _key
 
     def __repr__(self):
         return f'<COSE_Sign:\n' \

@@ -5,6 +5,8 @@ from cryptography.hazmat.primitives import keywrap
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM, AESCCM
 from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.hashes import SHA384, SHA256, SHA512
+from cryptography.hazmat.primitives.hmac import HMAC
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from dataclasses import dataclass
 from ecdsa import NIST521p, NIST384p, NIST256p
 
@@ -58,28 +60,29 @@ class AlgorithmIDs(IntEnum):
 @dataclass
 class AlgoParam:
     primitive: Any = None
+    key_derivation: Any = None
     curve: Any = None
     tag_length: int = None
     hash: Any = None
 
 
-class PrimitiveMap(Enum):
+class AlgID2Crypto(Enum):
     ES512 = AlgoParam(hash=SHA512, curve=NIST521p)
     ES384 = AlgoParam(hash=SHA384, curve=NIST384p)
-    ECDH_SS_A256KW = AlgoParam(hash=SHA256)
-    ECDH_SS_A192KW = AlgoParam(hash=SHA256)
-    ECDH_SS_A128KW = AlgoParam(hash=SHA256)
-    ECDH_ES_A256KW = AlgoParam(hash=SHA256)
-    ECDH_ES_A192KW = AlgoParam(hash=SHA256)
-    ECDH_ES_A128KW = AlgoParam(hash=SHA256)
-    ECDH_SS_HKDF_512 = AlgoParam(hash=SHA512)
-    ECDH_SS_HKDF_256 = AlgoParam(hash=SHA256)
-    ECDH_ES_HKDF_512 = AlgoParam(hash=SHA512)
-    ECDH_ES_HKDF_256 = AlgoParam(hash=SHA256)
+    ECDH_SS_A256KW = AlgoParam(primitive=keywrap, key_derivation=HKDF, hash=SHA256)
+    ECDH_SS_A192KW = AlgoParam(primitive=keywrap, key_derivation=HKDF, hash=SHA256)
+    ECDH_SS_A128KW = AlgoParam(primitive=keywrap, key_derivation=HKDF, hash=SHA256)
+    ECDH_ES_A256KW = AlgoParam(primitive=keywrap, key_derivation=HKDF, hash=SHA256)
+    ECDH_ES_A192KW = AlgoParam(primitive=keywrap, key_derivation=HKDF, hash=SHA256)
+    ECDH_ES_A128KW = AlgoParam(primitive=keywrap, key_derivation=HKDF, hash=SHA256)
+    ECDH_SS_HKDF_512 = AlgoParam(key_derivation=HKDF, hash=SHA512)
+    ECDH_SS_HKDF_256 = AlgoParam(key_derivation=HKDF, hash=SHA256)
+    ECDH_ES_HKDF_512 = AlgoParam(key_derivation=HKDF, hash=SHA512)
+    ECDH_ES_HKDF_256 = AlgoParam(key_derivation=HKDF, hash=SHA256)
     # DIRECT_HKDF_AES_256 = -13
     # DIRECT_HKDF_AES_128 = -12
-    DIRECT_HKDF_SHA_512 = AlgoParam(hash=SHA512)
-    DIRECT_HKDF_SHA_256 = AlgoParam(hash=SHA256)
+    DIRECT_HKDF_SHA_512 = AlgoParam(key_derivation=HKDF, hash=SHA512)
+    DIRECT_HKDF_SHA_256 = AlgoParam(key_derivation=SHA256)
     EDDSA = AlgoParam(hash=SHA256)
     ES256 = AlgoParam(hash=SHA256, curve=NIST256p)
     DIRECT = AlgoParam()
@@ -89,16 +92,16 @@ class PrimitiveMap(Enum):
     A128GCM = AlgoParam(primitive=AESGCM)
     A192GCM = AlgoParam(primitive=AESGCM)
     A256GCM = AlgoParam(primitive=AESGCM)
-    HMAC_256_64 = AlgoParam(hash=SHA256)
-    HMAC_256_256 = AlgoParam(hash=SHA256)
-    HMAC_384_384 = AlgoParam(hash=SHA384)
-    HMAC_512_512 = AlgoParam(hash=SHA512)
+    HMAC_256_64 = AlgoParam(primitive=HMAC, hash=SHA256)
+    HMAC_256_256 = AlgoParam(primitive=HMAC, hash=SHA256)
+    HMAC_384_384 = AlgoParam(primitive=HMAC, hash=SHA384)
+    HMAC_512_512 = AlgoParam(primitive=HMAC, hash=SHA512)
     AES_CCM_16_64_128 = AlgoParam(primitive=AESCCM, tag_length=8)
     AES_CCM_16_64_256 = AlgoParam(primitive=AESCCM, tag_length=8)
     AES_CCM_64_64_128 = AlgoParam(primitive=AESCCM, tag_length=8)
     AES_CCM_64_64_256 = AlgoParam(primitive=AESCCM, tag_length=8)
-    AES_MAC_128_64 = AlgoParam(primitive=AES)
-    AES_MAC_256_64 = AlgoParam(primitive=AES)
+    AES_MAC_128_64 = AlgoParam(primitive=AES, tag_length=8)
+    AES_MAC_256_64 = AlgoParam(primitive=AES, tag_length=8)
     # CHACHA20_POLY1305 = 24
     AES_MAC_128_128 = AlgoParam(primitive=AES)
     AES_MAC_256_128 = AlgoParam(primitive=AES)
@@ -106,5 +109,3 @@ class PrimitiveMap(Enum):
     AES_CCM_16_128_256 = AlgoParam(primitive=AESCCM, tag_length=16)
     AES_CCM_64_128_128 = AlgoParam(primitive=AESCCM, tag_length=16)
     AES_CCM_64_128_256 = AlgoParam(primitive=AESCCM, tag_length=16)
-
-

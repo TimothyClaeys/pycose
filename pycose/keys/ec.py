@@ -1,10 +1,19 @@
+from binascii import hexlify
 from enum import IntEnum
 from typing import Optional, Tuple
 
 import dataclasses
+from cryptography.hazmat.backends import openssl
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.asymmetric.ec import SECP256R1, SECP384R1, SECP521R1, ECDH
 from dataclasses import dataclass
+from ecdsa import SigningKey, VerifyingKey
+from ecdsa.ellipticcurve import Point
 
-from pycose.keys.cosekey import CoseKey, KTY, EllipticCurveTypes
+from pycose.algorithms import AlgorithmIDs, AlgoParam, AlgID2Crypto
+from pycose.context import CoseKDFContext
+from pycose.exceptions import CoseIllegalKeyOps, CoseIllegalCurve
+from pycose.keys.cosekey import CoseKey, KTY, EllipticCurveTypes, KeyOps
 
 
 @CoseKey.record_kty(KTY.EC2)
@@ -25,12 +34,18 @@ class EC2(CoseKey):
         def has_member(cls, item):
             return item in cls.__members__
 
+    KEY_DERIVATION_CURVES = {
+        EllipticCurveTypes.P_256: SECP256R1,
+        EllipticCurveTypes.P_384: SECP384R1,
+        EllipticCurveTypes.P_521: SECP521R1,
+    }
+
     def __init__(self,
                  kid: Optional[bytes] = None,
                  alg: Optional[int] = None,
                  key_ops: Optional[int] = None,
                  base_iv: Optional[bytes] = None,
-                 crv: Optional[int] = None,
+                 crv: Optional[EllipticCurveTypes] = None,
                  x: Optional[bytes] = None,
                  y: Optional[bytes] = None,
                  d: Optional[bytes] = None):
@@ -116,3 +131,77 @@ class EC2(CoseKey):
         output.extend(
             self._base_repr(k, v) if k not in [-2, -3, -4] else self._key_repr(k, v) for k, v in content.items())
         return "\n".join(output)
+
+    def ecdh_key_derivation(self,
+                            public_key: 'EC2',
+                            alg: AlgorithmIDs,
+                            curve: Optional[EllipticCurveTypes] = None,
+                            context: CoseKDFContext = b'') -> Tuple[bytes, bytes]:
+        self._check_key_conf(alg, KeyOps.DERIVE_KEY, curve)
+
+        algorithm: AlgoParam = AlgID2Crypto[self.alg.name].value
+
+        try:
+            curve = self.KEY_DERIVATION_CURVES[self.crv]()
+        except KeyError:
+            raise CoseIllegalCurve
+
+        d = ec.derive_private_key(int(hexlify(self.x), 16), curve, openssl.backend)
+        p = ec.EllipticCurvePublicNumbers(int(hexlify(self.x), 16), int(hexlify(self.y), 16), curve)
+        p = p.public_key(openssl.backend)
+
+        shared_key = d.exchange(ECDH(), p)
+
+        derived_key = algorithm.key_derivation(algorithm=algorithm.hash,
+                                               length=int(context.supp_pub_info.key_data_length / 8),
+                                               salt=None,
+                                               info=context.encode(),
+                                               backend=openssl.backend).derive(shared_key)
+
+        return shared_key, derived_key
+
+    def ec_sign_wrapper(self,
+                        to_be_signed: bytes,
+                        alg: Optional[AlgorithmIDs] = None,
+                        curve: EllipticCurveTypes = None) -> bytes:
+
+        self._check_key_conf(alg, KeyOps.SIGN, curve)
+
+        algorithm: AlgoParam = AlgID2Crypto[self.alg.name].value
+        sk = SigningKey.from_secret_exponent(int(hexlify(self.d), 16), curve=algorithm.curve)
+
+        return sk.sign_deterministic(to_be_signed, hashfunc=algorithm.hash)
+
+    def ec_verify_wrapper(self,
+                          to_be_signed: bytes,
+                          signature: bytes,
+                          alg: Optional[AlgorithmIDs] = None,
+                          curve: Optional[EllipticCurveTypes] = None) -> bool:
+        self._check_key_conf(alg, KeyOps.SIGN, curve)
+
+        algorithm: AlgoParam = AlgID2Crypto[self.alg.name].value
+        p = Point(curve=algorithm.curve, x=int(hexlify(self.x), 16), y=int(hexlify(self.y), 16))
+        vk = VerifyingKey.from_public_point(p, algorithm.curve, algorithm.hash, validate_point=True)
+
+        return vk.verify(signature, to_be_signed)
+
+    def _check_key_conf(self, algorithm: AlgorithmIDs, key_operation: KeyOps, curve: EllipticCurveTypes):
+        """ Helper function that checks the configuration of the COSE key object. """
+
+        if self.alg is not None and algorithm is not None and self.alg != algorithm:
+            raise ValueError("COSE key algorithm does not match with parameter 'algorithm'.")
+
+        if algorithm is not None:
+            self.alg = algorithm
+
+        if self.crv is not None and curve is not None and self.crv != curve:
+            raise ValueError("Curve in COSE key clashes with parameter 'curve'.")
+
+        if curve is not None:
+            self.crv = curve
+
+        if self.key_ops is not None and key_operation is not None and self.key_ops != key_operation:
+            raise CoseIllegalKeyOps(f"COSE key operation does not match with {key_operation}")
+
+        if key_operation is not None:
+            self.key_ops = key_operation

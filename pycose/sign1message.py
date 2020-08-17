@@ -1,10 +1,11 @@
-from typing import Optional, Union, Tuple
+from typing import Optional, Union
 
 import cbor2
 
-from pycose import cosemessage, crypto
+from pycose import cosemessage
 from pycose.algorithms import AlgorithmIDs
-from pycose.cosebase import HeaderKeys
+from pycose.exceptions import CoseIllegalKeyType
+from pycose.keys.cosekey import EllipticCurveTypes
 from pycose.keys.ec import EC2
 from pycose.keys.okp import OKP
 
@@ -25,15 +26,40 @@ class Sign1Message(cosemessage.CoseMessage):
                  uhdr: Optional[dict] = None,
                  payload: bytes = b'',
                  external_aad: bytes = b'',
-                 key: Optional[Union[EC2, OKP]] = None):
+                 private_key: Optional[Union[EC2, OKP]] = None,
+                 public_key: Optional[Union[EC2, OKP]] = None):
         if phdr is None:
             phdr = {}
         if uhdr is None:
             uhdr = {}
 
-        super().__init__(phdr, uhdr, payload, external_aad, key)
+        super().__init__(phdr, uhdr, payload, external_aad)
 
         self.signature = b''
+        self.private_key = private_key
+        self.public_key = public_key
+
+    @property
+    def private_key(self):
+        return self._private_key
+
+    @private_key.setter
+    def private_key(self, new_key: Union[EC2, OKP]):
+        if isinstance(new_key, EC2) or isinstance(new_key, OKP):
+            self._private_key = new_key
+        else:
+            raise CoseIllegalKeyType(f"Expected type {type(EC2)} or type {type(OKP)}, instead got {type(new_key)}")
+
+    @property
+    def public_key(self):
+        return self._public_key
+
+    @public_key.setter
+    def public_key(self, new_key: Union[EC2, OKP]):
+        if isinstance(new_key, EC2) or isinstance(new_key, OKP):
+            self._public_key = new_key
+        else:
+            raise CoseIllegalKeyType(f"Expected type {type(EC2)} or type {type(OKP)}, instead got {type(new_key)}")
 
     @property
     def signature(self):
@@ -58,14 +84,21 @@ class Sign1Message(cosemessage.CoseMessage):
 
         return cbor2.dumps(sig_structure)
 
-    def verify_signature(self, alg: Optional[AlgorithmIDs] = None, key: Optional[Union[EC2, OKP]] = None) -> bool:
+    def verify_signature(self,
+                         public_key: Optional[Union[EC2, OKP]],
+                         alg: Optional[AlgorithmIDs] = None,
+                         curve: Optional[EllipticCurveTypes] = None) -> bool:
         """
         Verifies the signature of a received message
         :return: True or raises an exception
         """
-        _alg, _key = self._get_crypt_params(alg, key)
+        if public_key is not None:
+            self.public_key = public_key
 
-        return crypto.ec_verify_wrapper(_key, self._sig_structure, self.signature, _alg)
+        if self.public_key is None:
+            raise ValueError("COSE Key cannot be None")
+
+        return public_key.ec_verify_wrapper(self._sig_structure, self.signature, alg)
 
     def compute_signature(self,
                           alg: Optional[AlgorithmIDs] = None,
@@ -73,8 +106,13 @@ class Sign1Message(cosemessage.CoseMessage):
 
         to_sign = self._sig_structure
 
-        _alg, _key = self._get_crypt_params(alg, key)
-        return crypto.ec_sign_wrapper(_key, to_sign, _alg)
+        if key is not None:
+            self.key = key
+
+        if self.key is None:
+            raise ValueError("COSE Key cannot be None")
+
+        return self.key.ec_sign_wrapper(to_sign, alg)
 
     def encode(self,
                tagged: bool = True,
@@ -94,24 +132,6 @@ class Sign1Message(cosemessage.CoseMessage):
             res = cbor2.dumps(message)
 
         return res
-
-    def _get_crypt_params(self,
-                          alg: Optional[AlgorithmIDs],
-                          key: Optional[Union[EC2, OKP]]) -> Tuple[AlgorithmIDs, Union[EC2, OKP]]:
-
-        # if nothing is overridden by the function parameters, search in COSE headers
-        _alg = alg if alg is not None else self.phdr.get(HeaderKeys.ALG)
-        _alg = _alg if _alg is not None else self.uhdr.get(HeaderKeys.ALG)
-
-        if _alg is None:
-            raise AttributeError('No algorithm specified.')
-
-        try:
-            _key = key if key is not None else self.key
-        except AttributeError:
-            raise AttributeError("No key specified.")
-
-        return _alg, _key
 
     def __repr__(self):
         return f'<COSE_Sign1:\n' \

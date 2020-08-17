@@ -1,12 +1,11 @@
 import abc
-from typing import Tuple, Optional
+from typing import Optional
 
 import cbor2
 
 from pycose import cosemessage
-from pycose import crypto
 from pycose.algorithms import AlgorithmIDs
-from pycose.cosebase import HeaderKeys
+from pycose.exceptions import CoseIllegalKeyType
 from pycose.keys.symmetric import SymmetricKey
 
 
@@ -14,63 +13,81 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
     @property
     @abc.abstractmethod
     def context(self) -> str:
-        """Getter for the context of the message."""
+        """ Getter for the context of the message. """
+
         raise NotImplementedError
 
+    def __init__(self,
+                 phdr: Optional[dict] = None,
+                 uhdr: Optional[dict] = None,
+                 payload: bytes = b'',
+                 external_aad: bytes = b'',
+                 key: Optional[SymmetricKey] = None,
+                 nonce: bytes = b''):
+
+        super().__init__(phdr, uhdr, payload, external_aad)
+
+        self.key = key
+        self.nonce = nonce
+
     @property
-    def key_bytes(self) -> bytes:
-        if self.key is None:
-            raise AttributeError('COSE_Key is not set')
+    def key(self):
+        return self._key
+
+    @key.setter
+    def key(self, new_key):
+        if isinstance(new_key, SymmetricKey):
+            self._key = new_key
         else:
-            return self.key.key_bytes
+            raise CoseIllegalKeyType(f"Expected type {type(SymmetricKey)}, instead got {type(new_key)}")
 
     def decrypt(self,
-                alg: Optional[AlgorithmIDs] = None,
                 nonce: Optional[bytes] = None,
-                key: Optional[SymmetricKey] = None) -> bytes:
+                key: Optional[SymmetricKey] = None,
+                alg: Optional[AlgorithmIDs] = None) -> bytes:
         """ Decrypts the payload. """
-        key, alg, nonce = self._get_crypt_params(alg, nonce, key)
 
-        return crypto.aead_decrypt(key, self._enc_structure, self.payload, alg, nonce)
+        if key is not None:
+            self.key = key
+
+        if self.key is None:
+            raise ValueError("COSE Key cannot be None")
+
+        if nonce is not None:
+            self.nonce = nonce
+
+        if self.nonce is None:
+            raise ValueError("Nonce for encryption/decryption cannot be empty")
+
+        return self.key.decrypt(self.payload, self._enc_structure, nonce, alg)
 
     def encrypt(self,
-                alg: Optional[AlgorithmIDs] = None,
                 nonce: Optional[bytes] = None,
-                key: Optional[SymmetricKey] = None) -> bytes:
+                key: Optional[SymmetricKey] = None,
+                alg: Optional[AlgorithmIDs] = None) -> bytes:
         """ Encrypts the payload. """
-        key, alg, nonce = self._get_crypt_params(alg, nonce, key)
 
-        return crypto.aead_encrypt(key, self._enc_structure, self.payload, alg, nonce)
+        if key is not None:
+            self.key = key
+
+        if self.key is None:
+            raise ValueError("COSE Key cannot be None")
+
+        if nonce is not None:
+            self.nonce = nonce
+
+        if self.nonce is None:
+            raise ValueError("Nonce for encryption/decryption cannot be empty")
+
+        return self.key.encrypt(self.payload, self._enc_structure, nonce, alg)
 
     @property
     def _enc_structure(self) -> bytes:
+        """ Build the encryption context. """
+
         enc_structure = [self.context]
 
         enc_structure = self._base_structure(enc_structure)
         aad = cbor2.dumps(enc_structure)
         return aad
 
-    def _get_crypt_params(self,
-                          alg: Optional[AlgorithmIDs],
-                          nonce: Optional[bytes],
-                          key: Optional[SymmetricKey]) -> Tuple[bytes, AlgorithmIDs, bytes]:
-        try:
-            _key = key.key_bytes if key is not None else self.key_bytes
-        except AttributeError:
-            raise AttributeError("No key specified.")
-
-        # search in protected headers
-        _alg = alg if alg is not None else self.phdr.get(HeaderKeys.ALG)
-        _nonce = nonce if nonce is not None else self.phdr.get(HeaderKeys.IV)
-
-        # search in unprotected headers
-        _alg = _alg if _alg is not None else self.uhdr.get(HeaderKeys.ALG)
-        _nonce = _nonce if _nonce is not None else self.uhdr.get(HeaderKeys.IV)
-
-        if _alg is None:
-            raise AttributeError('No algorithm specified.')
-
-        if _nonce is None:
-            raise AttributeError('No nonce specified.')
-
-        return _key, _alg, _nonce

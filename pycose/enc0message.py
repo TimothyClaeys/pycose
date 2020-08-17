@@ -39,9 +39,10 @@ class Enc0Message(enccommon.EncCommon):
                alg: Optional[int] = None,
                nonce: Optional[bytes] = None,
                key: Optional[SymmetricKey] = None) -> bytes:
+        """ Encode the COSE Encrypt0 message. """
 
         if encrypt:
-            message = [self.encode_phdr(), self.encode_uhdr(), self.encrypt(alg, nonce, key)]
+            message = [self.encode_phdr(), self.encode_uhdr(), self.encrypt(nonce, alg, key)]
         else:
             message = [self.encode_phdr(), self.encode_uhdr(), self.payload]
 

@@ -1,15 +1,9 @@
 import sys
-from binascii import hexlify
 from typing import Union, List, Optional, Any, Tuple
-
-import cbor2
-from cryptography.hazmat.backends import openssl
-from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PublicKey, X25519PrivateKey
-from dataclasses import dataclass
 
 from pycose import CoseMessage
 from pycose.algorithms import AlgorithmIDs
+from pycose.context import CoseKDFContext
 from pycose.cosebase import HeaderKeys
 from pycose.keys.ec import EC2
 from pycose.keys.okp import OKP
@@ -20,13 +14,9 @@ if sys.version_info.minor < 8:
 else:
     from functools import singledispatchmethod
 
-from pycose.crypto import key_wrap, KEY_DERIVATION_CURVES, ecdh_key_derivation, key_unwrap, \
-    x25519_key_derivation, hmac_hkdf_key_derivation
-
-
-
 
 class CoseRecipient(CoseMessage):
+
     @classmethod
     def recursive_encode(
             cls,
@@ -64,13 +54,6 @@ class CoseRecipient(CoseMessage):
 
         self.recipients = [] if recipients is None else recipients
 
-    @property
-    def key_bytes(self) -> bytes:
-        if self.key is None:
-            raise AttributeError('COSE_Key is not set')
-        else:
-            return self.key.key_bytes
-
     def encode(self,
                encrypt: bool = True,
                alg: Optional[AlgorithmIDs] = None,
@@ -91,41 +74,16 @@ class CoseRecipient(CoseMessage):
         return recipient
 
     def encrypt(self, alg: Optional[AlgorithmIDs] = None, key: Optional[SymmetricKey] = None) -> bytes:
-        """ Do key wrapping. """
-        _alg = alg if alg is not None else self.phdr.get(HeaderKeys.ALG)
-        _alg = _alg if _alg is not None else self.uhdr.get(HeaderKeys.ALG)
+        """ Key wrapping. """
 
-        if _alg is None:
-            raise AttributeError('No algorithm specified.')
-
-        if AlgorithmIDs.ECDH_SS_HKDF_512 <= _alg <= AlgorithmIDs.ECDH_ES_HKDF_256 or _alg == AlgorithmIDs.DIRECT:
-            return b''
-
-        try:
-            _key = key.key_bytes if key is not None else self.key_bytes
-        except AttributeError:
-            raise AttributeError("No key specified.")
-
-        return key_wrap(_key, self.payload)
+        alg, key = self._get_enc_params(alg, key)
+        return self.key.key_wrap(self.payload, alg=alg)
 
     def decrypt(self, alg: Optional[AlgorithmIDs] = None, key: Optional[SymmetricKey] = None) -> bytes:
-        """ Do key wrapping. """
-        _alg = alg if alg is not None else self.phdr.get(HeaderKeys.ALG)
-        _alg = _alg if _alg is not None else self.uhdr.get(HeaderKeys.ALG)
+        """ Key unwrapping. """
 
-        if _alg is None:
-            raise AttributeError('No algorithm specified.')
-
-        if not (AlgorithmIDs.ECDH_SS_A256KW <= _alg <= AlgorithmIDs.ECDH_ES_HKDF_256 or AlgorithmIDs.ECDH_ES_A128KW
-                or AlgorithmIDs.A256KW <= _alg <= AlgorithmIDs.A128KW):
-            raise ValueError("algorithm is not a key wrapping algorithm")
-
-        try:
-            _key = key.key_bytes if key is not None else self.key_bytes
-        except AttributeError:
-            raise AttributeError("No key specified.")
-
-        return key_unwrap(_key, self.payload)
+        alg, key = self._get_enc_params(alg, key)
+        return self.key.key_unwrap(self.payload, alg=alg)
 
     @singledispatchmethod
     @classmethod
@@ -135,23 +93,12 @@ class CoseRecipient(CoseMessage):
 
     @derive_kek.register(EC2)
     @classmethod
-    def _(cls, private_key: EC2, public_key: EC2 = None, alg: Optional[AlgorithmIDs] = None,
-          context: CoseKDFContext = None,
+    def _(cls, private_key: EC2, public_key: Optional[EC2] = None, alg: Optional[AlgorithmIDs] = None,
+          context: Optional[CoseKDFContext] = None,
           salt: bytes = None, expose_secret: bool = False):
         _ = salt
 
-        try:
-            crv = KEY_DERIVATION_CURVES[public_key.crv]()
-        except KeyError:
-            raise ValueError(f'Invalid curve: {public_key.crv}')
-
-        # TODO: implement checks for the COSE_keys, correct curve, correct key operation, ..
-        # TODO: move this logic to the crypto.py file
-        d = ec.derive_private_key(int(hexlify(private_key.private_bytes), 16), crv, openssl.backend)
-        p = ec.EllipticCurvePublicNumbers(
-            int(hexlify(public_key.x), 16), int(hexlify(public_key.y), 16), crv).public_key(openssl.backend)
-
-        secret, kek = ecdh_key_derivation(d, p, alg, int(context.supp_pub_info.key_data_length / 8), context.encode())
+        secret, kek = private_key.ecdh_key_derivation(public_key, alg, context)
 
         if expose_secret:
             return secret, kek
@@ -165,13 +112,7 @@ class CoseRecipient(CoseMessage):
 
         _ = public_key
 
-        # TODO: implement checks for the COSE_keys, correct curve, correct key operation, ..
-        kek = hmac_hkdf_key_derivation(
-            alg=alg,
-            shared_secret=private_key,
-            length=int(context.supp_pub_info.key_data_length / 8),
-            salt=salt,
-            context=context.encode())
+        kek = private_key.hmac_key_derivation(alg, salt, context)
 
         if expose_secret:
             return private_key.private_bytes, kek
@@ -184,17 +125,53 @@ class CoseRecipient(CoseMessage):
           context: CoseKDFContext = None, salt: bytes = None, expose_secret: bool = False):
         _ = salt
 
-        # TODO: move this logic to the crypto.py file
-        # TODO: implement checks for the COSE_keys, correct curve, correct key operation, ..
-        p = X25519PublicKey.from_public_bytes(public_key.public_bytes)
-        d = X25519PrivateKey.from_private_bytes(private_key.private_bytes)
-
-        secret, kek = x25519_key_derivation(d, p, alg, int(context.supp_pub_info.key_data_length / 8), context.encode())
+        secret, kek = private_key.x25519_key_derivation(public_key, alg, context)
 
         if expose_secret:
             return secret, kek
         else:
             return kek
+
+    def _get_enc_params(self, alg: Optional[AlgorithmIDs] = None, key: Optional[SymmetricKey] = None
+                        ) -> Tuple[AlgorithmIDs, SymmetricKey]:
+        """ Do key wrapping. """
+        _alg = alg if alg is not None else self.phdr.get(HeaderKeys.ALG)
+        _alg = _alg if _alg is not None else self.uhdr.get(HeaderKeys.ALG)
+
+        if _alg is None:
+            raise AttributeError('No algorithm specified.')
+
+        if not (AlgorithmIDs.ECDH_SS_A256KW <= _alg <= AlgorithmIDs.ECDH_ES_HKDF_256 or AlgorithmIDs.ECDH_ES_A128KW
+                or AlgorithmIDs.A256KW <= _alg <= AlgorithmIDs.A128KW):
+            raise ValueError("algorithm is not a key wrapping algorithm")
+
+        try:
+            _key = key if key is not None else self.key
+        except AttributeError:
+            raise AttributeError("No key specified.")
+
+        return _alg, _key
+
+    def _get_kek_derive_params(self,
+                               alg: Optional[AlgorithmIDs],
+                               key: Optional[Union[EC2, OKP]]) -> Tuple[Union[EC2, OKP], AlgorithmIDs]:
+        """ Analyze the COSE headers and provided data and extract the correct key derivation parameters. """
+
+        try:
+            _key = key if key is not None else self.key
+        except AttributeError:
+            raise AttributeError("No key specified.")
+
+        # search in protected headers
+        _alg = alg if alg is not None else self.phdr.get(HeaderKeys.ALG)
+
+        # search in unprotected headers
+        _alg = _alg if _alg is not None else self.uhdr.get(HeaderKeys.ALG)
+
+        if _alg is None:
+            raise AttributeError('No algorithm specified.')
+
+        return _key, _alg
 
     def __repr__(self) -> str:
         return f'<COSE_Recipient:\n' \
