@@ -9,7 +9,6 @@ from pytest import skip
 from pycose.algorithms import AlgorithmIDs
 from pycose.cosebase import HeaderKeys
 from pycose.keys.cosekey import KTY, EllipticCurveTypes, CoseKey, KeyOps
-from pycose.exceptions import CoseInvalidKey
 from pycose.keys.ec import EC2
 from pycose.keys.okp import OKP
 from pycose.keys.symmetric import SymmetricKey

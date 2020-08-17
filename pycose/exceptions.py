@@ -1,8 +1,8 @@
-class CoseUnsupportedMAC(Exception):
+class CoseUnknownAlgorithm(Exception):
     pass
 
 
-class CoseUnsupportedEnc(Exception):
+class CoseIllegalCurve(Exception):
     pass
 
 
@@ -10,5 +10,9 @@ class CoseInvalidTag(Exception):
     pass
 
 
-class CoseInvalidKey(Exception):
+class CoseIllegalKeyOps(Exception):
+    pass
+
+
+class CoseIllegalKeyType(Exception):
     pass
