@@ -47,11 +47,11 @@ class CoseKDFContext:
     party_u_info: PartyInfo
     party_v_info: PartyInfo
     supp_pub_info: SuppPubInfo
-    supp_priv_info: bytes = None
+    supp_priv_info: bytes = b''
 
     def encode(self):
         context = \
             [self.algorithm_id, self.party_u_info.encode(), self.party_v_info.encode(), self.supp_pub_info.encode()]
-        if self.supp_priv_info is not None:
+        if self.supp_priv_info != b"":
             context.append(self.supp_priv_info)
         return cbor2.dumps(context)

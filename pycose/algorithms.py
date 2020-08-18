@@ -82,7 +82,7 @@ class AlgID2Crypto(Enum):
     # DIRECT_HKDF_AES_256 = -13
     # DIRECT_HKDF_AES_128 = -12
     DIRECT_HKDF_SHA_512 = AlgoParam(key_derivation=HKDF, hash=SHA512)
-    DIRECT_HKDF_SHA_256 = AlgoParam(key_derivation=SHA256)
+    DIRECT_HKDF_SHA_256 = AlgoParam(key_derivation=HKDF, hash=SHA256)
     EDDSA = AlgoParam(hash=SHA256)
     ES256 = AlgoParam(hash=SHA256, curve=NIST256p)
     DIRECT = AlgoParam()
@@ -105,7 +105,7 @@ class AlgID2Crypto(Enum):
     # CHACHA20_POLY1305 = 24
     AES_MAC_128_128 = AlgoParam(primitive=AES)
     AES_MAC_256_128 = AlgoParam(primitive=AES)
-    AES_CCM_16_128_128 = AlgoParam(primitive=AESCCM, tag_length=16)
-    AES_CCM_16_128_256 = AlgoParam(primitive=AESCCM, tag_length=16)
-    AES_CCM_64_128_128 = AlgoParam(primitive=AESCCM, tag_length=16)
-    AES_CCM_64_128_256 = AlgoParam(primitive=AESCCM, tag_length=16)
+    AES_CCM_16_128_128 = AlgoParam(primitive=AESCCM)
+    AES_CCM_16_128_256 = AlgoParam(primitive=AESCCM)
+    AES_CCM_64_128_128 = AlgoParam(primitive=AESCCM)
+    AES_CCM_64_128_256 = AlgoParam(primitive=AESCCM)

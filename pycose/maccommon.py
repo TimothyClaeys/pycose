@@ -56,7 +56,7 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
         if self.key is None:
             raise ValueError("COSE Key cannot be None")
 
-        return self.key.verify_tag_wrapper(self.auth_tag, to_digest, alg)
+        return self.key.verify_tag(self.auth_tag, to_digest, alg)
 
     def compute_tag(self, alg: Optional[AlgorithmIDs] = None, key: Optional[SymmetricKey] = None) -> bytes:
         """ Wrapper function to access the cryptographic primitives. """
@@ -67,7 +67,7 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
         if self.key is None:
             raise ValueError("COSE Key cannot be None")
 
-        self.auth_tag = self.key.calc_tag_wrapper(self._mac_structure, alg)
+        self.auth_tag = self.key.compute_tag(self._mac_structure, alg)
         return self.auth_tag
 
     @property

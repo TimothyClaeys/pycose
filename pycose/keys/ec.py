@@ -134,9 +134,11 @@ class EC2(CoseKey):
 
     def ecdh_key_derivation(self,
                             public_key: 'EC2',
-                            alg: AlgorithmIDs,
-                            curve: Optional[EllipticCurveTypes] = None,
-                            context: CoseKDFContext = b'') -> Tuple[bytes, bytes]:
+                            context: CoseKDFContext,
+                            alg: Optional[AlgorithmIDs] = None,
+                            curve: Optional[EllipticCurveTypes] = None) -> Tuple[bytes, bytes]:
+        """ Derive a CEK from ECDH + HKDF algorithm """
+
         self._check_key_conf(alg, KeyOps.DERIVE_KEY, curve)
 
         algorithm: AlgoParam = AlgID2Crypto[self.alg.name].value
@@ -146,13 +148,13 @@ class EC2(CoseKey):
         except KeyError:
             raise CoseIllegalCurve
 
-        d = ec.derive_private_key(int(hexlify(self.x), 16), curve, openssl.backend)
-        p = ec.EllipticCurvePublicNumbers(int(hexlify(self.x), 16), int(hexlify(self.y), 16), curve)
+        d = ec.derive_private_key(int(hexlify(self.d), 16), curve, openssl.backend)
+        p = ec.EllipticCurvePublicNumbers(int(hexlify(public_key.x), 16), int(hexlify(public_key.y), 16), curve)
         p = p.public_key(openssl.backend)
 
         shared_key = d.exchange(ECDH(), p)
 
-        derived_key = algorithm.key_derivation(algorithm=algorithm.hash,
+        derived_key = algorithm.key_derivation(algorithm=algorithm.hash(),
                                                length=int(context.supp_pub_info.key_data_length / 8),
                                                salt=None,
                                                info=context.encode(),
@@ -160,10 +162,10 @@ class EC2(CoseKey):
 
         return shared_key, derived_key
 
-    def ec_sign_wrapper(self,
-                        to_be_signed: bytes,
-                        alg: Optional[AlgorithmIDs] = None,
-                        curve: EllipticCurveTypes = None) -> bytes:
+    def compute_signature(self,
+                          to_be_signed: bytes,
+                          alg: Optional[AlgorithmIDs] = None,
+                          curve: EllipticCurveTypes = None) -> bytes:
 
         self._check_key_conf(alg, KeyOps.SIGN, curve)
 
@@ -172,11 +174,11 @@ class EC2(CoseKey):
 
         return sk.sign_deterministic(to_be_signed, hashfunc=algorithm.hash)
 
-    def ec_verify_wrapper(self,
-                          to_be_signed: bytes,
-                          signature: bytes,
-                          alg: Optional[AlgorithmIDs] = None,
-                          curve: Optional[EllipticCurveTypes] = None) -> bool:
+    def verify_signature(self,
+                         to_be_signed: bytes,
+                         signature: bytes,
+                         alg: Optional[AlgorithmIDs] = None,
+                         curve: Optional[EllipticCurveTypes] = None) -> bool:
         self._check_key_conf(alg, KeyOps.SIGN, curve)
 
         algorithm: AlgoParam = AlgID2Crypto[self.alg.name].value
