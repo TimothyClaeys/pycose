@@ -7,6 +7,7 @@ from typing import List, Union, Dict, Optional
 import dataclasses as dc
 
 from pycose.algorithms import AlgorithmIDs
+from pycose.exceptions import CoseIllegalKeyOps
 
 
 @unique
@@ -187,6 +188,50 @@ class CoseKey(metaclass=ABCMeta):
     @abstractmethod
     def __repr__(self):
         raise NotImplementedError
+
+    def _check_key_conf(self,
+                        algorithm: AlgorithmIDs,
+                        key_operation: KeyOps,
+                        peer_key: Optional[Union['EC2', 'OKP']] = None,
+                        curve: Optional[EllipticCurveTypes] = None):
+        """ Helper function that checks the configuration of the COSE key object. """
+
+        if self.alg is not None and algorithm is not None and self.alg != algorithm:
+            raise ValueError("COSE key algorithm does not match with parameter 'algorithm'.")
+
+        if algorithm is not None:
+            self.alg = algorithm
+
+        if peer_key is not None:
+            if peer_key.alg is not None and self.alg != peer_key.alg:
+                raise ValueError("Algorithms for private and public key do not match")
+            else:
+                peer_key.alg = self.alg
+
+        if hasattr(self, "crv"):
+            if self.crv is not None and curve is not None and self.crv != curve:
+                raise ValueError("Curve in COSE key clashes with parameter 'curve'.")
+
+            if curve is not None:
+                self.crv = curve
+
+        if peer_key is not None:
+            if peer_key.crv is not None and self.crv != peer_key.crv:
+                raise ValueError("Curve parameter for private and public key do not match")
+            else:
+                peer_key.crv = self.crv
+
+        if self.key_ops is not None and key_operation is not None and self.key_ops != key_operation:
+            raise CoseIllegalKeyOps(f"COSE key operation should be {key_operation.name}, instead {self.key_ops.name}")
+
+        if key_operation is not None:
+            self.key_ops = key_operation
+
+        if peer_key is not None:
+            if peer_key.key_ops is not None and self.key_ops != peer_key.key_ops:
+                raise ValueError("Key operation for private and public key do not match")
+            else:
+                peer_key.key_ops = self.key_ops
 
 
 class CoseKeySet:

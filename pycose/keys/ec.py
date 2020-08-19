@@ -187,23 +187,3 @@ class EC2(CoseKey):
 
         return vk.verify(signature, to_be_signed)
 
-    def _check_key_conf(self, algorithm: AlgorithmIDs, key_operation: KeyOps, curve: EllipticCurveTypes):
-        """ Helper function that checks the configuration of the COSE key object. """
-
-        if self.alg is not None and algorithm is not None and self.alg != algorithm:
-            raise ValueError("COSE key algorithm does not match with parameter 'algorithm'.")
-
-        if algorithm is not None:
-            self.alg = algorithm
-
-        if self.crv is not None and curve is not None and self.crv != curve:
-            raise ValueError("Curve in COSE key clashes with parameter 'curve'.")
-
-        if curve is not None:
-            self.crv = curve
-
-        if self.key_ops is not None and key_operation is not None and self.key_ops != key_operation:
-            raise CoseIllegalKeyOps(f"COSE key operation does not match with {key_operation}")
-
-        if key_operation is not None:
-            self.key_ops = key_operation
