@@ -55,4 +55,4 @@ def test_sign1_decoding(setup_sign1_tests: tuple) -> None:
     key = create_cose_key(EC2, test_input['sign0']['key'])
 
     cose_msg.key = key
-    assert cose_msg.verify_signature()
+    assert cose_msg.verify()

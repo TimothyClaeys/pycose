@@ -68,4 +68,4 @@ def test_sign_decoding(setup_sign_tests: tuple) -> None:
 
     assert cose_msg._sig_structure(cose_msg.cose_signatures[0]) == unhexlify(
         test_intermediate['signers'][0]["ToBeSign_hex"])
-    assert cose_msg.verify_signature(cose_msg.cose_signatures[0])
+    assert cose_msg.verify(cose_msg.cose_signatures[0])
