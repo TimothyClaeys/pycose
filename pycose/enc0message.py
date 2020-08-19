@@ -12,6 +12,7 @@ from typing import Optional
 import cbor2
 
 from pycose import cosemessage, enccommon
+from pycose.algorithms import AlgorithmIDs
 from pycose.keys.symmetric import SymmetricKey
 
 
@@ -25,19 +26,20 @@ class Enc0Message(enccommon.EncCommon):
                  uhdr: Optional[dict] = None,
                  payload: bytes = b'',
                  external_aad: bytes = b'',
-                 key: Optional[SymmetricKey] = None):
+                 key: Optional[SymmetricKey] = None,
+                 nonce: bytes = b''):
         if phdr is None:
             phdr = {}
         if uhdr is None:
             uhdr = {}
 
-        super().__init__(phdr, uhdr, payload, external_aad, key)
+        super().__init__(phdr, uhdr, payload, external_aad, key, nonce)
 
     def encode(self,
                tagged: bool = True,
                encrypt: bool = True,
-               alg: Optional[int] = None,
-               nonce: Optional[bytes] = None,
+               alg: Optional[AlgorithmIDs] = None,
+               nonce: bytes = b"",
                key: Optional[SymmetricKey] = None) -> bytes:
         """ Encode the COSE Encrypt0 message. """
 

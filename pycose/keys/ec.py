@@ -113,14 +113,6 @@ class EC2(CoseKey):
 
         return key_obj
 
-    @property
-    def public_bytes(self) -> Tuple[bytes, bytes]:
-        return self.x, self.y
-
-    @property
-    def private_bytes(self) -> bytes:
-        return self.d
-
     def encode(self, *argv):
         kws = ['_' + kw for kw in argv if self.EC2Prm.has_member(kw.upper())]
         return {**super().encode(*argv), **{self.EC2Prm[kw[1:].upper()]: dataclasses.asdict(self)[kw] for kw in kws}}
@@ -162,10 +154,11 @@ class EC2(CoseKey):
 
         return shared_key, derived_key
 
-    def compute_signature(self,
-                          to_be_signed: bytes,
-                          alg: Optional[AlgorithmIDs] = None,
-                          curve: EllipticCurveTypes = None) -> bytes:
+    def sign(self,
+             to_be_signed: bytes,
+             alg: Optional[AlgorithmIDs] = None,
+             curve: EllipticCurveTypes = None) -> bytes:
+        """ Sign a message """
 
         self._check_key_conf(alg, KeyOps.SIGN, curve)
 
@@ -174,15 +167,17 @@ class EC2(CoseKey):
 
         return sk.sign_deterministic(to_be_signed, hashfunc=algorithm.hash)
 
-    def verify_signature(self,
-                         to_be_signed: bytes,
-                         signature: bytes,
-                         alg: Optional[AlgorithmIDs] = None,
-                         curve: Optional[EllipticCurveTypes] = None) -> bool:
-        self._check_key_conf(alg, KeyOps.SIGN, curve)
+    def verify(self,
+               to_be_signed: bytes,
+               signature: bytes,
+               alg: Optional[AlgorithmIDs] = None,
+               curve: Optional[EllipticCurveTypes] = None) -> bool:
+        """ Verify a message's signature """
+
+        self._check_key_conf(alg, KeyOps.VERIFY, curve)
 
         algorithm: AlgoParam = AlgID2Crypto[self.alg.name].value
-        p = Point(curve=algorithm.curve, x=int(hexlify(self.x), 16), y=int(hexlify(self.y), 16))
+        p = Point(curve=algorithm.curve.curve, x=int(hexlify(self.x), 16), y=int(hexlify(self.y), 16))
         vk = VerifyingKey.from_public_point(p, algorithm.curve, algorithm.hash, validate_point=True)
 
         return vk.verify(signature, to_be_signed)

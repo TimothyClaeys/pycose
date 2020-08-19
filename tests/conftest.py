@@ -315,12 +315,14 @@ def _fix_header_attribute_names(data: dict, key) -> None:
 
 def create_cose_key(key_type: Type[CoseKey],
                     input_data: dict,
-                    usage: KeyOps = None,
+                    alg: Optional[AlgorithmIDs] = None,
+                    usage: Optional[KeyOps] = None,
                     **kwargs) -> Union[EC2, SymmetricKey, OKP]:
     if key_type == EC2:
         key = EC2(
             kid=input_data.get(CoseKey.Common.KID),
             key_ops=usage,
+            alg=alg,
             crv=kwargs.get('crv'),
             x=CoseKey.base64decode(input_data.get(EC2.EC2Prm.X)),
             y=CoseKey.base64decode(input_data.get(EC2.EC2Prm.Y)),
@@ -329,19 +331,21 @@ def create_cose_key(key_type: Type[CoseKey],
     elif key_type == SymmetricKey:
         key = SymmetricKey(
             kid=input_data.get(CoseKey.Common.KID),
+            alg=alg,
             key_ops=usage,
             k=CoseKey.base64decode(input_data.get(SymmetricKey.SymPrm.K))
         )
     elif key_type == OKP:
         key = OKP(
             kid=input_data.get(CoseKey.Common.KID),
+            alg=alg,
             key_ops=usage,
             crv=kwargs.get('crv'),
             x=CoseKey.base64decode(input_data.get(OKP.OKPPrm.X)),
             d=CoseKey.base64decode(input_data.get(OKP.OKPPrm.D)),
         )
     else:
-        raise CoseInvalidKey
+        raise Exception
 
     return key
 

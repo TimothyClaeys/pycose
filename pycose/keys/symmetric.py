@@ -10,14 +10,14 @@ from dataclasses import dataclass
 
 from pycose.algorithms import AlgID2Crypto, AlgoParam, AlgorithmIDs
 from pycose.context import CoseKDFContext
-from pycose.exceptions import CoseUnknownAlgorithm, CoseIllegalKeyOps, CoseInvalidTag
+from pycose.exceptions import CoseUnknownAlgorithm, CoseInvalidTag
 from pycose.keys.cosekey import CoseKey, KTY, KeyOps
 
 
 @CoseKey.record_kty(KTY.SYMMETRIC)
 @dataclass(init=False)
 class SymmetricKey(CoseKey):
-    k: Optional[bytes] = None
+    _k: Optional[bytes] = None
 
     class SymPrm(IntEnum):
         K = - 1
@@ -36,8 +36,14 @@ class SymmetricKey(CoseKey):
         self.k = k
 
     @property
-    def key_bytes(self):
-        return self.k
+    def k(self) -> Optional[bytes]:
+        return self._k
+
+    @k.setter
+    def k(self, new_k: Optional[bytes]) -> None:
+        if type(new_k) is not bytes and new_k is not None:
+            raise ValueError("symmetric key must be of type 'bytes'")
+        self._k = new_k
 
     @classmethod
     def from_cose_key_obj(cls, cose_key_obj: dict) -> dict:
@@ -60,15 +66,11 @@ class SymmetricKey(CoseKey):
         output.extend(self._base_repr(k, v) if k not in [-1] else self._key_repr(k, v) for k, v in content.items())
         return "\n".join(output)
 
-    def encrypt(self, plaintext: bytes, aad: bytes, nonce: bytes, alg: Optional[AlgorithmIDs] = None) -> bytes:
+    def encrypt(self, plaintext: bytes, aad: bytes, nonce: bytes, alg: Optional[AlgorithmIDs]) -> bytes:
         self._check_key_conf(alg, KeyOps.ENCRYPT)
 
         try:
-            algorithm: AlgoParam = AlgID2Crypto[self.alg.name].value
-            if algorithm.tag_length is not None:
-                cipher: Union[AESGCM, AESCCM] = algorithm.primitive(self.k, tag_length=algorithm.tag_length)
-            else:
-                cipher = algorithm.primitive(self.k)
+            cipher = self._prepare_cipher()
             ciphertext = cipher.encrypt(nonce=nonce, data=plaintext, associated_data=aad)
         except KeyError as err:
             raise CoseUnknownAlgorithm(err)
@@ -79,22 +81,32 @@ class SymmetricKey(CoseKey):
         self._check_key_conf(alg, KeyOps.DECRYPT)
 
         try:
-            algorithm: AlgoParam = AlgID2Crypto[self.alg.name].value
-            if algorithm.tag_length is not None:
-                cipher: Union[AESGCM, AESCCM] = algorithm.primitive(self.k, tag_length=algorithm.tag_length)
-            else:
-                cipher = algorithm.primitive(self.k)
+            cipher = self._prepare_cipher()
             plaintext = cipher.decrypt(nonce=nonce, data=ciphertext, associated_data=aad)
         except KeyError as err:
             raise CoseUnknownAlgorithm(err)
 
         return plaintext
 
+    def _prepare_cipher(self):
+        alg = self.alg.name if hasattr(self.alg, "name") else AlgorithmIDs(self.alg).name
+
+        algorithm: AlgoParam = AlgID2Crypto[alg].value
+
+        if algorithm.tag_length is not None:
+            cipher: Union[AESGCM, AESCCM] = algorithm.primitive(self.k, tag_length=algorithm.tag_length)
+        else:
+            cipher = algorithm.primitive(self.k)
+
+        return cipher
+
     def key_wrap(self, plaintext_key: bytes, alg: Optional[AlgorithmIDs] = None) -> bytes:
         self._check_key_conf(alg, KeyOps.WRAP)
 
         try:
-            algorithm: AlgoParam = AlgID2Crypto[self.alg.name].value
+            alg = self.alg.name if hasattr(self.alg, "name") else AlgorithmIDs(self.alg)
+
+            algorithm: AlgoParam = AlgID2Crypto[alg.name].value
         except KeyError as err:
             raise CoseUnknownAlgorithm(err)
 
@@ -104,7 +116,9 @@ class SymmetricKey(CoseKey):
         self._check_key_conf(alg, KeyOps.UNWRAP)
 
         try:
-            algorithm: AlgoParam = AlgID2Crypto[self.alg.name].value
+            alg = self.alg.name if hasattr(self.alg, "name") else AlgorithmIDs(self.alg)
+
+            algorithm: AlgoParam = AlgID2Crypto[alg.name].value
         except KeyError as err:
             raise CoseUnknownAlgorithm(err)
 
@@ -117,7 +131,12 @@ class SymmetricKey(CoseKey):
 
         iv = unhexlify(b"".join([b"00"] * 16))
 
-        algorithm: AlgoParam = AlgID2Crypto[self.alg.name].value
+        try:
+            alg = self.alg.name if hasattr(self.alg, "name") else AlgorithmIDs(self.alg)
+
+            algorithm: AlgoParam = AlgID2Crypto[alg.name].value
+        except KeyError as err:
+            raise CoseUnknownAlgorithm(err)
 
         if self.alg in {AlgorithmIDs.AES_MAC_128_128,
                         AlgorithmIDs.AES_MAC_128_64,
@@ -166,7 +185,13 @@ class SymmetricKey(CoseKey):
                             salt: bytes = b'') -> bytes:
 
         self._check_key_conf(alg, KeyOps.DERIVE_KEY)
-        algorithm: AlgoParam = AlgID2Crypto[self.alg.name].value
+
+        try:
+            alg = self.alg.name if hasattr(self.alg, "name") else AlgorithmIDs(self.alg)
+
+            algorithm: AlgoParam = AlgID2Crypto[alg.name].value
+        except KeyError as err:
+            raise CoseUnknownAlgorithm(err)
 
         derived_key = algorithm.key_derivation(algorithm=algorithm.hash(),
                                                length=int(context.supp_pub_info.key_data_length / 8),

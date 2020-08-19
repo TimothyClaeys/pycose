@@ -98,7 +98,7 @@ class Sign1Message(cosemessage.CoseMessage):
         if self.public_key is None:
             raise ValueError("COSE Key cannot be None")
 
-        return public_key.verify_signature(self._sig_structure, self.signature, alg)
+        return public_key.verify(self._sig_structure, self.signature, alg)
 
     def compute_signature(self,
                           alg: Optional[AlgorithmIDs] = None,
@@ -112,7 +112,7 @@ class Sign1Message(cosemessage.CoseMessage):
         if self.key is None:
             raise ValueError("COSE Key cannot be None")
 
-        return self.key.compute_signature(to_sign, alg)
+        return self.key.sign(to_sign, alg)
 
     def encode(self,
                tagged: bool = True,

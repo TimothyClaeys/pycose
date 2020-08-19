@@ -133,28 +133,3 @@ class OKP(CoseKey):
                                                backend=openssl.backend).derive(shared_secret)
 
         return shared_secret, derived_key
-
-    def _check_key_conf(self, algorithm: AlgorithmIDs, public_key: 'OKP', key_operation: KeyOps,
-                        curve: EllipticCurveTypes):
-        """ Helper function that checks the configuration of the COSE key object. """
-
-        if self.alg is not None and algorithm is not None and self.alg != algorithm:
-            raise ValueError("COSE key algorithm does not match with parameter 'algorithm'.")
-
-        if algorithm is not None:
-            self.alg = algorithm
-
-        if public_key.alg is not None and public_key.alg != self.key.alg:
-            raise CoseIllegalCurve(f"Public and private key algorithms do not match: {public_key.alg} != {self.alg}.")
-
-        if self.crv is not None and curve is not None and self.crv != curve:
-            raise ValueError("Curve in COSE key clashes with parameter 'curve'.")
-
-        if curve is not None:
-            self.crv = curve
-
-        if self.key_ops is not None and key_operation is not None and self.key_ops != key_operation:
-            raise CoseIllegalKeyOps(f"COSE key operation does not match with {key_operation}")
-
-        if key_operation is not None:
-            self.key_ops = key_operation
