@@ -119,6 +119,10 @@ class CoseKey(metaclass=ABCMeta):
             to_decode = to_decode + "="
             return base64.b64decode(to_decode)
 
+    @staticmethod
+    def base64encode(to_encode: bytes) -> str:
+        return base64.b64encode(to_encode).decode("utf-8")
+
     @classmethod
     def _base_repr(cls, k: int, v: bytes) -> str:
         return f"\t{repr(k):<16} = {repr(v)}"
