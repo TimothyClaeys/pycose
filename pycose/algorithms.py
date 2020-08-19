@@ -1,4 +1,5 @@
 from enum import unique, IntEnum, Enum
+from hashlib import sha256, sha384, sha512
 from typing import Any
 
 from cryptography.hazmat.primitives import keywrap
@@ -67,8 +68,8 @@ class AlgoParam:
 
 
 class AlgID2Crypto(Enum):
-    ES512 = AlgoParam(hash=SHA512, curve=NIST521p)
-    ES384 = AlgoParam(hash=SHA384, curve=NIST384p)
+    ES512 = AlgoParam(hash=sha512, curve=NIST521p)
+    ES384 = AlgoParam(hash=sha384, curve=NIST384p)
     ECDH_SS_A256KW = AlgoParam(primitive=keywrap, key_derivation=HKDF, hash=SHA256)
     ECDH_SS_A192KW = AlgoParam(primitive=keywrap, key_derivation=HKDF, hash=SHA256)
     ECDH_SS_A128KW = AlgoParam(primitive=keywrap, key_derivation=HKDF, hash=SHA256)
@@ -84,7 +85,7 @@ class AlgID2Crypto(Enum):
     DIRECT_HKDF_SHA_512 = AlgoParam(key_derivation=HKDF, hash=SHA512)
     DIRECT_HKDF_SHA_256 = AlgoParam(key_derivation=HKDF, hash=SHA256)
     EDDSA = AlgoParam(hash=SHA256)
-    ES256 = AlgoParam(hash=SHA256, curve=NIST256p)
+    ES256 = AlgoParam(hash=sha256, curve=NIST256p)
     DIRECT = AlgoParam()
     A256KW = AlgoParam(primitive=keywrap)
     A192KW = AlgoParam(primitive=keywrap)
