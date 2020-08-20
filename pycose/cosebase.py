@@ -40,18 +40,6 @@ class HeaderKeys(IntEnum):
 class CoseBase(metaclass=abc.ABCMeta):
     """ Basic COSE information buckets. """
 
-    COSE_HDR_PARSER = {}
-
-    @classmethod
-    def record_hdr_value_parser(cls, hdr_param: HeaderKeys):
-        """Decorator to record all the CBOR tags dynamically"""
-
-        def decorator(func):
-            cls.COSE_HDR_PARSER[hdr_param] = func
-            return func
-
-        return decorator
-
     @classmethod
     def from_cose_obj(cls, cose_obj: list):
         try:
