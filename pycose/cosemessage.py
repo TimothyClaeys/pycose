@@ -92,6 +92,6 @@ class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
         return structure
 
     @abc.abstractmethod
-    def encode(self, tagged: bool = True) -> bytes:
+    def encode(self, **kwargs) -> bytes:
         raise NotImplementedError
 

@@ -6,7 +6,7 @@ from pycose import CoseMessage
 from pycose.keys.cosekey import KeyOps
 from pycose.keys.symmetric import SymmetricKey
 from pycose.mac0message import Mac0Message
-from tests.conftest import generic_test_setup, create_cose_key
+from tests.conftest import generic_test_setup, create_cose_key, extract_alg
 
 
 @fixture
@@ -18,25 +18,27 @@ def setup_mac0_tests(mac0_test_input: dict) -> tuple:
 def test_mac0_encoding(setup_mac0_tests: tuple) -> None:
     _, test_input, test_output, test_intermediate, fail = setup_mac0_tests
 
-    mac0 = Mac0Message(
+    mac0: Mac0Message = Mac0Message(
         phdr=test_input['mac0'].get('protected', {}),
         uhdr=test_input['mac0'].get('unprotected', {}),
         payload=test_input.get('plaintext', '').encode('utf-8'),
-        external_aad=unhexlify(test_input['mac0'].get("external", b''))
-    )
+        external_aad=unhexlify(test_input['mac0'].get("external", b'')))
 
     assert mac0._mac_structure == unhexlify(test_intermediate["ToMac_hex"])
 
-    key = create_cose_key(SymmetricKey, test_input['mac0']["recipients"][0]["key"], usage=KeyOps.MAC_CREATE)
-    assert key.key_bytes == unhexlify(test_intermediate["CEK_hex"])
+    cek = create_cose_key(
+        SymmetricKey,
+        test_input['mac0']["recipients"][0]["key"],
+        alg=extract_alg(test_input["mac0"]),
+        usage=KeyOps.MAC_CREATE)
 
-    mac0.key = key
+    assert cek.k == unhexlify(test_intermediate["CEK_hex"])
 
     # verify encoding (with automatic tag computation)
     if fail:
-        assert mac0.encode() != unhexlify(test_output)
+        assert mac0.encode(key=cek) != unhexlify(test_output)
     else:
-        assert mac0.encode() == unhexlify(test_output)
+        assert mac0.encode(key=cek) == unhexlify(test_output)
 
 
 def test_mac0_decoding(setup_mac0_tests: tuple) -> None:
@@ -45,7 +47,7 @@ def test_mac0_decoding(setup_mac0_tests: tuple) -> None:
     if fail:
         skip("invalid test input")
 
-    cose_msg = CoseMessage.decode(unhexlify(test_output))
+    cose_msg: Mac0Message = CoseMessage.decode(unhexlify(test_output))
 
     assert cose_msg.phdr == test_input['mac0'].get('protected', {})
     assert cose_msg.uhdr == test_input['mac0'].get('unprotected', {})
@@ -54,8 +56,12 @@ def test_mac0_decoding(setup_mac0_tests: tuple) -> None:
     # set up potential external data
     cose_msg.external_aad = unhexlify(test_input['mac0'].get("external", b''))
 
-    key = create_cose_key(SymmetricKey, test_input['mac0']["recipients"][0]["key"], usage=KeyOps.MAC_VERIFY)
-    cose_msg.key = key
-    assert key.key_bytes == unhexlify(test_intermediate["CEK_hex"])
+    cek = create_cose_key(
+        SymmetricKey,
+        test_input['mac0']["recipients"][0]["key"],
+        alg=extract_alg(test_input["mac0"]),
+        usage=KeyOps.MAC_VERIFY)
 
-    assert cose_msg.verify_auth_tag()
+    assert cek.k == unhexlify(test_intermediate["CEK_hex"])
+
+    assert cose_msg.verify_tag(cek)

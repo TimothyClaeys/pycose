@@ -6,7 +6,7 @@ from pycose import CoseMessage
 from pycose.keys.cosekey import KeyOps
 from pycose.keys.ec import EC2
 from pycose.signmessage import SignMessage, CoseSignature
-from tests.conftest import generic_test_setup, create_cose_key
+from tests.conftest import generic_test_setup, create_cose_key, extract_alg
 
 
 @fixture
@@ -18,21 +18,21 @@ def setup_sign_tests(sign_test_input: dict) -> tuple:
 def test_sign_encoding(setup_sign_tests: tuple) -> None:
     _, test_input, test_output, test_intermediate, fail = setup_sign_tests
 
-    sign = SignMessage(
+    sign: SignMessage = SignMessage(
         phdr=test_input['sign'].get('protected', {}),
         uhdr=test_input['sign'].get('unprotected', {}),
-        payload=test_input['plaintext'].encode('utf-8'),
-    )
+        payload=test_input['plaintext'].encode('utf-8'))
 
-    signer_key = create_cose_key(EC2, test_input['sign']['signers'][0]['key'], KeyOps.SIGN)
+    alg = extract_alg(test_input["sign"]["signers"][0])
+
+    signer_key = create_cose_key(EC2, test_input['sign']['signers'][0]['key'], usage=KeyOps.SIGN, alg=alg)
 
     signer = test_input["sign"]['signers'][0]
     signer = CoseSignature(
         phdr=signer.get('protected'),
         uhdr=signer.get('unprotected'),
         external_aad=unhexlify(signer.get("external", b'')),
-        key=signer_key
-    )
+        encaps_msg=sign)
 
     sign.cose_signatures.append(signer)
 

@@ -2,7 +2,7 @@ import json
 import os
 import pathlib
 from binascii import unhexlify
-from typing import List, Type, Union, Optional
+from typing import List, Type, Union, Optional, Tuple
 
 from pytest import skip
 
@@ -316,14 +316,13 @@ def _fix_header_attribute_names(data: dict, key) -> None:
 def create_cose_key(key_type: Type[CoseKey],
                     input_data: dict,
                     alg: Optional[AlgorithmIDs] = None,
-                    usage: Optional[KeyOps] = None,
-                    **kwargs) -> Union[EC2, SymmetricKey, OKP]:
+                    usage: Optional[KeyOps] = None) -> Union[EC2, SymmetricKey, OKP]:
     if key_type == EC2:
         key = EC2(
             kid=input_data.get(CoseKey.Common.KID),
             key_ops=usage,
             alg=alg,
-            crv=kwargs.get('crv'),
+            crv=input_data.get(EC2.EC2Prm.CRV),
             x=CoseKey.base64decode(input_data.get(EC2.EC2Prm.X)),
             y=CoseKey.base64decode(input_data.get(EC2.EC2Prm.Y)),
             d=CoseKey.base64decode(input_data.get(EC2.EC2Prm.D)),
@@ -340,7 +339,7 @@ def create_cose_key(key_type: Type[CoseKey],
             kid=input_data.get(CoseKey.Common.KID),
             alg=alg,
             key_ops=usage,
-            crv=kwargs.get('crv'),
+            crv=input_data.get(OKP.OKPPrm.CRV),
             x=CoseKey.base64decode(input_data.get(OKP.OKPPrm.X)),
             d=CoseKey.base64decode(input_data.get(OKP.OKPPrm.D)),
         )
@@ -350,11 +349,11 @@ def create_cose_key(key_type: Type[CoseKey],
     return key
 
 
-def extract_protected_header(test_input: dict, key: str) -> dict:
+def extract_phdr(test_input: dict, key: str) -> dict:
     return test_input[key].get('protected', {})
 
 
-def extract_unprotected_header(test_input: dict, key: str, rng_index=0) -> dict:
+def extract_uhdr(test_input: dict, key: str, rng_index=0) -> dict:
     base = test_input[key].get('unprotected', {})
 
     if key == 'encrypted' or key == 'enveloped':
@@ -366,3 +365,79 @@ def extract_unprotected_header(test_input: dict, key: str, rng_index=0) -> dict:
 def extract_unsent_nonce(test_input: dict, key: str) -> Optional[bytes]:
     if 'unsent' in test_input[key]:
         return unhexlify(test_input[key]['unsent']['IV_hex'])
+    else:
+        return b''
+
+
+def extract_nonce(test_input: dict, rng_index=0) -> bytes:
+    if 'rng_stream' in test_input:
+        return unhexlify(test_input['rng_stream'][rng_index])
+    else:
+        return b""
+
+
+def extract_alg(test_input: dict) -> AlgorithmIDs:
+    alg = test_input.get('protected', {}).get(HeaderKeys.ALG)
+    if alg is None:
+        alg = test_input.get('unprotected', {}).get(HeaderKeys.ALG)
+
+    return alg
+
+
+def setup_ec_receiver_keys(recipient: dict, received_key_obj) -> Tuple[EC2, EC2]:
+    alg = recipient.get("protected", {}).get(HeaderKeys.ALG)
+    if alg is None:
+        alg = recipient.get("unprotected", {}).get(HeaderKeys.ALG)
+
+    rcvr_static_key = EC2(
+        kid=recipient['key'][CoseKey.Common.KID].encode('utf-8'),
+        crv=recipient['key'][EC2.EC2Prm.CRV],
+        alg=alg,
+        x=CoseKey.base64decode(recipient['key'][EC2.EC2Prm.X]),
+        y=CoseKey.base64decode(recipient['key'][EC2.EC2Prm.Y]),
+        d=CoseKey.base64decode(recipient['key'][EC2.EC2Prm.D]),
+    )
+
+    # create CoseKey object for the sender key
+    if 'sender_key' in recipient:
+        sender_key = EC2(
+            alg=alg,
+            crv=recipient["sender_key"][EC2.EC2Prm.CRV],
+            x=CoseKey.base64decode(recipient['sender_key'][EC2.EC2Prm.X]),
+            y=CoseKey.base64decode(recipient['sender_key'][EC2.EC2Prm.Y]))
+    else:
+        sender_key = EC2(
+            crv=received_key_obj.get(EC2.EC2Prm.CRV),
+            alg=alg,
+            x=received_key_obj.get(EC2.EC2Prm.X),
+            y=received_key_obj.get(EC2.EC2Prm.Y),
+        )
+
+    return rcvr_static_key, sender_key
+
+
+def setup_okp_receiver_keys(recipient: dict, received_key_obj) -> Tuple[OKP, OKP]:
+    alg = recipient.get("protected", {}).get(HeaderKeys.ALG)
+    if alg is None:
+        alg = recipient.get("unprotected", {}).get(HeaderKeys.ALG)
+
+    rcvr_static_key = OKP(
+        kid=recipient['key'][CoseKey.Common.KID].encode('utf-8'),
+        crv=recipient['key'][OKP.OKPPrm.CRV],
+        alg=alg,
+        x=unhexlify(recipient['key'][OKP.OKPPrm.X]),
+        d=unhexlify(recipient['key'][OKP.OKPPrm.D]))
+
+    # create CoseKey object for the sender key
+    if 'sender_key' in recipient:
+        sender_key = OKP(
+            alg=alg,
+            crv=recipient["sender_key"][OKP.OKPPrm.CRV],
+            x=unhexlify(recipient['sender_key'][OKP.OKPPrm.X]))
+    else:
+        sender_key = OKP(
+            crv=received_key_obj.get(EC2.EC2Prm.CRV),
+            alg=alg,
+            x=received_key_obj.get(EC2.EC2Prm.X))
+
+    return rcvr_static_key, sender_key
