@@ -1,11 +1,11 @@
-from typing import Union, List, Optional, Tuple, Any
+from typing import List, Optional
 
 import cbor2
 
 from pycose import cosemessage, enccommon
 from pycose.algorithms import AlgorithmIDs
 from pycose.keys.symmetric import SymmetricKey
-from pycose.recipient import CoseRecipient
+from pycose.recipient import CoseRecipient, RcptParams
 
 
 @cosemessage.CoseMessage.record_cbor_tag(96)
@@ -14,7 +14,7 @@ class EncMessage(enccommon.EncCommon):
     cbor_tag = 96
 
     @classmethod
-    def from_cose_obj(cls, cose_obj: list):
+    def from_cose_obj(cls, cose_obj: list) -> 'EncMessage':
         msg = super().from_cose_obj(cose_obj)
 
         try:
@@ -28,14 +28,13 @@ class EncMessage(enccommon.EncCommon):
                  uhdr: Optional[dict] = None,
                  payload: bytes = b'',
                  external_aad: bytes = b'',
-                 key: Optional[SymmetricKey] = None,
                  recipients: Optional[List[CoseRecipient]] = None):
         if phdr is None:
             phdr = {}
         if uhdr is None:
             uhdr = {}
 
-        super().__init__(phdr, uhdr, payload, external_aad, key)
+        super().__init__(phdr, uhdr, payload, external_aad)
 
         if recipients is None:
             self.recipients = list()
@@ -43,24 +42,28 @@ class EncMessage(enccommon.EncCommon):
             self.recipients = recipients
 
     def encode(self,
-               tagged: bool = True,
-               encrypt: bool = True,
+               nonce: bytes,
+               key: SymmetricKey,
                alg: Optional[AlgorithmIDs] = None,
-               nonce: Optional[bytes] = None,
-               key: Optional[SymmetricKey] = None,
-               crypto_params:
-               Tuple[Tuple[bool, Union[AlgorithmIDs, None], Union[SymmetricKey, None], Union[Tuple[Any], None]]] = None
-               ) -> bytes:
-        """ Encodes the message as a CBOR array """
+               enc_params: Optional[List[RcptParams]] = None,
+               tagged: bool = True,
+               encrypt: bool = True) -> bytes:
+        """ Encodes and protects the COSE_Encrypt message """
 
         # encode/encrypt the base fields
         if encrypt:
-            message = [self.encode_phdr(), self.encode_uhdr(), self.encrypt(alg, nonce, key)]
+            message = [self.encode_phdr(), self.encode_uhdr(), self.encrypt(nonce=nonce, key=key, alg=alg)]
         else:
             message = [self.encode_phdr(), self.encode_uhdr(), self.payload]
 
-        if len(self.recipients) > 0:
-            message.append(CoseRecipient.recursive_encode(self.recipients, crypto_params))
+        if enc_params is None:
+            enc_params = []
+
+        if len(self.recipients) == len(enc_params):
+            if len(enc_params) > 0:
+                message.append(CoseRecipient.recursive_encode(self.recipients, enc_params))
+        else:
+            raise ValueError("List with cryptographic parameters should have the same length as the recipient list.")
 
         if tagged:
             message = cbor2.dumps(cbor2.CBORTag(self.cbor_tag, message))

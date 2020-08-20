@@ -1,10 +1,13 @@
 import sys
-from typing import Union, List, Optional, Any, Tuple
+from typing import Union, List, Optional, Tuple
+
+from dataclasses import dataclass, field
 
 from pycose import CoseMessage
 from pycose.algorithms import AlgorithmIDs
 from pycose.context import CoseKDFContext
-from pycose.cosebase import HeaderKeys
+from pycose.exceptions import CoseIllegalKeyType, CoseInvalidAlgorithm
+from pycose.keys.cosekey import EllipticCurveTypes, CK
 from pycose.keys.ec import EC2
 from pycose.keys.okp import OKP
 from pycose.keys.symmetric import SymmetricKey
@@ -15,26 +18,26 @@ else:
     from functools import singledispatchmethod
 
 
+@dataclass
+class RcptParams:
+    key: SymmetricKey
+    alg: Optional[AlgorithmIDs] = None
+    params: List['RcptParams'] = field(default_factory=list)
+    encrypt_or_mac: bool = True
+
+
 class CoseRecipient(CoseMessage):
 
     @classmethod
-    def recursive_encode(
-            cls,
-            recipients: List['CoseRecipient'],
-            crypto_params:
-            Tuple[Tuple[bool, Optional[AlgorithmIDs], Optional[SymmetricKey], Optional[Tuple[Any]]]] = None) -> list:
+    def recursive_encode(cls, recipients: List['CoseRecipient'], enc_params: List[RcptParams]) -> list:
         """ Recursively encode/encrypt the recipients """
-        if crypto_params is None:
-            recipients = [r.encode() for r in recipients]
-        else:
-            if len(crypto_params) != len(recipients):
-                raise ValueError("'crypto_params' should have the same length as the internal recipients list.")
-            recipients = [r.encode(*p) for r, p in zip(recipients, crypto_params)]
+
+        recipients = [r.encode(p) for r, p in zip(recipients, enc_params)]
 
         return recipients
 
     @classmethod
-    def from_recipient_obj(cls, recipient_obj: list):
+    def from_recipient_obj(cls, recipient_obj: list) -> list:
         msg = super().from_cose_obj(recipient_obj)
 
         try:
@@ -45,60 +48,72 @@ class CoseRecipient(CoseMessage):
 
         return msg
 
-    def __init__(self, phdr: Optional[dict] = None,
+    def __init__(self,
+                 phdr: Optional[dict] = None,
                  uhdr: Optional[dict] = None,
                  payload: bytes = b'',
-                 key: Optional[SymmetricKey] = None,
                  recipients: Optional[List] = None):
-        super().__init__(phdr=phdr, uhdr=uhdr, payload=payload, key=key)
+
+        super().__init__(phdr=phdr, uhdr=uhdr, payload=payload)
 
         self.recipients = [] if recipients is None else recipients
 
-    def encode(self,
-               encrypt: bool = True,
-               alg: Optional[AlgorithmIDs] = None,
-               key: Optional[SymmetricKey] = None,
-               crypto_params:
-               List[Tuple[bool, Union[AlgorithmIDs, None], Union[SymmetricKey, None], List[Any]]] = None) -> list:
-
-        if encrypt:
-            recipient = [self.encode_phdr(), self.encode_uhdr(), self.encrypt(alg, key)]
+    def encode(self, parameters: RcptParams) -> list:
+        if parameters.encrypt_or_mac:
+            recipient = [self.encode_phdr(), self.encode_uhdr(), self.encrypt(parameters.alg, parameters.key)]
         else:
             recipient = [self.encode_phdr(), self.encode_uhdr(), self.payload]
 
         # recursively encode/encrypt the recipients
-        if len(self.recipients) > 0:
-            recipients = CoseRecipient.recursive_encode(self.recipients, crypto_params)
-            recipient.append(recipients)
+        if len(self.recipients) == len(parameters.params):
+            if len(self.recipients) > 0:
+                recipient.append(CoseRecipient.recursive_encode(self.recipients, parameters.params))
+        else:
+            raise ValueError("List with cryptographic parameters should have the same length as the recipient list.")
 
         return recipient
 
-    def encrypt(self, alg: Optional[AlgorithmIDs] = None, key: Optional[SymmetricKey] = None) -> bytes:
+    def encrypt(self, alg: AlgorithmIDs, key: SymmetricKey) -> bytes:
         """ Key wrapping. """
 
-        alg, key = self._get_enc_params(alg, key)
-        return self.key.key_wrap(self.payload, alg=alg)
+        self._sanitize_args(key, alg)
+
+        return key.key_wrap(self.payload, alg=alg)
 
     def decrypt(self, alg: Optional[AlgorithmIDs] = None, key: Optional[SymmetricKey] = None) -> bytes:
         """ Key unwrapping. """
 
-        alg, key = self._get_enc_params(alg, key)
-        return self.key.key_unwrap(self.payload, alg=alg)
+        self._sanitize_args(key, alg)
+
+        return key.key_unwrap(self.payload, alg=alg)
 
     @singledispatchmethod
     @classmethod
-    def derive_kek(cls, private_key, public_key: Optional[Union[EC2, OKP]] = None, alg: Optional[AlgorithmIDs] = None,
-                   context: CoseKDFContext = None, salt: bytes = None, expose_secret: bool = False):
+    def derive_kek(cls,
+                   private_key: CK,
+                   public_key: Optional[Union[EC2, OKP]] = None,
+                   alg: Optional[AlgorithmIDs] = None,
+                   context: CoseKDFContext = None,
+                   curve: Optional[EllipticCurveTypes] = None,
+                   salt: bytes = b'',
+                   expose_secret: bool = False) -> Union[Tuple[bytes, bytes], bytes]:
+        """ Derive the Key Encryption Key (KEK) which protects the CEK (Content Encryption Key) """
+
         raise NotImplementedError
 
     @derive_kek.register(EC2)
     @classmethod
-    def _(cls, private_key: EC2, public_key: Optional[EC2] = None, alg: Optional[AlgorithmIDs] = None,
+    def _(cls,
+          private_key: EC2,
+          public_key: EC2,
+          alg: Optional[AlgorithmIDs] = None,
           context: Optional[CoseKDFContext] = None,
-          salt: bytes = None, expose_secret: bool = False):
+          curve: Optional[EllipticCurveTypes] = None,
+          salt: bytes = b'',
+          expose_secret: bool = False) -> Union[Tuple[bytes, bytes], bytes]:
         _ = salt
 
-        secret, kek = private_key.ecdh_key_derivation(public_key, alg, context)
+        secret, kek = private_key.ecdh_key_derivation(public_key, context, alg, curve)
 
         if expose_secret:
             return secret, kek
@@ -107,12 +122,19 @@ class CoseRecipient(CoseMessage):
 
     @derive_kek.register(SymmetricKey)
     @classmethod
-    def _(cls, private_key: SymmetricKey, public_key=None, alg: Optional[AlgorithmIDs] = None,
-          context: CoseKDFContext = None, salt: bytes = None, expose_secret: bool = False):
+    def _(cls,
+          private_key: SymmetricKey,
+          public_key=None,
+          alg: Optional[AlgorithmIDs] = None,
+          context: CoseKDFContext = None,
+          curve=None,
+          salt: bytes = b'',
+          expose_secret: bool = False):
 
         _ = public_key
+        _ = curve
 
-        kek = private_key.hmac_key_derivation(alg, salt, context)
+        kek = private_key.hmac_key_derivation(context, alg, salt)
 
         if expose_secret:
             return private_key.private_bytes, kek
@@ -121,57 +143,32 @@ class CoseRecipient(CoseMessage):
 
     @derive_kek.register(OKP)
     @classmethod
-    def _(cls, private_key: OKP, public_key: OKP = None, alg: Optional[AlgorithmIDs] = None,
-          context: CoseKDFContext = None, salt: bytes = None, expose_secret: bool = False):
+    def _(cls,
+          private_key: OKP,
+          public_key: OKP,
+          alg: Optional[AlgorithmIDs] = None,
+          context: CoseKDFContext = None,
+          curve: Optional[EllipticCurveTypes] = None,
+          salt: bytes = None,
+          expose_secret: bool = False):
         _ = salt
 
-        secret, kek = private_key.x25519_key_derivation(public_key, alg, context)
+        secret, kek = private_key.x25519_key_derivation(public_key, context, alg, curve)
 
         if expose_secret:
             return secret, kek
         else:
             return kek
 
-    def _get_enc_params(self, alg: Optional[AlgorithmIDs] = None, key: Optional[SymmetricKey] = None
-                        ) -> Tuple[AlgorithmIDs, SymmetricKey]:
-        """ Do key wrapping. """
-        _alg = alg if alg is not None else self.phdr.get(HeaderKeys.ALG)
-        _alg = _alg if _alg is not None else self.uhdr.get(HeaderKeys.ALG)
+    @classmethod
+    def _sanitize_args(cls, key: SymmetricKey, alg: Optional[AlgorithmIDs] = None) -> None:
+        """ Sanitize parameters for encryption/decryption algorithms. """
 
-        if _alg is None:
-            raise AttributeError('No algorithm specified.')
+        if key is None:
+            raise CoseIllegalKeyType("COSE Key cannot be None")
 
-        if not (AlgorithmIDs.ECDH_SS_A256KW <= _alg <= AlgorithmIDs.ECDH_ES_HKDF_256 or AlgorithmIDs.ECDH_ES_A128KW
-                or AlgorithmIDs.A256KW <= _alg <= AlgorithmIDs.A128KW):
-            raise ValueError("algorithm is not a key wrapping algorithm")
-
-        try:
-            _key = key if key is not None else self.key
-        except AttributeError:
-            raise AttributeError("No key specified.")
-
-        return _alg, _key
-
-    def _get_kek_derive_params(self,
-                               alg: Optional[AlgorithmIDs],
-                               key: Optional[Union[EC2, OKP]]) -> Tuple[Union[EC2, OKP], AlgorithmIDs]:
-        """ Analyze the COSE headers and provided data and extract the correct key derivation parameters. """
-
-        try:
-            _key = key if key is not None else self.key
-        except AttributeError:
-            raise AttributeError("No key specified.")
-
-        # search in protected headers
-        _alg = alg if alg is not None else self.phdr.get(HeaderKeys.ALG)
-
-        # search in unprotected headers
-        _alg = _alg if _alg is not None else self.uhdr.get(HeaderKeys.ALG)
-
-        if _alg is None:
-            raise AttributeError('No algorithm specified.')
-
-        return _key, _alg
+        if key.alg is None and alg is None:
+            raise CoseInvalidAlgorithm("COSE algorithm cannot be None")
 
     def __repr__(self) -> str:
         return f'<COSE_Recipient:\n' \

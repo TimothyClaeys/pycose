@@ -6,29 +6,26 @@
 #    signatures: [+ COSE_Signature]
 # ]
 #
-from itertools import zip_longest
-from typing import Optional, Union, List, Tuple
+from typing import Optional, Union, List
 
 import cbor2
 
 from pycose import cosemessage
 from pycose.algorithms import AlgorithmIDs
-from pycose.cosebase import HeaderKeys
 from pycose.keys.ec import EC2
 from pycose.keys.okp import OKP
-from pycose.signer import CoseSignature
+from pycose.signer import CoseSignature, SignerParams
 
 
 @cosemessage.CoseMessage.record_cbor_tag(98)
 class SignMessage(cosemessage.CoseMessage):
     cbor_tag = 98
-    context = "Signature"
 
     @classmethod
-    def from_cose_obj(cls, cose_obj):
+    def from_cose_obj(cls, cose_obj) -> 'SignMessage':
         msg = super().from_cose_obj(cose_obj)
 
-        msg.cose_signatures = [CoseSignature.from_signature_obj(r) for r in cose_obj.pop(0)]
+        msg.cose_signatures = [CoseSignature.from_signature_obj(r, msg) for r in cose_obj.pop(0)]
         return msg
 
     def __init__(self,
@@ -41,49 +38,31 @@ class SignMessage(cosemessage.CoseMessage):
         if uhdr is None:
             uhdr = {}
 
-        super().__init__(phdr, uhdr, payload, b'')
+        super().__init__(phdr, uhdr, payload, payload)
 
         if cose_signatures is None:
             self.cose_signatures = list()
         else:
             self.cose_signatures = cose_signatures
 
-    def _sig_structure(self, cose_signature):
-        _sig_structure = [
-            cose_signature.context,
-            self.encode_phdr(),
-            cose_signature.encode_phdr(),
-            cose_signature.external_aad,
-            self.payload
-        ]
-
-        return cbor2.dumps(_sig_structure)
-
     def encode(self,
-               tagged: bool = True,
+               key: Union[EC2, OKP],
                alg: Optional[AlgorithmIDs] = None,
-               key: Optional[Union[EC2, OKP]] = None,
-               sign_params: Tuple[Tuple[bool, Optional[AlgorithmIDs], Optional[Union[EC2, OKP]]]] = None) -> bytes:
-        """ Encodes the message as a CBOR array """
+               sign_params: Optional[List[SignerParams]] = None,
+               tagged: bool = True) -> bytes:
+        """ Encodes and protects the COSE_Sign message."""
 
-        if sign_params is None:
-            sign_params = ((True, None, None),)
-
+        signers = []
         message = [self.encode_phdr(), self.encode_uhdr(), self.payload]
 
-        if len(sign_params) > len(self.cose_signatures):
-            raise ValueError("sign_params to long")
+        if sign_params is None:
+            sign_params = []
 
-        signers = list()
-        for cose_signature, param in zip_longest(self.cose_signatures, sign_params, fillvalue=((True, None, None),)):
-            sign, alg, key = param
-
-            if sign:
-                signature = CoseSignature.compute_signature(self._sig_structure(cose_signature), alg, key)
-            else:
-                signature = None
-
-            signers.append(cose_signature.encode(signature))
+        if len(sign_params) == len(self.cose_signatures):
+            for cose_signature, p in zip(self.cose_signatures, sign_params):
+                signers.append(cose_signature.encode(p))
+        else:
+            raise ValueError("List with cryptographic parameters should have the same length as the recipient list.")
 
         message.append(signers)
 

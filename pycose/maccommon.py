@@ -1,12 +1,11 @@
 import abc
-from typing import Optional, Tuple
+from typing import Optional
 
 import cbor2
 
-from pycose import cosemessage, CoseMessage
+from pycose import cosemessage
 from pycose.algorithms import AlgorithmIDs
-from pycose.cosebase import HeaderKeys
-from pycose.exceptions import CoseIllegalKeyType
+from pycose.exceptions import CoseIllegalKeyType, CoseInvalidAlgorithm
 from pycose.keys.symmetric import SymmetricKey
 
 
@@ -17,57 +16,28 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
         """Getter for the context of the message."""
         raise NotImplementedError
 
-    @classmethod
-    def from_cose_obj(cls, cose_obj: list) -> CoseMessage:
-        msg = super().from_cose_obj(cose_obj)
-        msg.auth_tag = cose_obj.pop(0)
-        return msg
-
     def __init__(self,
                  phdr: Optional[dict] = None,
                  uhdr: Optional[dict] = None,
                  payload: bytes = b'',
-                 external_aad: bytes = b'',
-                 key: Optional[SymmetricKey] = None):
+                 external_aad: bytes = b''):
         super().__init__(phdr, uhdr, payload, external_aad)
 
-        self.key = key
         self.auth_tag = b''
 
-    @property
-    def key(self):
-        return self._key
-
-    @key.setter
-    def key(self, new_key):
-        if isinstance(new_key, SymmetricKey):
-            self._key = new_key
-        else:
-            raise CoseIllegalKeyType(f"Expected type {type(SymmetricKey)}, instead got {type(new_key)}")
-
-    def verify_tag(self, alg: Optional[AlgorithmIDs] = None, key: Optional[SymmetricKey] = None) -> bool:
+    def verify_tag(self, key: SymmetricKey, alg: Optional[AlgorithmIDs] = None) -> bool:
         """ Verifies the authentication tag of a received message. """
 
-        to_digest = self._mac_structure
+        self._sanitize_args(key, alg)
 
-        if key is not None:
-            self.key = key
+        return key.verify_tag(self.auth_tag, self._mac_structure, alg)
 
-        if self.key is None:
-            raise ValueError("COSE Key cannot be None")
+    def compute_tag(self, key: SymmetricKey, alg: Optional[AlgorithmIDs] = None) -> bytes:
+        """ Computes the authentication tag of a COSE_Mac or COSE_Mac0 message. """
 
-        return self.key.verify_tag(self.auth_tag, to_digest, alg)
+        self._sanitize_args(key, alg)
 
-    def compute_tag(self, alg: Optional[AlgorithmIDs] = None, key: Optional[SymmetricKey] = None) -> bytes:
-        """ Wrapper function to access the cryptographic primitives. """
-
-        if key is not None:
-            self.key = key
-
-        if self.key is None:
-            raise ValueError("COSE Key cannot be None")
-
-        self.auth_tag = self.key.compute_tag(self._mac_structure, alg)
+        self.auth_tag = key.compute_tag(self._mac_structure, alg)
         return self.auth_tag
 
     @property
@@ -84,3 +54,12 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
         mac_structure.append(self.payload)
         return cbor2.dumps(mac_structure)
 
+    @classmethod
+    def _sanitize_args(cls, key: SymmetricKey, alg: Optional[AlgorithmIDs] = None) -> None:
+        """ Sanitize parameters for encryption/decryption algorithms. """
+
+        if key is None:
+            raise CoseIllegalKeyType("COSE Key cannot be None")
+
+        if key.alg is None and alg is None:
+            raise CoseInvalidAlgorithm("COSE algorithm cannot be None")
