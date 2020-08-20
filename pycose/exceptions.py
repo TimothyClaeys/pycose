@@ -1,4 +1,4 @@
-class CoseUnknownAlgorithm(Exception):
+class CoseInvalidAlgorithm(Exception):
     pass
 
 
@@ -16,3 +16,4 @@ class CoseIllegalKeyOps(Exception):
 
 class CoseIllegalKeyType(Exception):
     pass
+
