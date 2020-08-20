@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 from pycose.algorithms import AlgorithmIDs, AlgoParam, AlgID2Crypto
 from pycose.context import CoseKDFContext
-from pycose.exceptions import CoseIllegalCurve, CoseIllegalKeyOps
+from pycose.exceptions import CoseInvalidAlgorithm
 from pycose.keys.cosekey import CoseKey, KTY, EllipticCurveTypes, KeyOps
 
 
@@ -33,7 +33,7 @@ class OKP(CoseKey):
             return item in cls.__members__
 
     def __init__(self,
-                 kid: Optional[ bytes] = None,
+                 kid: Optional[bytes] = None,
                  alg: Optional[int] = None,
                  key_ops: Optional[int] = None,
                  base_iv: Optional[bytes] = None,
@@ -113,20 +113,25 @@ class OKP(CoseKey):
 
     def x25519_key_derivation(self,
                               public_key: 'OKP',
-                              alg: AlgorithmIDs,
-                              curve: Optional[EllipticCurveTypes] = None,
-                              context: CoseKDFContext = b'') -> Tuple[bytes, bytes]:
+                              context: CoseKDFContext = b'',
+                              alg: Optional[AlgorithmIDs] = None,
+                              curve: Optional[EllipticCurveTypes] = None) -> Tuple[bytes, bytes]:
 
-        self._check_key_conf(alg, public_key, KeyOps.DERIVE_KEY, curve)
+        self._check_key_conf(alg, KeyOps.DERIVE_KEY, public_key, curve)
 
-        algorithm: AlgoParam = AlgID2Crypto[self.alg.name].value
+        try:
+            alg = self.alg.name if hasattr(self.alg, "name") else AlgorithmIDs(self.alg).name
+
+            algorithm: AlgoParam = AlgID2Crypto[alg].value
+        except KeyError as err:
+            raise CoseInvalidAlgorithm(err)
 
         p = X25519PublicKey.from_public_bytes(public_key.x)
         d = X25519PrivateKey.from_private_bytes(self.d)
 
         shared_secret = d.exchange(p)
 
-        derived_key = algorithm.key_derivation(algorithm=algorithm.hash,
+        derived_key = algorithm.key_derivation(algorithm=algorithm.hash(),
                                                length=int(context.supp_pub_info.key_data_length / 8),
                                                salt=None,
                                                info=context.encode(),

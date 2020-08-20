@@ -12,7 +12,7 @@ from ecdsa.ellipticcurve import Point
 
 from pycose.algorithms import AlgorithmIDs, AlgoParam, AlgID2Crypto
 from pycose.context import CoseKDFContext
-from pycose.exceptions import CoseIllegalKeyOps, CoseIllegalCurve
+from pycose.exceptions import CoseIllegalKeyOps, CoseIllegalCurve, CoseInvalidAlgorithm
 from pycose.keys.cosekey import CoseKey, KTY, EllipticCurveTypes, KeyOps
 
 
@@ -129,16 +129,21 @@ class EC2(CoseKey):
                             context: CoseKDFContext,
                             alg: Optional[AlgorithmIDs] = None,
                             curve: Optional[EllipticCurveTypes] = None) -> Tuple[bytes, bytes]:
-        """ Derive a CEK from ECDH + HKDF algorithm """
+        """ Derive a CEK with ECDH + HKDF algorithm """
 
-        self._check_key_conf(alg, KeyOps.DERIVE_KEY, curve)
+        self._check_key_conf(alg, KeyOps.DERIVE_KEY, public_key, curve)
 
-        algorithm: AlgoParam = AlgID2Crypto[self.alg.name].value
+        try:
+            alg = self.alg.name if hasattr(self.alg, "name") else AlgorithmIDs(self.alg).name
+
+            algorithm: AlgoParam = AlgID2Crypto[alg].value
+        except KeyError as err:
+            raise CoseInvalidAlgorithm(err)
 
         try:
             curve = self.KEY_DERIVATION_CURVES[self.crv]()
         except KeyError:
-            raise CoseIllegalCurve
+            raise CoseIllegalCurve(curve)
 
         d = ec.derive_private_key(int(hexlify(self.d), 16), curve, openssl.backend)
         p = ec.EllipticCurvePublicNumbers(int(hexlify(public_key.x), 16), int(hexlify(public_key.y), 16), curve)
@@ -162,7 +167,13 @@ class EC2(CoseKey):
 
         self._check_key_conf(alg, KeyOps.SIGN, curve)
 
-        algorithm: AlgoParam = AlgID2Crypto[self.alg.name].value
+        try:
+            alg = self.alg.name if hasattr(self.alg, "name") else AlgorithmIDs(self.alg).name
+
+            algorithm: AlgoParam = AlgID2Crypto[alg].value
+        except KeyError as err:
+            raise CoseInvalidAlgorithm(err)
+
         sk = SigningKey.from_secret_exponent(int(hexlify(self.d), 16), curve=algorithm.curve)
 
         return sk.sign_deterministic(to_be_signed, hashfunc=algorithm.hash)
@@ -176,7 +187,13 @@ class EC2(CoseKey):
 
         self._check_key_conf(alg, KeyOps.VERIFY, curve)
 
-        algorithm: AlgoParam = AlgID2Crypto[self.alg.name].value
+        try:
+            alg = self.alg.name if hasattr(self.alg, "name") else AlgorithmIDs(self.alg).name
+
+            algorithm: AlgoParam = AlgID2Crypto[alg].value
+        except KeyError as err:
+            raise CoseInvalidAlgorithm(err)
+
         p = Point(curve=algorithm.curve.curve, x=int(hexlify(self.x), 16), y=int(hexlify(self.y), 16))
         vk = VerifyingKey.from_public_point(p, algorithm.curve, algorithm.hash, validate_point=True)
 

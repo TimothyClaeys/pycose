@@ -2,7 +2,7 @@ import base64
 from abc import ABCMeta, abstractmethod
 from binascii import hexlify
 from enum import IntEnum, unique
-from typing import List, Union, Dict, Optional
+from typing import List, Union, Dict, Optional, TypeVar
 
 import dataclasses as dc
 
@@ -202,6 +202,9 @@ class CoseKey(metaclass=ABCMeta):
         if algorithm is not None:
             self.alg = algorithm
 
+        if self.alg is None:
+            raise ValueError("Selected COSE algorithm cannot be 'None'")
+
         if peer_key is not None:
             if peer_key.alg is not None and self.alg != peer_key.alg:
                 raise ValueError("Algorithms for private and public key do not match")
@@ -234,8 +237,11 @@ class CoseKey(metaclass=ABCMeta):
                 peer_key.key_ops = self.key_ops
 
 
+CK = TypeVar('CK', bound=CoseKey)
+
+
 class CoseKeySet:
-    def __init__(self, cose_keys: List[CoseKey] = None):
+    def __init__(self, cose_keys: List[CK] = None):
         if cose_keys is None:
             self.cose_keys = []
         else:

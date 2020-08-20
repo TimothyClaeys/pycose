@@ -10,7 +10,7 @@ from dataclasses import dataclass
 
 from pycose.algorithms import AlgID2Crypto, AlgoParam, AlgorithmIDs
 from pycose.context import CoseKDFContext
-from pycose.exceptions import CoseUnknownAlgorithm, CoseInvalidTag
+from pycose.exceptions import CoseInvalidAlgorithm, CoseInvalidTag
 from pycose.keys.cosekey import CoseKey, KTY, KeyOps
 
 
@@ -73,7 +73,7 @@ class SymmetricKey(CoseKey):
             cipher = self._prepare_cipher()
             ciphertext = cipher.encrypt(nonce=nonce, data=plaintext, associated_data=aad)
         except KeyError as err:
-            raise CoseUnknownAlgorithm(err)
+            raise CoseInvalidAlgorithm(err)
 
         return ciphertext
 
@@ -84,7 +84,7 @@ class SymmetricKey(CoseKey):
             cipher = self._prepare_cipher()
             plaintext = cipher.decrypt(nonce=nonce, data=ciphertext, associated_data=aad)
         except KeyError as err:
-            raise CoseUnknownAlgorithm(err)
+            raise CoseInvalidAlgorithm(err)
 
         return plaintext
 
@@ -104,23 +104,29 @@ class SymmetricKey(CoseKey):
         self._check_key_conf(alg, KeyOps.WRAP)
 
         try:
-            alg = self.alg.name if hasattr(self.alg, "name") else AlgorithmIDs(self.alg)
+            alg = self.alg.name if hasattr(self.alg, "name") else AlgorithmIDs(self.alg).name
 
-            algorithm: AlgoParam = AlgID2Crypto[alg.name].value
+            algorithm: AlgoParam = AlgID2Crypto[alg].value
         except KeyError as err:
-            raise CoseUnknownAlgorithm(err)
+            raise CoseInvalidAlgorithm(err)
 
-        return algorithm.primitive.aes_key_wrap(self.k, plaintext_key, openssl.backend)
+        if self.alg in {AlgorithmIDs.A128KW, AlgorithmIDs.A192KW, AlgorithmIDs.A256KW}:
+            return algorithm.primitive.aes_key_wrap(self.k, plaintext_key, openssl.backend)
+        elif self.alg == AlgorithmIDs.DIRECT:
+            return b''
+        else:
+            raise CoseInvalidAlgorithm(f"Key wrap requires one of the following algorithms: \
+            {(AlgorithmIDs.A256KW, AlgorithmIDs.A192KW, AlgorithmIDs.A128KW, AlgorithmIDs.DIRECT)}")
 
     def key_unwrap(self, wrapped_key: bytes, alg: Optional[AlgorithmIDs] = None) -> bytes:
         self._check_key_conf(alg, KeyOps.UNWRAP)
 
         try:
-            alg = self.alg.name if hasattr(self.alg, "name") else AlgorithmIDs(self.alg)
+            alg = self.alg.name if hasattr(self.alg, "name") else AlgorithmIDs(self.alg).name
 
-            algorithm: AlgoParam = AlgID2Crypto[alg.name].value
+            algorithm: AlgoParam = AlgID2Crypto[alg].value
         except KeyError as err:
-            raise CoseUnknownAlgorithm(err)
+            raise CoseInvalidAlgorithm(err)
 
         return algorithm.primitive.aes_key_unwrap(self.k, wrapped_key, openssl.backend)
 
@@ -132,11 +138,11 @@ class SymmetricKey(CoseKey):
         iv = unhexlify(b"".join([b"00"] * 16))
 
         try:
-            alg = self.alg.name if hasattr(self.alg, "name") else AlgorithmIDs(self.alg)
+            alg = self.alg.name if hasattr(self.alg, "name") else AlgorithmIDs(self.alg).name
 
-            algorithm: AlgoParam = AlgID2Crypto[alg.name].value
+            algorithm: AlgoParam = AlgID2Crypto[alg].value
         except KeyError as err:
-            raise CoseUnknownAlgorithm(err)
+            raise CoseInvalidAlgorithm(err)
 
         if self.alg in {AlgorithmIDs.AES_MAC_128_128,
                         AlgorithmIDs.AES_MAC_128_64,
@@ -160,7 +166,7 @@ class SymmetricKey(CoseKey):
             h.update(to_be_maced)
             digest = h.finalize()
 
-            if algorithm == AlgorithmIDs.HMAC_256_64:
+            if AlgorithmIDs[alg] == AlgorithmIDs.HMAC_256_64:
                 # truncate the result to the first 64 bits
                 digest = digest[:8]
 
@@ -187,11 +193,11 @@ class SymmetricKey(CoseKey):
         self._check_key_conf(alg, KeyOps.DERIVE_KEY)
 
         try:
-            alg = self.alg.name if hasattr(self.alg, "name") else AlgorithmIDs(self.alg)
+            alg = self.alg.name if hasattr(self.alg, "name") else AlgorithmIDs(self.alg).name
 
-            algorithm: AlgoParam = AlgID2Crypto[alg.name].value
+            algorithm: AlgoParam = AlgID2Crypto[alg].value
         except KeyError as err:
-            raise CoseUnknownAlgorithm(err)
+            raise CoseInvalidAlgorithm(err)
 
         derived_key = algorithm.key_derivation(algorithm=algorithm.hash(),
                                                length=int(context.supp_pub_info.key_data_length / 8),
