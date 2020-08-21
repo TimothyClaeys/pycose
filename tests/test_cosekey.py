@@ -397,8 +397,8 @@ def test_ec_ecdsa(kid, alg, key_ops, x, y, d, curve, to_sign, signature):
         crv=curve
     )
 
-    assert key.sign(to_sign, alg, curve) == signature
+    assert key.sign(to_be_signed=to_sign, alg=alg, curve=curve) == signature
 
     # switch key operation
     key.key_ops = KeyOps.VERIFY
-    assert key.verify(to_sign, signature, alg, curve)
+    assert key.verify(to_be_signed=to_sign, signature=signature, alg=alg, curve=curve)

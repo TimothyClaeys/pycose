@@ -12,7 +12,7 @@ from ecdsa.ellipticcurve import Point
 
 from pycose.algorithms import AlgorithmIDs, AlgoParam, AlgID2Crypto
 from pycose.context import CoseKDFContext
-from pycose.exceptions import CoseIllegalKeyOps, CoseIllegalCurve, CoseInvalidAlgorithm
+from pycose.exceptions import CoseIllegalCurve, CoseInvalidAlgorithm
 from pycose.keys.cosekey import CoseKey, KTY, EllipticCurveTypes, KeyOps
 
 
@@ -165,7 +165,7 @@ class EC2(CoseKey):
              curve: EllipticCurveTypes = None) -> bytes:
         """ Sign a message """
 
-        self._check_key_conf(alg, KeyOps.SIGN, curve)
+        self._check_key_conf(algorithm=alg, key_operation=KeyOps.SIGN, curve=curve)
 
         try:
             alg = self.alg.name if hasattr(self.alg, "name") else AlgorithmIDs(self.alg).name
@@ -185,7 +185,7 @@ class EC2(CoseKey):
                curve: Optional[EllipticCurveTypes] = None) -> bool:
         """ Verify a message's signature """
 
-        self._check_key_conf(alg, KeyOps.VERIFY, curve)
+        self._check_key_conf(algorithm=alg, key_operation=KeyOps.VERIFY, curve=curve)
 
         try:
             alg = self.alg.name if hasattr(self.alg, "name") else AlgorithmIDs(self.alg).name
@@ -198,4 +198,3 @@ class EC2(CoseKey):
         vk = VerifyingKey.from_public_point(p, algorithm.curve, algorithm.hash, validate_point=True)
 
         return vk.verify(signature, to_be_signed)
-
