@@ -2,12 +2,16 @@ import base64
 from abc import ABCMeta, abstractmethod
 from binascii import hexlify
 from enum import IntEnum, unique
-from typing import List, Union, Dict, Optional, TypeVar
+from typing import List, Union, Dict, Optional, TypeVar, TYPE_CHECKING, Type, Callable
 
 import dataclasses as dc
 
 from pycose.algorithms import AlgorithmIDs
 from pycose.exceptions import CoseIllegalKeyOps
+
+if TYPE_CHECKING:
+    from pycose.keys.ec import EC2
+    from pycose.keys.okp import OKP
 
 
 @unique
