@@ -1,7 +1,7 @@
 import abc
 from typing import Optional, Union
 
-from pycose import cosemessage
+from pycose import cosebase
 from pycose.algorithms import AlgorithmIDs
 from pycose.exceptions import CoseIllegalKeyType, CoseInvalidAlgorithm, CoseIllegalCurve
 from pycose.keys.cosekey import EllipticCurveTypes
@@ -9,36 +9,24 @@ from pycose.keys.ec import EC2
 from pycose.keys.okp import OKP
 
 
-class SignCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
+class SignCommon(cosebase.CoseBase, metaclass=abc.ABCMeta):
     @property
     @abc.abstractmethod
     def context(self) -> str:
         """Getter for the context of the message."""
         raise NotImplementedError
 
-    def __init__(self,
-                 phdr: Optional[dict] = None,
-                 uhdr: Optional[dict] = None,
-                 payload: bytes = b'',
-                 external_aad: bytes = b''):
+    def __init__(self, phdr: Optional[dict] = None, uhdr: Optional[dict] = None):
         if phdr is None:
             phdr = {}
         if uhdr is None:
             uhdr = {}
 
-        super().__init__(phdr, uhdr, payload, external_aad)
-
-        self.signature = b''
+        super().__init__(phdr, uhdr)
 
     @property
     def signature(self):
-        return self._signature
-
-    @signature.setter
-    def signature(self, new_signature):
-        if type(new_signature) is not bytes:
-            raise ValueError("signature must be of type 'bytes'")
-        self._signature = new_signature
+        raise NotImplementedError
 
     @property
     def _sig_structure(self):

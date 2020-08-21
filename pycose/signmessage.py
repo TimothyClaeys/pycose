@@ -6,14 +6,11 @@
 #    signatures: [+ COSE_Signature]
 # ]
 #
-from typing import Optional, Union, List
+from typing import Optional, List
 
 import cbor2
 
 from pycose import cosemessage
-from pycose.algorithms import AlgorithmIDs
-from pycose.keys.ec import EC2
-from pycose.keys.okp import OKP
 from pycose.signer import CoseSignature, SignerParams
 
 
@@ -23,16 +20,20 @@ class SignMessage(cosemessage.CoseMessage):
 
     @classmethod
     def from_cose_obj(cls, cose_obj) -> 'SignMessage':
-        msg = super().from_cose_obj(cose_obj)
+        """ Parses COSE_Sign messages. """
 
-        msg.cose_signatures = [CoseSignature.from_signature_obj(r, msg) for r in cose_obj.pop(0)]
+        msg: 'SignMessage' = super().from_cose_obj(cose_obj)
+
+        for r in cose_obj.pop(0):
+            msg.append_signer(CoseSignature.from_signature_obj(r))
+
         return msg
 
     def __init__(self,
                  phdr: Optional[dict] = None,
                  uhdr: Optional[dict] = None,
                  payload: bytes = b'',
-                 cose_signatures: Optional[List[CoseSignature]] = None):
+                 signers: Optional[List[CoseSignature]] = None):
         if phdr is None:
             phdr = {}
         if uhdr is None:
@@ -40,16 +41,16 @@ class SignMessage(cosemessage.CoseMessage):
 
         super().__init__(phdr, uhdr, payload, payload)
 
-        if cose_signatures is None:
-            self.cose_signatures = list()
+        if signers is None:
+            self._signers = list()
         else:
-            self.cose_signatures = cose_signatures
+            self._signers = signers
 
-    def encode(self,
-               key: Union[EC2, OKP],
-               alg: Optional[AlgorithmIDs] = None,
-               sign_params: Optional[List[SignerParams]] = None,
-               tagged: bool = True) -> bytes:
+    @property
+    def signers(self):
+        return self._signers
+
+    def encode(self, sign_params: Optional[List[SignerParams]] = None, tagged: bool = True) -> bytes:
         """ Encodes and protects the COSE_Sign message."""
 
         signers = []
@@ -58,9 +59,9 @@ class SignMessage(cosemessage.CoseMessage):
         if sign_params is None:
             sign_params = []
 
-        if len(sign_params) == len(self.cose_signatures):
-            for cose_signature, p in zip(self.cose_signatures, sign_params):
-                signers.append(cose_signature.encode(p))
+        if len(sign_params) == len(self.signers):
+            for signer, p in zip(self.signers, sign_params):
+                signers.append(signer.encode(p))
         else:
             raise ValueError("List with cryptographic parameters should have the same length as the recipient list.")
 
@@ -73,9 +74,18 @@ class SignMessage(cosemessage.CoseMessage):
 
         return message
 
+    def append_signer(self, signer: CoseSignature) -> None:
+        """ Appends a new signer (COSE_Signature) to the COSE_Sign message. """
+
+        if not isinstance(signer, CoseSignature):
+            raise TypeError(f"Signer must be of type {CoseSignature}")
+
+        signer._parent_msg = self
+        self._signers.append(signer)
+
     def __repr__(self):
         return f'<COSE_Sign:\n' \
                f'\t phdr={self._phdr}\n' \
                f'\t uhdr={self._uhdr}\n' \
                f'\t payload={self._payload}\n' \
-               f'\t signatures={self.cose_signatures}>'
+               f'\t signatures={self.signers}>'

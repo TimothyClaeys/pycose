@@ -10,7 +10,7 @@ from pycose.keys.okp import OKP
 
 
 @cosemessage.CoseMessage.record_cbor_tag(18)
-class Sign1Message(signcommon.SignCommon):
+class Sign1Message(cosemessage.CoseMessage, signcommon.SignCommon):
     context = "Signature1"
     cbor_tag = 18
 
@@ -27,6 +27,18 @@ class Sign1Message(signcommon.SignCommon):
                  external_aad: bytes = b''):
 
         super().__init__(phdr, uhdr, payload, external_aad)
+        self.signature = b''
+
+    @property
+    def signature(self):
+        return self._signature
+
+    @signature.setter
+    def signature(self, value):
+        if not isinstance(value, bytes):
+            TypeError("Signature must be of type 'bytes'")
+
+        self._signature = value
 
     @property
     def _sig_structure(self):
@@ -70,3 +82,4 @@ class Sign1Message(signcommon.SignCommon):
                f'\t uhdr={self._uhdr}\n' \
                f'\t payload={self._payload}\n' \
                f'\t signature={self.signature}>'
+

@@ -10,7 +10,7 @@ from pycose.keys.ec import EC2
 from pycose.keys.okp import OKP
 
 if TYPE_CHECKING:
-    from pycose.signmessage import SignMessage
+    pass
 
 
 @dataclass
@@ -25,23 +25,32 @@ class CoseSignature(signcommon.SignCommon):
     context = "Signature"
 
     @classmethod
-    def from_signature_obj(cls, cose_signature_obj: list, encaps_msg: 'SignMessage'):
-        msg = super().from_cose_obj(cose_signature_obj)
+    def from_signature_obj(cls, cose_signature_obj: list) -> 'CoseSignature':
+        """ Parses COSE_Signature objects. """
+
+        msg: 'CoseSignature' = super().from_cose_obj(cose_signature_obj)
         msg.signature = cose_signature_obj.pop()
-        msg.encaps_msg = encaps_msg
+
         return msg
 
-    def __init__(self,
-                 phdr: Optional[dict],
-                 uhdr: Optional[dict],
-                 signature: Optional[bytes] = b'',
-                 external_aad: Optional[bytes] = b'',
-                 encaps_msg: Optional['SignMessage'] = None):
+    def __init__(self, phdr: Optional[dict], uhdr: Optional[dict], external_aad: Optional[bytes] = b''):
 
-        super().__init__(phdr, uhdr, external_aad=external_aad)
+        super().__init__(phdr, uhdr)
 
-        self.signature = signature
-        self.encaps_msg = encaps_msg
+        self.signature = b''
+        self._parent_msg = None
+        self.external_aad = external_aad
+
+    @property
+    def signature(self):
+        return self._signature
+
+    @signature.setter
+    def signature(self, value):
+        if not isinstance(value, bytes):
+            TypeError("Signature must be of type 'bytes'")
+
+        self._signature = value
 
     @property
     def _sig_structure(self) -> bytes:
@@ -49,10 +58,10 @@ class CoseSignature(signcommon.SignCommon):
 
         _sig_structure = [
             self.context,
-            self.encaps_msg.encode_phdr(),
+            self._parent_msg.encode_phdr(),
             self.encode_phdr(),
             self.external_aad,
-            self.payload
+            self._parent_msg.payload
         ]
 
         return cbor2.dumps(_sig_structure)
