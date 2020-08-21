@@ -1,40 +1,74 @@
 import abc
+from typing import Optional, Union
 
-from pycose import cosemessage, crypto
+from pycose import cosebase
+from pycose.algorithms import AlgorithmIDs
+from pycose.exceptions import CoseIllegalKeyType, CoseInvalidAlgorithm, CoseIllegalCurve
+from pycose.keys.cosekey import EllipticCurveTypes
+from pycose.keys.ec import EC2
+from pycose.keys.okp import OKP
 
 
-class SignCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
-    @classmethod
-    def from_cose_obj(cls, cose_obj):
-        msg = super(SignCommon, cls).from_cose_obj(cose_obj)
-
-        msg.signers = cose_obj.pop(0)
-        return msg
-
+class SignCommon(cosebase.CoseBase, metaclass=abc.ABCMeta):
     @property
     @abc.abstractmethod
-    def key(self):
-        NotImplementedError("Cannot not instantiate abstract class CoseMessage")
+    def context(self) -> str:
+        """Getter for the context of the message."""
+        raise NotImplementedError
 
-    @key.setter
-    @abc.abstractmethod
-    def key(self, new_value):
-        NotImplementedError("Cannot not instantiate abstract class MacCommon")
+    def __init__(self, phdr: Optional[dict] = None, uhdr: Optional[dict] = None):
+        if phdr is None:
+            phdr = {}
+        if uhdr is None:
+            uhdr = {}
+
+        super().__init__(phdr, uhdr)
 
     @property
-    @abc.abstractmethod
+    def signature(self):
+        raise NotImplementedError
+
+    @property
     def _sig_structure(self):
-        raise NotImplementedError("Cannot instantiate abstract SignCommon class")
+        raise NotImplementedError
 
-    @abc.abstractmethod
-    def verify_signature(self, alg, curve='P-256', signer=None):
-        raise NotImplementedError("Cannot instantiate abstract SignCommon class")
-
-    def compute_signature(self, alg='ES256', curve='P-256'):
+    def verify_signature(self,
+                         public_key: Union[EC2, OKP],
+                         alg: Optional[AlgorithmIDs] = None,
+                         curve: Optional[EllipticCurveTypes] = None) -> bool:
         """
-        pass key, byte-string-to-mac and algorithm found in the header buckets to the hmac wrapper
-        :return: tag
+        Verifies the signature of a received message
+        :return: True or raises an exception
+        """
+        self._sanitize_args(public_key, alg, curve)
+
+        return public_key.verify(self._sig_structure, self.signature, alg, curve)
+
+    def compute_signature(self,
+                          private_key: Union[EC2, OKP] = None,
+                          alg: Optional[AlgorithmIDs] = None,
+                          curve: Optional[EllipticCurveTypes] = None) -> bytes:
+        """
+        Computes the signature of a COSE message
+        :return: True or raises an exception
         """
 
-        to_sign = self._sig_structure
-        return crypto.ec_sign_wrapper(self.key, to_sign, alg, curve)
+        self._sanitize_args(private_key, alg, curve)
+
+        return private_key.sign(self._sig_structure, alg)
+
+    @classmethod
+    def _sanitize_args(cls,
+                       key: Union[EC2, OKP],
+                       alg: Optional[AlgorithmIDs] = None,
+                       curve: Optional[EllipticCurveTypes] = None) -> None:
+        """ Sanitize parameters for encryption/decryption algorithms. """
+
+        if key is None:
+            raise CoseIllegalKeyType("COSE Key cannot be None")
+
+        if key.alg is None and alg is None:
+            raise CoseInvalidAlgorithm("COSE algorithm cannot be None")
+
+        if key.crv is None and curve is None:
+            raise CoseIllegalCurve("Ellipic curve cannot be None")

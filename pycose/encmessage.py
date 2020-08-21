@@ -1,74 +1,80 @@
-import binascii
-from copy import deepcopy
+from typing import List, Optional
 
-import cbor
+import cbor2
 
 from pycose import cosemessage, enccommon
-from pycose.attributes import CoseAttrs
-from pycose.recipient import CoseRecipient
+from pycose.algorithms import AlgorithmIDs
+from pycose.keys.symmetric import SymmetricKey
+from pycose.recipient import CoseRecipient, RcptParams
 
 
-@cosemessage.CoseMessage.record_cbor_tag(97)
+@cosemessage.CoseMessage.record_cbor_tag(96)
 class EncMessage(enccommon.EncCommon):
-    context = "ENC"
+    context = "Encrypt"
     cbor_tag = 96
 
-    def __init__(self, p_header=CoseAttrs(), u_header=CoseAttrs(), payload=None, key=None, recipients=[]):
-        super(EncMessage, self).__init__(
-            deepcopy(p_header),
-            deepcopy(u_header),
-            payload,
-            key
-        )
+    @classmethod
+    def from_cose_obj(cls, cose_obj: list) -> 'EncMessage':
+        msg = super().from_cose_obj(cose_obj)
 
-        for rcpt in recipients:
-            if not isinstance(rcpt, CoseRecipient):
-                raise ValueError()
-        self._recipients = deepcopy(recipients)
+        try:
+            msg.recipients = [CoseRecipient.from_recipient_obj(r) for r in cose_obj.pop(0)]
+        except (IndexError, ValueError):
+            msg.recipients = None
+        return msg
 
-        self._encoded_recipients = self.__encode_recipients()
+    def __init__(self,
+                 phdr: Optional[dict] = None,
+                 uhdr: Optional[dict] = None,
+                 payload: bytes = b'',
+                 external_aad: bytes = b'',
+                 recipients: Optional[List[CoseRecipient]] = None):
+        if phdr is None:
+            phdr = {}
+        if uhdr is None:
+            uhdr = {}
 
-    @property
-    def recipients(self):
-        """Returns an array of recipients."""
-        return self._recipients
+        super().__init__(phdr, uhdr, payload, external_aad)
 
-    @recipients.setter
-    def recipients(self, new_value):
-        for rcpt in new_value:
-            if not isinstance(rcpt, CoseRecipient):
-                raise ValueError()
-        self._recipients = deepcopy(new_value)
-
-    @property
-    def encoded_recipients(self):
-        return self.__encode_recipients()
-
-    def change_recipient(self, recpt_index, label, value, where):
-        recipient = self._recipients[recpt_index]
-        recipient.add_to_header(label, value, where)
-
-    def add_to_recpients(self, rcpt):
-        if not isinstance(rcpt, CoseRecipient):
-            raise ValueError()
+        if recipients is None:
+            self.recipients = list()
         else:
-            self._recipients.append(rcpt)
+            self.recipients = recipients
 
-    def find_in_recipients(self, label):
-        raise NotImplementedError
+    def encode(self,
+               nonce: bytes,
+               key: SymmetricKey,
+               alg: Optional[AlgorithmIDs] = None,
+               enc_params: Optional[List[RcptParams]] = None,
+               tagged: bool = True,
+               encrypt: bool = True) -> bytes:
+        """ Encodes and protects the COSE_Encrypt message """
 
-    def encode(self):
-        """Encodes the message into a CBOR array"""
+        # encode/encrypt the base fields
+        if encrypt:
+            message = [self.encode_phdr(), self.encode_uhdr(), self.encrypt(nonce=nonce, key=key, alg=alg)]
+        else:
+            message = [self.encode_phdr(), self.encode_uhdr(), self.payload]
 
-        if len(binascii.hexlify(self.auth_tag)) not in [16, 32, 64, 96, 128]:
-            raise ValueError("Tag has invalid size.")
+        if enc_params is None:
+            enc_params = []
 
-        return cbor.dumps(cbor.Tag(self.cbor_tag, [self.encoded_protected_header, self.unprotected_header,
-                                                   self.payload, self.encoded_recipients]))
+        if len(self.recipients) == len(enc_params):
+            if len(enc_params) > 0:
+                message.append(CoseRecipient.recursive_encode(self.recipients, enc_params))
+        else:
+            raise ValueError("List with cryptographic parameters should have the same length as the recipient list.")
 
-    def __encode_recipients(self):
-        recipient_list = []
-        for rcpt in self._recipients:
-            rcpt.encrypt(rcpt.alg)
-            recipient_list.append([rcpt.encoded_protected_header, rcpt.encoded_unprotected_header, rcpt.payload])
-        return recipient_list
+        if tagged:
+            message = cbor2.dumps(cbor2.CBORTag(self.cbor_tag, message))
+        else:
+            message = cbor2.dumps(message)
+
+        return message
+
+    def __repr__(self) -> str:
+        return f'<COSE_Encrypt:\n' \
+               f'\t phdr={self._phdr}\n' \
+               f'\t uhdr={self._uhdr}\n' \
+               f'\t payload={self._payload}\n' \
+               f'\t recipients={self.recipients}>'

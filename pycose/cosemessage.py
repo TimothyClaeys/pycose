@@ -1,139 +1,97 @@
 import abc
+from typing import Type, Optional
 
-import cbor
+import cbor2
 
-from pycose.attributes import CoseAttrs
-from pycose.basicstructure import BasicCoseStructure
-from pycose.exceptions import CoseUnknownAttributeName, CoseUnknownAttributeValue
+from pycose.cosebase import CoseBase
+from pycose.keys.cosekey import CoseKey
 
 
-class CoseMessage(BasicCoseStructure, metaclass=abc.ABCMeta):
-    """
-    Parent class of all COSE message types.
-    """
+class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
+    """ Parent class of all COSE message types. """
 
-    cose_msg_id = {}
+    COSE_MSG_ID = {}
 
     @classmethod
-    def record_cbor_tag(cls, cbor_tag):
+    def record_cbor_tag(cls, cbor_tag: int):
         """Decorator to record all the CBOR tags dynamically"""
 
         def decorator(the_class):
             if not issubclass(the_class, CoseMessage):
                 raise ValueError("Can only decorate subclass of CoseMessage")
-            cls.cose_msg_id[cbor_tag] = the_class
+            cls.COSE_MSG_ID[cbor_tag] = the_class
             return the_class
 
         return decorator
 
     @classmethod
-    def decode(cls, received):
+    def decode(cls, received: bytes):
         """Decode received COSE message based on the CBOR tag."""
+
         try:
-            cbor_tag = cbor.loads(received).tag
-            cose_obj = cbor.loads(received).value
+            cbor_tag = cbor2.loads(received).tag
+            cose_obj = cbor2.loads(received).value
         except AttributeError:
-            raise AttributeError("Message was not tagged")
+            raise AttributeError("Message was not tagged.")
         except ValueError:
             raise ValueError("Decode accepts only bytes as input.")
 
         if isinstance(cose_obj, list):
             try:
-                return cls.cose_msg_id[cbor_tag].from_cose_obj(cose_obj)
+                return cls.COSE_MSG_ID[cbor_tag].from_cose_obj(cose_obj)
             except KeyError as e:
                 raise KeyError("CBOR tag is not recognized", e)
-
         else:
             raise TypeError("Message is not a COSE security message")
 
     @classmethod
-    def from_cose_obj(cls, cose_obj):
-        """Returns an initialized COSE message object."""
-        protected_header = dict()
-        unprotected_header = dict()
+    def from_cose_obj(cls, cose_obj: list):
+        """ Returns an initialized COSE message object. """
 
-        try:
-            decoded_protected_header = cbor.loads(cose_obj.pop(0))
-        except (ValueError, EOFError):
-            decoded_protected_header = {}
+        msg = super().from_cose_obj(cose_obj)
+        msg.payload = cose_obj.pop(0)
+        return msg
 
-        try:
-            decoded_unprotected_header = cose_obj.pop(0)
-        except ValueError:
-            decoded_unprotected_header = {}
-
-        for k1 in decoded_protected_header:
-            try:
-                attr_name = [k for k, v in CoseAttrs._header_keys.items() if v == k1][0]
-            except KeyError:
-                raise CoseUnknownAttributeName()
-
-            try:
-                attr_val = \
-                    [k for k, v in CoseAttrs._header_values[k1].items() if int(v) == decoded_protected_header[k1]][0]
-            except KeyError:
-                # we don't throw an exception here because some keys are not mapped on stored header values, e.g. iv
-                attr_val = decoded_protected_header[k1]
-
-            protected_header[attr_name] = attr_val
-
-        for k2 in decoded_unprotected_header:
-            try:
-                attr_name = [k for k, v in CoseAttrs._header_keys.items() if v == k2][0]
-            except KeyError:
-                raise CoseUnknownAttributeName()
-
-            try:
-                attr_val = \
-                    [k for k, v in CoseAttrs._header_values[k2].items() if int(v) == decoded_unprotected_header[k2]][0]
-            except KeyError:
-                # we don't throw an exception here because some keys are not mapped on stored header values, e.g. iv
-                attr_val = decoded_unprotected_header[k2]
-
-            unprotected_header[attr_name] = attr_val
-
-        payload = cose_obj.pop(0)
-
-        return cls(protected_header, unprotected_header, payload)
-
-    def __init__(self, p_header=CoseAttrs(), u_header=CoseAttrs(), payload=b'', external_aad=b''):
-        super(CoseMessage, self).__init__(p_header, u_header)
-        self._payload = payload
-        self._external_aad = external_aad
+    def __init__(self,
+                 phdr: Optional[dict] = None,
+                 uhdr: Optional[dict] = None,
+                 payload: bytes = b'',
+                 external_aad: bytes = b''):
+        super().__init__(phdr, uhdr)
+        self.payload = payload
+        self.external_aad = external_aad
 
     @property
-    def external_aad(self):
+    def external_aad(self) -> bytes:
         return self._external_aad
 
+    @external_aad.setter
+    def external_aad(self, new_external_aad: bytes) -> None:
+        if type(new_external_aad) is not bytes:
+            raise TypeError("external_aad must be of type 'bytes'")
+        self._external_aad = new_external_aad
+
     @property
-    def payload(self):
+    def payload(self) -> bytes:
         return self._payload
 
     @payload.setter
-    def payload(self, new_value):
-        if isinstance(new_value, bytes):
-            self._payload = new_value
-        elif isinstance(new_value, str):
-            self._payload = new_value.encode('utf-8')
-        else:
-            raise TypeError("Payload must be of type bytes or string")
+    def payload(self, new_payload: bytes) -> None:
+        if type(new_payload) is not bytes:
+            raise TypeError("payload should be of type 'bytes'")
+        self._payload = new_payload  # can be plaintext or ciphertext
 
-
-    @external_aad.setter
-    def external_aad(self, new_external_aad):
-        if isinstance(new_external_aad, str):
-            self._external_aad = cbor.loads(new_external_aad)
-        elif isinstance(new_external_aad, bytes):
-            self._external_aad = new_external_aad
+    def _base_structure(self, structure: list) -> list:
+        if len(self.phdr) == 0:
+            structure.append(b'')
         else:
-            raise TypeError("Input must be of type str or bytes")
+            structure.append(self.encode_phdr())
+
+        structure.append(self._external_aad)
+
+        return structure
 
     @abc.abstractmethod
-    def encode(self):
-        raise NotImplementedError("Cannot not instantiate abstract class CoseMessage")
+    def encode(self, **kwargs) -> bytes:
+        raise NotImplementedError
 
-    @property
-    @abc.abstractmethod
-    def context(self):
-        """Getter for the context of the message."""
-        NotImplementedError("Cannot not instantiate abstract class CoseMessage")

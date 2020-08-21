@@ -1,22 +1,19 @@
-class CoseUnsupportedMAC(Exception):
-    def __init__(self, *args, **kwargs):
-        Exception.__init__(self, *args, **kwargs)
+class CoseInvalidAlgorithm(Exception):
+    pass
 
-class CoseUnsupportedEnc(Exception):
-    def __init__(self, *args, **kwargs):
-        Exception.__init__(self, *args, **kwargs)
+
+class CoseIllegalCurve(Exception):
+    pass
 
 
 class CoseInvalidTag(Exception):
-    def __init__(self, *args, **kwargs):
-        Exception.__init__(self, *args, **kwargs)
+    pass
 
 
-class CoseUnknownAttributeName(Exception):
-    def __init__(self, *args, **kwargs):
-        Exception.__init__(self, *args, **kwargs)
+class CoseIllegalKeyOps(Exception):
+    pass
 
 
-class CoseUnknownAttributeValue(Exception):
-    def __init__(self, *args, **kwargs):
-        Exception.__init__(self, *args, **kwargs)
+class CoseIllegalKeyType(Exception):
+    pass
+

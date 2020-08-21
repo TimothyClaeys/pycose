@@ -7,14 +7,13 @@
 # ]
 #
 
-import binascii
-import copy
+from typing import Optional
 
-import cbor
+import cbor2
 
 from pycose import cosemessage, maccommon
-from pycose.attributes import CoseAttrs
-from pycose.exceptions import *
+from pycose.algorithms import AlgorithmIDs
+from pycose.keys.symmetric import SymmetricKey
 
 
 @cosemessage.CoseMessage.record_cbor_tag(17)
@@ -22,29 +21,47 @@ class Mac0Message(maccommon.MacCommon):
     context = "MAC0"
     cbor_tag = 17
 
-    def __init__(self, p_header=CoseAttrs(), u_header=CoseAttrs(), payload=None, key=None):
-        super(Mac0Message, self).__init__(
-            p_header=copy.deepcopy(p_header),
-            u_header=copy.deepcopy(u_header),
-            payload=payload,
-            key=key
-        )
+    @classmethod
+    def from_cose_obj(cls, cose_obj: list) -> 'Mac0Message':
+        msg = super().from_cose_obj(cose_obj)
+        msg.auth_tag = cose_obj.pop(0)
 
-    def __repr__(self):
-        repr = cbor.loads(cbor.dumps(cbor.Tag(self.cbor_tag,
-                                              [self.encoded_protected_header, self.encoded_unprotected_header,
-                                               self.payload, self.auth_tag])))
-        t = repr.tag
-        v = [binascii.hexlify(element) if isinstance(element, bytes) else element for element in repr.value]
+        return msg
 
-        return str((t, v))
+    def __init__(self,
+                 phdr: Optional[dict] = None,
+                 uhdr: Optional[dict] = None,
+                 payload: bytes = b'',
+                 external_aad: bytes = b''):
+        if phdr is None:
+            phdr = {}
+        if uhdr is None:
+            uhdr = {}
 
-    def encode(self):
-        """Encodes the message into a CBOR array with the correct CBOR tag."""
+        super().__init__(phdr, uhdr, payload, external_aad)
 
-        if len(binascii.hexlify(self.auth_tag)) not in [16, 32, 64, 96, 128]:
-            raise CoseInvalidTag("The length of the COSE auth tag must be in [16, 32, 64, 96, 128]")
+    def encode(self,
+               key: SymmetricKey,
+               alg: Optional[AlgorithmIDs] = None,
+               tagged: bool = True,
+               mac: bool = True) -> bytes:
+        """ Encode and protect the COSE_Mac0 message. """
 
-        return cbor.dumps(cbor.Tag(self.cbor_tag,
-                                   [self.encoded_protected_header, self.encoded_unprotected_header, self.payload,
-                                    self.auth_tag]))
+        if mac:
+            message = [self.encode_phdr(), self.encode_uhdr(), self.payload, self.compute_tag(alg=alg, key=key)]
+        else:
+            message = [self.encode_phdr(), self.encode_uhdr(), self.payload]
+
+        if tagged:
+            res = cbor2.dumps(cbor2.CBORTag(self.cbor_tag, message))
+        else:
+            res = cbor2.dumps(message)
+
+        return res
+
+    def __repr__(self) -> str:
+        return f'<COSE_Mac0:\n' \
+               f'\t phdr={self._phdr}\n' \
+               f'\t uhdr={self._uhdr}\n' \
+               f'\t payload={self._payload}\n' \
+               f'\t tag={self.auth_tag}>'

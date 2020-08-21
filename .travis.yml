@@ -10,14 +10,12 @@ before_install:
     - git submodule update --init --recursive
 
 install: 
-  - "pip install -r requirements.txt"
+  - "pip install -e ."
 
 python: 
   - "3.6"
-  - "3.5"
-  - "3.4"
+  - "3.7"
+  - "3.8"
 
 script:
-  - "cd tests/"
-  - "python test_crypto.py"
-  - "python test_mac0message.py"
+  - "python -m pytest tests/"

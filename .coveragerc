@@ -1,0 +1,3 @@
+[run]
+omit = *tests*, ./venv/*, *__init__.py 
+branch=True

@@ -1,61 +1,63 @@
 import abc
-from os import urandom
+from typing import Optional
 
-import cbor
+import cbor2
 
 from pycose import cosemessage
-from pycose import crypto
-from pycose.attributes import CoseAttrs
+from pycose.algorithms import AlgorithmIDs
+from pycose.exceptions import CoseIllegalKeyType, CoseInvalidAlgorithm
+from pycose.keys.symmetric import SymmetricKey
 
 
 class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
-    @classmethod
-    def from_cose_obj(cls, cose_obj):
-        msg = super(EncCommon, cls).from_cose_obj(cose_obj)
-        try:
-            msg.recipients = cose_obj.pop(0)
-        except (IndexError, ValueError):
-            msg.recipients = None
-        return msg
+    @property
+    @abc.abstractmethod
+    def context(self) -> str:
+        """ Getter for the context of the message. """
 
-    def __init__(self, p_header=CoseAttrs(), u_header=CoseAttrs(), payload=None, key=None):
-        super(EncCommon, self).__init__(p_header, u_header, payload)
-        self._key = key
+        raise NotImplementedError
+
+    def __init__(self,
+                 phdr: Optional[dict] = None,
+                 uhdr: Optional[dict] = None,
+                 payload: bytes = b'',
+                 external_aad: bytes = b''):
+
+        super().__init__(phdr, uhdr, payload, external_aad)
+
+    def decrypt(self, nonce: bytes, key: SymmetricKey, alg: Optional[AlgorithmIDs] = None) -> bytes:
+        """ Decrypts the payload. """
+
+        self._sanitize_args(nonce=nonce, key=key, alg=alg)
+
+        return key.decrypt(ciphertext=self.payload, aad=self._enc_structure, nonce=nonce, alg=alg)
+
+    def encrypt(self, nonce: bytes, key: SymmetricKey, alg: Optional[AlgorithmIDs] = None) -> bytes:
+        """ Encrypts the payload. The provided arguments overwrite the default ones. """
+
+        self._sanitize_args(nonce=nonce, key=key, alg=alg)
+
+        return key.encrypt(plaintext=self.payload, aad=self._enc_structure, nonce=nonce, alg=alg)
 
     @property
-    def key(self):
-        return self._key
+    def _enc_structure(self) -> bytes:
+        """ Build the encryption context. """
 
-    @key.setter
-    def key(self, new_value):
-        if isinstance(new_value, bytes):
-            self._key = new_value
-        else:
-            raise ValueError("Key must be of type bytes")
+        enc_structure = [self.context]
 
-    def decrypt(self, alg, nonce):
-        self.payload = crypto.aead_encrypt(self.key, self._enc_structure, self.payload, alg, nonce)
-
-    def encrypt(self, alg, nonce=urandom(12)):
-        self.payload = crypto.aead_encrypt(self.key, self._enc_structure, self.payload, alg, nonce)
-
-    def encode(self):
-        raise NotImplementedError("Cannot instantiate abstract class EncCommon")
-
-    @property
-    def _enc_structure(self):
-        enc_structure = list()
-        enc_structure.append(self.context)
-
-        if len(self.protected_header) == 0:
-            enc_structure.append(bytes())
-        else:
-            enc_structure.append(self.encoded_protected_header)
-
-        if self.external_aad is None:
-            enc_structure.append(bytes())
-        else:
-            enc_structure.append(self.external_aad)
-
-        aad = cbor.dumps(enc_structure)
+        enc_structure = self._base_structure(enc_structure)
+        aad = cbor2.dumps(enc_structure)
         return aad
+
+    @classmethod
+    def _sanitize_args(cls, nonce: bytes, key: SymmetricKey, alg: Optional[AlgorithmIDs] = None) -> None:
+        """ Sanitize parameters for encryption/decryption algorithms. """
+
+        if nonce == b"" or nonce is None:
+            raise ValueError(f"{nonce} is not a valid nonce value")
+
+        if key is None:
+            raise CoseIllegalKeyType("COSE Key cannot be None")
+
+        if key.alg is None and alg is None:
+            raise CoseInvalidAlgorithm("COSE algorithm cannot be None")
