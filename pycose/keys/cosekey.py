@@ -1,10 +1,10 @@
 import base64
+import dataclasses
 from abc import ABCMeta, abstractmethod
 from binascii import hexlify
+from dataclasses import dataclass
 from enum import IntEnum, unique
 from typing import List, Union, Dict, Optional, TypeVar, TYPE_CHECKING, Type, Callable
-
-import dataclasses as dc
 
 from pycose.algorithms import AlgorithmIDs
 from pycose.exceptions import CoseIllegalKeyOps
@@ -16,6 +16,8 @@ if TYPE_CHECKING:
 
 @unique
 class KTY(IntEnum):
+    """ The different COSE key types. """
+
     RESERVED = 0
     OKP = 1
     EC2 = 2
@@ -24,6 +26,8 @@ class KTY(IntEnum):
 
 @unique
 class KeyOps(IntEnum):
+    """ Supported COSE key operations. """
+
     SIGN = 1
     VERIFY = 2
     ENCRYPT = 3
@@ -49,17 +53,20 @@ class EllipticCurveTypes(IntEnum):
     SECP256K1 = 8
 
 
-@dc.dataclass
+@dataclass
 class CoseKey(metaclass=ABCMeta):
+    """ Abstract base class for all key type in COSE. """
+
     _kty: Optional[KTY]
     _kid: Optional[Union[int, bytes]]
     _alg: Optional[AlgorithmIDs]
     _key_ops: Optional[KeyOps]
     _base_iv: Optional[bytes]
 
-    KTY = {}
+    _KTY = {}
 
     class Common(IntEnum):
+        """ Common COSE key parameters. """
         KTY = 1
         KID = 2
         ALG = 3
@@ -67,24 +74,34 @@ class CoseKey(metaclass=ABCMeta):
         BASE_IV = 5
 
         @classmethod
-        def has_member(cls, item):
+        def _has_member(cls, item):
             return item in cls.__members__
 
     @classmethod
-    def record_kty(cls, kty_id: int):
-        """Decorator to record all the CBOR tags dynamically"""
+    def record_kty(cls, kty_id: int) -> Callable[[Type['CoseKey']], Type['CoseKey']]:
+        """
+        Decorator to record all the COSE key types dynamically.
 
-        def decorator(the_class):
+        :param kty_id: Integer identifying the COSE key type (see RFC 8152)
+        :raises ValueError: Checks if the decorated class is of type 'CoseKey'
+        :return: Decorator function
+        """
+
+        def decorator(the_class: Type['CoseKey']) -> Type['CoseKey']:
             if not issubclass(the_class, CoseKey):
                 raise ValueError("Can only decorate subclass of CoseKey")
-            cls.KTY[kty_id] = the_class
+            cls._KTY[kty_id] = the_class
             return the_class
 
         return decorator
 
     @classmethod
     def from_cose_key_obj(cls, cose_key_obj: dict) -> dict:
-        """Returns an initialized COSE_Key object."""
+        """
+        Internal decoding routine. Returns an initialized COSE_Key object.
+
+        :param cose_key_obj: dictionary
+        """
 
         key_obj = {}
         values = set(item.value for item in cls.Common)
@@ -105,13 +122,24 @@ class CoseKey(metaclass=ABCMeta):
 
     @classmethod
     def decode(cls, received: dict):
+        """
+        Decoding function for COSE key objects.
+
+        :param received: Dictionary must contain the KTY element otherwise the key object cannot be decoded properly.
+        :raises KeyError: Decoding function fails when KTY parameter is not found or has an invalid value.
+        """
         try:
-            return cls.KTY[received[cls.Common.KTY]].from_cose_key_obj(received)
+            return cls._KTY[received[cls.Common.KTY]].from_cose_key_obj(received)
         except KeyError as e:
             raise KeyError("Key type identifier is not recognized", e)
 
     @staticmethod
     def base64decode(to_decode: str) -> bytes:
+        """
+        Decodes BASE64 encoded keys to bytes.
+        :param to_decode: base64 encoded key.
+        :return: key as bytes.
+        """
         to_decode = to_decode.replace('-', '+')
         to_decode = to_decode.replace('_', '/')
 
@@ -126,6 +154,11 @@ class CoseKey(metaclass=ABCMeta):
 
     @staticmethod
     def base64encode(to_encode: bytes) -> str:
+        """
+        Encodes key bytes as a string.
+        :param to_encode: bytes
+        :return: base64 encoding.
+        """
         return base64.b64encode(to_encode).decode("utf-8")
 
     @classmethod
@@ -141,8 +174,8 @@ class CoseKey(metaclass=ABCMeta):
         return self._kty
 
     @kty.setter
-    def kty(self, new_kty: KTY) -> None:
-        _ = KTY(new_kty)  # check if the new value is a known COSE KTY, should never be None!
+    def kty(self, new_kty: _KTY) -> None:
+        _ = KTY(new_kty)  # check if the new value is a known COSE _KTY, should never be None!
         self._kty = new_kty
 
     @property
@@ -186,8 +219,8 @@ class CoseKey(metaclass=ABCMeta):
         self._base_iv = new_base_iv
 
     def encode(self, *argv) -> Dict[int, Union[int, bytes]]:
-        key_words = [kw for kw in argv if self.Common.has_member(kw.upper())] + ['_kty']
-        return {self.Common[kw[1:].upper()]: dc.asdict(self)[kw] for kw in key_words}
+        key_words = [kw for kw in argv if self.Common._has_member(kw.upper())] + ['_kty']
+        return {self.Common[kw[1:].upper()]: dataclasses.asdict(self)[kw] for kw in key_words}
 
     @abstractmethod
     def __repr__(self):
@@ -197,7 +230,7 @@ class CoseKey(metaclass=ABCMeta):
                         algorithm: AlgorithmIDs,
                         key_operation: KeyOps,
                         peer_key: Optional[Union['EC2', 'OKP']] = None,
-                        curve: Optional[EllipticCurveTypes] = None):
+                        curve: Optional[EllipticCurveType] = None):
         """ Helper function that checks the configuration of the COSE key object. """
 
         if self.alg is not None and algorithm is not None and self.alg != algorithm:
