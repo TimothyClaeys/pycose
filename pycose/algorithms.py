@@ -26,6 +26,11 @@ class AlgorithmIDs(IntEnum):
     ECDH_SS_HKDF_256 = -27
     ECDH_ES_HKDF_512 = -26
     ECDH_ES_HKDF_256 = -25
+    # SHAKE_128 = -18
+    # SHA_512_256 = -17
+    SHA_256 = -16
+    # SHA_256_64 = -15
+    # SHA_1 = -14
     # DIRECT_HKDF_AES_256 = -13
     # DIRECT_HKDF_AES_128 = -12
     DIRECT_HKDF_SHA_512 = -11
@@ -82,6 +87,7 @@ class AlgID2Crypto(Enum):
     ECDH_ES_HKDF_256 = AlgoParam(key_derivation=HKDF, hash=SHA256)
     # DIRECT_HKDF_AES_256 = -13
     # DIRECT_HKDF_AES_128 = -12
+    SHA_256 = AlgoParam(hash=SHA256)
     DIRECT_HKDF_SHA_512 = AlgoParam(key_derivation=HKDF, hash=SHA512)
     DIRECT_HKDF_SHA_256 = AlgoParam(key_derivation=HKDF, hash=SHA256)
     EDDSA = AlgoParam(hash=SHA256)
