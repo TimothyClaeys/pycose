@@ -40,6 +40,23 @@ class EC2(CoseKey):
         EllipticCurveType.P_521: SECP521R1,
     }
 
+    @classmethod
+    def from_cose_key_obj(cls, cose_key_obj: dict) -> 'EC2':
+        """ Returns an initialized COSE_Key object of type EC2."""
+
+        cose_key = cls(
+            kid=cose_key_obj.get(cls.Common.KID),
+            alg=cose_key_obj.get(cls.Common.ALG),
+            key_ops=cose_key_obj.get(cls.Common.KEY_OPS),
+            base_iv=cose_key_obj.get(cls.Common.BASE_IV),
+            crv=cose_key_obj.get(cls.EC2Prm.CRV),
+            x=cose_key_obj.get(cls.EC2Prm.X),
+            y=cose_key_obj.get(cls.EC2Prm.Y),
+            d=cose_key_obj.get(cls.EC2Prm.D)
+        )
+
+        return cose_key
+
     def __init__(self,
                  kid: Optional[bytes] = None,
                  alg: Optional[int] = None,
@@ -94,24 +111,6 @@ class EC2(CoseKey):
         if type(new_d) is not bytes and new_d is not None:
             raise ValueError("private key must be of type 'bytes'")
         self._d = new_d
-
-    @classmethod
-    def from_cose_key_obj(cls, cose_key_obj: dict) -> dict:
-        """Returns an initialized COSE_Key object."""
-
-        key_obj = super().from_cose_key_obj(cose_key_obj)
-        values = set(item.value for item in cls.EC2Prm)
-
-        for k, v in cose_key_obj.items():
-            if k in values:
-                if k == cls.EC2Prm.CRV:
-                    v = EllipticCurveType(v)
-                else:
-                    # store key coordinates as bytes
-                    v = v
-                key_obj[cls.EC2Prm(k)] = v
-
-        return key_obj
 
     def encode(self, *argv):
         kws = ['_' + kw for kw in argv if self.EC2Prm.has_member(kw.upper())]

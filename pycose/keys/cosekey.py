@@ -55,7 +55,7 @@ class EllipticCurveType(IntEnum):
     SECP256K1 = 8
 
 
-@dataclass
+@dataclass(init=False)
 class CoseKey(metaclass=ABCMeta):
     """ Abstract base class for all key type in COSE. """
 
@@ -79,6 +79,13 @@ class CoseKey(metaclass=ABCMeta):
         def _has_member(cls, item):
             return item in cls.__members__
 
+    def __init__(self, kty, kid, alg, key_ops, base_iv):
+        self.kty = kty
+        self.kid = kid
+        self.alg = alg
+        self.key_ops = key_ops
+        self.base_iv = base_iv
+
     @classmethod
     def record_kty(cls, kty_id: int) -> Callable[[Type['CoseKey']], Type['CoseKey']]:
         """
@@ -96,31 +103,6 @@ class CoseKey(metaclass=ABCMeta):
             return the_class
 
         return decorator
-
-    @classmethod
-    def from_cose_key_obj(cls, cose_key_obj: dict) -> dict:
-        """
-        Internal decoding routine. Returns an initialized COSE_Key object.
-
-        :param cose_key_obj: dictionary
-        """
-
-        key_obj = {}
-        values = set(item.value for item in cls.Common)
-
-        for k, v in cose_key_obj.items():
-            if k in values:
-                if k == cls.Common.ALG:
-                    v = AlgorithmIDs(v)
-                elif k == cls.Common.KTY:
-                    v = KTY(v)
-                elif k == cls.Common.KEY_OPS:
-                    v = KeyOps(v)
-                else:
-                    v = hexlify(v)
-                key_obj[cls.Common(k)] = v
-
-        return key_obj
 
     @classmethod
     def decode(cls, received: dict):
@@ -176,8 +158,8 @@ class CoseKey(metaclass=ABCMeta):
         return self._kty
 
     @kty.setter
-    def kty(self, new_kty: _KTY) -> None:
-        _ = KTY(new_kty)  # check if the new value is a known COSE _KTY, should never be None!
+    def kty(self, new_kty: KTY) -> None:
+        _ = KTY(new_kty)  # check if the new value is a known COSE KTY, should never be None!
         self._kty = new_kty
 
     @property

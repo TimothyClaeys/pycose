@@ -1,4 +1,4 @@
-from binascii import hexlify, unhexlify
+from binascii import unhexlify
 from enum import IntEnum
 from typing import Optional, Union
 
@@ -35,6 +35,20 @@ class SymmetricKey(CoseKey):
         super().__init__(KTY.SYMMETRIC, kid, alg, key_ops, base_iv)
         self.k = k
 
+    @classmethod
+    def from_cose_key_obj(cls, cose_key_obj: dict) -> 'SymmetricKey':
+        """ Returns an initialized COSE_Key object of type OKP."""
+
+        cose_key = cls(
+            kid=cose_key_obj.get(cls.Common.KID),
+            alg=cose_key_obj.get(cls.Common.ALG),
+            key_ops=cose_key_obj.get(cls.Common.KEY_OPS),
+            base_iv=cose_key_obj.get(cls.Common.BASE_IV),
+            k=cose_key_obj.get(cls.SymPrm.K),
+        )
+
+        return cose_key
+
     @property
     def k(self) -> Optional[bytes]:
         return self._k
@@ -44,17 +58,6 @@ class SymmetricKey(CoseKey):
         if type(new_k) is not bytes and new_k is not None:
             raise ValueError("symmetric key must be of type 'bytes'")
         self._k = new_k
-
-    @classmethod
-    def from_cose_key_obj(cls, cose_key_obj: dict) -> dict:
-        """Returns an initialized COSE_Key object."""
-
-        key_obj = super().from_cose_key_obj(cose_key_obj)
-
-        if cls.SymPrm.K in cose_key_obj:
-            key_obj[cls.SymPrm.K] = hexlify(key_obj[cls.SymPrm.K])
-
-        return key_obj
 
     def encode(self, *argv):
         kws = [kw for kw in argv if self.SymPrm.has_member(kw.upper())]

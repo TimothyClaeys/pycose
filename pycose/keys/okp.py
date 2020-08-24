@@ -31,6 +31,22 @@ class OKP(CoseKey):
         @classmethod
         def has_member(cls, item):
             return item in cls.__members__
+    
+    @classmethod
+    def from_cose_key_obj(cls, cose_key_obj: dict) -> 'OKP':
+        """ Returns an initialized COSE_Key object of type OKP."""
+
+        cose_key = cls(
+            kid=cose_key_obj.get(cls.Common.KID),
+            alg=cose_key_obj.get(cls.Common.ALG),
+            key_ops=cose_key_obj.get(cls.Common.KEY_OPS),
+            base_iv=cose_key_obj.get(cls.Common.BASE_IV),
+            crv=cose_key_obj.get(cls.OKPPrm.CRV),
+            x=cose_key_obj.get(cls.OKPPrm.X),
+            d=cose_key_obj.get(cls.OKPPrm.D)
+        )
+
+        return cose_key
 
     def __init__(self,
                  kid: Optional[bytes] = None,
@@ -82,24 +98,6 @@ class OKP(CoseKey):
     @property
     def private_bytes(self) -> Optional[bytes]:
         return self.d
-
-    @classmethod
-    def from_cose_key_obj(cls, cose_key_obj: dict) -> dict:
-        """Returns an initialized COSE_Key object."""
-
-        key_obj = super().from_cose_key_obj(cose_key_obj)
-        values = set(item.value for item in cls.OKPPrm)
-
-        for k, v in cose_key_obj.items():
-            if k in values:
-                if k == cls.OKPPrm.CRV:
-                    v = EllipticCurveType(v)
-                else:
-                    # store key coordinates as bytes
-                    v = v
-                key_obj[cls.OKPPrm(k)] = v
-
-        return key_obj
 
     def encode(self, *argv):
         kws = [kw for kw in argv if self.OKPPrm.has_member(kw.upper())]
