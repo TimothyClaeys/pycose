@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from pycose.algorithms import AlgorithmIDs, AlgoParam, AlgID2Crypto
 from pycose.context import CoseKDFContext
 from pycose.exceptions import CoseInvalidAlgorithm
-from pycose.keys.cosekey import CoseKey, KTY, EllipticCurveTypes, KeyOps
+from pycose.keys.cosekey import CoseKey, KTY, EllipticCurveType, KeyOps
 
 
 @CoseKey.record_kty(KTY.OKP)
@@ -19,7 +19,7 @@ class OKP(CoseKey):
     Octet Key Pairs: Do not assume that keys using this type are elliptic curves.  This key type could be used for
     other curve types.
     """
-    _crv: Optional[EllipticCurveTypes] = None
+    _crv: Optional[EllipticCurveType] = None
     _x: Optional[bytes] = None
     _d: Optional[bytes] = None
 
@@ -46,13 +46,13 @@ class OKP(CoseKey):
         self.d = d
 
     @property
-    def crv(self) -> Optional[EllipticCurveTypes]:
+    def crv(self) -> Optional[EllipticCurveType]:
         return self._crv
 
     @crv.setter
-    def crv(self, new_crv: Optional[EllipticCurveTypes]) -> None:
+    def crv(self, new_crv: Optional[EllipticCurveType]) -> None:
         if new_crv is not None:
-            _ = EllipticCurveTypes(new_crv)
+            _ = EllipticCurveType(new_crv)
         self._crv = new_crv
 
     @property
@@ -93,7 +93,7 @@ class OKP(CoseKey):
         for k, v in cose_key_obj.items():
             if k in values:
                 if k == cls.OKPPrm.CRV:
-                    v = EllipticCurveTypes(v)
+                    v = EllipticCurveType(v)
                 else:
                     # store key coordinates as bytes
                     v = v
@@ -115,7 +115,7 @@ class OKP(CoseKey):
                               public_key: 'OKP',
                               context: CoseKDFContext = b'',
                               alg: Optional[AlgorithmIDs] = None,
-                              curve: Optional[EllipticCurveTypes] = None) -> Tuple[bytes, bytes]:
+                              curve: Optional[EllipticCurveType] = None) -> Tuple[bytes, bytes]:
 
         self._check_key_conf(alg, KeyOps.DERIVE_KEY, public_key, curve)
 

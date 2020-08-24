@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from pycose import signcommon
 from pycose.algorithms import AlgorithmIDs
-from pycose.keys.cosekey import EllipticCurveTypes
+from pycose.keys.cosekey import EllipticCurveType
 from pycose.keys.ec import EC2
 from pycose.keys.okp import OKP
 
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 class SignerParams:
     private_key: Union[EC2, OKP]
     alg: Optional[AlgorithmIDs] = None
-    curve: Optional[EllipticCurveTypes] = None
+    curve: Optional[EllipticCurveType] = None
     sign: bool = True
 
 

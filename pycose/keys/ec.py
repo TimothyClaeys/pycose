@@ -13,13 +13,13 @@ from ecdsa.ellipticcurve import Point
 from pycose.algorithms import AlgorithmIDs, AlgoParam, AlgID2Crypto
 from pycose.context import CoseKDFContext
 from pycose.exceptions import CoseIllegalCurve, CoseInvalidAlgorithm
-from pycose.keys.cosekey import CoseKey, KTY, EllipticCurveTypes, KeyOps
+from pycose.keys.cosekey import CoseKey, KTY, EllipticCurveType, KeyOps
 
 
 @CoseKey.record_kty(KTY.EC2)
 @dataclass(init=False)
 class EC2(CoseKey):
-    _crv: Optional[EllipticCurveTypes] = None
+    _crv: Optional[EllipticCurveType] = None
     _x: Optional[bytes] = None
     _y: Optional[bytes] = None
     _d: Optional[bytes] = None
@@ -35,9 +35,9 @@ class EC2(CoseKey):
             return item in cls.__members__
 
     KEY_DERIVATION_CURVES = {
-        EllipticCurveTypes.P_256: SECP256R1,
-        EllipticCurveTypes.P_384: SECP384R1,
-        EllipticCurveTypes.P_521: SECP521R1,
+        EllipticCurveType.P_256: SECP256R1,
+        EllipticCurveType.P_384: SECP384R1,
+        EllipticCurveType.P_521: SECP521R1,
     }
 
     def __init__(self,
@@ -45,7 +45,7 @@ class EC2(CoseKey):
                  alg: Optional[int] = None,
                  key_ops: Optional[int] = None,
                  base_iv: Optional[bytes] = None,
-                 crv: Optional[EllipticCurveTypes] = None,
+                 crv: Optional[EllipticCurveType] = None,
                  x: Optional[bytes] = None,
                  y: Optional[bytes] = None,
                  d: Optional[bytes] = None):
@@ -56,13 +56,13 @@ class EC2(CoseKey):
         self.d = d
 
     @property
-    def crv(self) -> Optional[EllipticCurveTypes]:
+    def crv(self) -> Optional[EllipticCurveType]:
         return self._crv
 
     @crv.setter
-    def crv(self, new_crv: Optional[EllipticCurveTypes]) -> None:
+    def crv(self, new_crv: Optional[EllipticCurveType]) -> None:
         if new_crv is not None:
-            _ = EllipticCurveTypes(new_crv)
+            _ = EllipticCurveType(new_crv)
         self._crv = new_crv
 
     @property
@@ -105,7 +105,7 @@ class EC2(CoseKey):
         for k, v in cose_key_obj.items():
             if k in values:
                 if k == cls.EC2Prm.CRV:
-                    v = EllipticCurveTypes(v)
+                    v = EllipticCurveType(v)
                 else:
                     # store key coordinates as bytes
                     v = v
@@ -128,7 +128,7 @@ class EC2(CoseKey):
                             public_key: 'EC2',
                             context: CoseKDFContext,
                             alg: Optional[AlgorithmIDs] = None,
-                            curve: Optional[EllipticCurveTypes] = None) -> Tuple[bytes, bytes]:
+                            curve: Optional[EllipticCurveType] = None) -> Tuple[bytes, bytes]:
         """ Derive a CEK with ECDH + HKDF algorithm """
 
         self._check_key_conf(alg, KeyOps.DERIVE_KEY, public_key, curve)
@@ -162,7 +162,7 @@ class EC2(CoseKey):
     def sign(self,
              to_be_signed: bytes,
              alg: Optional[AlgorithmIDs] = None,
-             curve: EllipticCurveTypes = None) -> bytes:
+             curve: EllipticCurveType = None) -> bytes:
         """ Sign a message """
 
         self._check_key_conf(algorithm=alg, key_operation=KeyOps.SIGN, curve=curve)
@@ -182,7 +182,7 @@ class EC2(CoseKey):
                to_be_signed: bytes,
                signature: bytes,
                alg: Optional[AlgorithmIDs] = None,
-               curve: Optional[EllipticCurveTypes] = None) -> bool:
+               curve: Optional[EllipticCurveType] = None) -> bool:
         """ Verify a message's signature """
 
         self._check_key_conf(algorithm=alg, key_operation=KeyOps.VERIFY, curve=curve)

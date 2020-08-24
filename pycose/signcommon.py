@@ -4,7 +4,7 @@ from typing import Optional, Union
 from pycose import cosebase
 from pycose.algorithms import AlgorithmIDs
 from pycose.exceptions import CoseIllegalKeyType, CoseInvalidAlgorithm, CoseIllegalCurve
-from pycose.keys.cosekey import EllipticCurveTypes
+from pycose.keys.cosekey import EllipticCurveType
 from pycose.keys.ec import EC2
 from pycose.keys.okp import OKP
 
@@ -35,7 +35,7 @@ class SignCommon(cosebase.CoseBase, metaclass=abc.ABCMeta):
     def verify_signature(self,
                          public_key: Union[EC2, OKP],
                          alg: Optional[AlgorithmIDs] = None,
-                         curve: Optional[EllipticCurveTypes] = None) -> bool:
+                         curve: Optional[EllipticCurveType] = None) -> bool:
         """
         Verifies the signature of a received message
         :return: True or raises an exception
@@ -47,7 +47,7 @@ class SignCommon(cosebase.CoseBase, metaclass=abc.ABCMeta):
     def compute_signature(self,
                           private_key: Union[EC2, OKP] = None,
                           alg: Optional[AlgorithmIDs] = None,
-                          curve: Optional[EllipticCurveTypes] = None) -> bytes:
+                          curve: Optional[EllipticCurveType] = None) -> bytes:
         """
         Computes the signature of a COSE message
         :return: True or raises an exception
@@ -61,7 +61,7 @@ class SignCommon(cosebase.CoseBase, metaclass=abc.ABCMeta):
     def _sanitize_args(cls,
                        key: Union[EC2, OKP],
                        alg: Optional[AlgorithmIDs] = None,
-                       curve: Optional[EllipticCurveTypes] = None) -> None:
+                       curve: Optional[EllipticCurveType] = None) -> None:
         """ Sanitize parameters for encryption/decryption algorithms. """
 
         if key is None:

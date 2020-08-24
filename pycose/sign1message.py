@@ -4,7 +4,7 @@ import cbor2
 
 from pycose import cosemessage, signcommon
 from pycose.algorithms import AlgorithmIDs
-from pycose.keys.cosekey import EllipticCurveTypes
+from pycose.keys.cosekey import EllipticCurveType
 from pycose.keys.ec import EC2
 from pycose.keys.okp import OKP
 
@@ -56,7 +56,7 @@ class Sign1Message(cosemessage.CoseMessage, signcommon.SignCommon):
     def encode(self,
                private_key: Union[EC2, OKP],
                alg: Optional[AlgorithmIDs] = None,
-               curve: Optional[EllipticCurveTypes] = None,
+               curve: Optional[EllipticCurveType] = None,
                tagged: bool = True,
                sign: bool = True) -> bytes:
         """ Encodes the message into a CBOR array with or without a CBOR tag. """

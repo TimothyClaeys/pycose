@@ -41,7 +41,9 @@ class KeyOps(IntEnum):
 
 
 @unique
-class EllipticCurveTypes(IntEnum):
+class EllipticCurveType(IntEnum):
+    """ The (elliptic) curves supported by COSE. """
+
     RESERVED = 0
     P_256 = 1
     P_384 = 2
