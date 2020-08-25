@@ -30,10 +30,6 @@ class EC2(CoseKey):
         Y = -3
         D = -4
 
-        @classmethod
-        def has_member(cls, item):
-            return item in cls.__members__
-
     KEY_DERIVATION_CURVES = {
         EllipticCurveType.P_256: SECP256R1,
         EllipticCurveType.P_384: SECP384R1,
@@ -113,7 +109,12 @@ class EC2(CoseKey):
         self._d = new_d
 
     def encode(self, *argv):
-        kws = ['_' + kw for kw in argv if self.EC2Prm.has_member(kw.upper())]
+        kws = []
+
+        for kw in argv:
+            if kw.upper() in self.EC2Prm.__members__:
+                kws.append('_' + kw)
+
         return {**super().encode(*argv), **{self.EC2Prm[kw[1:].upper()]: dataclasses.asdict(self)[kw] for kw in kws}}
 
     def __repr__(self):

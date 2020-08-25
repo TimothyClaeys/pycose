@@ -75,10 +75,6 @@ class CoseKey(metaclass=ABCMeta):
         KEY_OPS = 4
         BASE_IV = 5
 
-        @classmethod
-        def _has_member(cls, item):
-            return item in cls.__members__
-
     def __init__(self, kty, kid, alg, key_ops, base_iv):
         self.kty = kty
         self.kid = kid
@@ -203,7 +199,12 @@ class CoseKey(metaclass=ABCMeta):
         self._base_iv = new_base_iv
 
     def encode(self, *argv) -> Dict[int, Union[int, bytes]]:
-        key_words = [kw for kw in argv if self.Common._has_member(kw.upper())] + ['_kty']
+        key_words = ["_kty"]
+
+        for kw in argv:
+            if kw.upper() in self.Common.__members__:
+                key_words.append(kw)
+
         return {self.Common[kw[1:].upper()]: dataclasses.asdict(self)[kw] for kw in key_words}
 
     @abstractmethod

@@ -28,10 +28,6 @@ class OKP(CoseKey):
         X = -2
         D = -4
 
-        @classmethod
-        def has_member(cls, item):
-            return item in cls.__members__
-    
     @classmethod
     def from_cose_key_obj(cls, cose_key_obj: dict) -> 'OKP':
         """ Returns an initialized COSE_Key object of type OKP."""
@@ -100,7 +96,12 @@ class OKP(CoseKey):
         return self.d
 
     def encode(self, *argv):
-        kws = [kw for kw in argv if self.OKPPrm.has_member(kw.upper())]
+        kws = []
+
+        for kw in argv:
+            if kw.upper() in self.OKPPrm.__members__:
+                kws.append('_' + kw)
+
         return {**super().encode(*argv), **{self.OKPPrm[kw[1:].upper()]: dataclasses.asdict(self)[kw] for kw in kws}}
 
     def __repr__(self):
