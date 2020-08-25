@@ -41,22 +41,18 @@ def test_cosekey_create(crv, x, y, expected):
     assert sorted(key.encode('x', 'y', 'crv')) == sorted(expected)
 
 
-@m.parametrize('encoded_key_obj, expected',
+@m.parametrize('encoded_key_obj',
                [
                    ({-1: 1,
                      -2: unhexlify(b'EDCBD809C754DB6582C16D6D65747C8AECC92D619C778EB17F13B55C9B3E48F5'),
                      -3: unhexlify(b'0F38495E0CFD448E93B1E366C047CBA0D567B3C526BCE36C3F3403A29D9D2A8A'),
-                     1: 2},
-                    {CoseKey.Common.KTY: KTY.EC2,
-                     EC2.EC2Prm.CRV: EllipticCurveType.P_256,
-                     EC2.EC2Prm.X: unhexlify(
-                         b'edcbd809c754db6582c16d6d65747c8aecc92d619c778eb17f13b55c9b3e48f5'),
-                     EC2.EC2Prm.Y: unhexlify(
-                         b'0f38495e0cfd448e93b1e366c047cba0d567b3c526bce36c3f3403a29d9d2a8a')}
-                    )], ids=['test_EC2_key_decoding_' + str(i) for i in range(1)])
-def test_cosekey_decode(encoded_key_obj, expected):
+                     1: 2})
+               ], ids=['test_EC2_key_decoding_' + str(i) for i in range(1)])
+def test_cosekey_decode(encoded_key_obj):
     key = CoseKey.decode(encoded_key_obj)
-    assert key == expected
+    assert type(key) == EC2
+    assert key.kty == KTY.EC2
+    assert key.crv == EllipticCurveType.P_256
 
 
 @m.parametrize("kid, alg, key_ops, base_iv, k, pl, aad, nonce, algo, ct",

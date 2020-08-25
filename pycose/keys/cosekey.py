@@ -198,8 +198,8 @@ class CoseKey(metaclass=ABCMeta):
 
     @base_iv.setter
     def base_iv(self, new_base_iv: bytes) -> None:
-        if new_base_iv is not None:
-            _ = KeyOps(new_base_iv)  # check if the new value is a known COSE key operation
+        if new_base_iv is not None and not isinstance(new_base_iv, bytes):
+            raise ValueError("base_iv attribute must be of type 'bytes'")
         self._base_iv = new_base_iv
 
     def encode(self, *argv) -> Dict[int, Union[int, bytes]]:

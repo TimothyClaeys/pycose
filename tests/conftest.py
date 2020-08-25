@@ -275,6 +275,8 @@ def _fix_key_object(data: dict, key: str) -> None:
         (key_param_to_be_replaced[k] if k in key_param_to_be_replaced else k):
             key_attr_to_be_replaced[v] if v in key_attr_to_be_replaced else v for k, v in data[key].items()
     }
+    if CoseKey.Common.KID in updated:
+       updated[CoseKey.Common.KID] = updated[CoseKey.Common.KID].encode('utf-8')
     data[key] = updated
 
 
@@ -390,7 +392,7 @@ def setup_ec_receiver_keys(recipient: dict, received_key_obj) -> Tuple[EC2, EC2]
         alg = recipient.get("unprotected", {}).get(HeaderKeys.ALG)
 
     rcvr_static_key = EC2(
-        kid=recipient['key'][CoseKey.Common.KID].encode('utf-8'),
+        kid=recipient['key'][CoseKey.Common.KID],
         crv=recipient['key'][EC2.EC2Prm.CRV],
         alg=alg,
         x=CoseKey.base64decode(recipient['key'][EC2.EC2Prm.X]),
@@ -422,7 +424,7 @@ def setup_okp_receiver_keys(recipient: dict, received_key_obj) -> Tuple[OKP, OKP
         alg = recipient.get("unprotected", {}).get(HeaderKeys.ALG)
 
     rcvr_static_key = OKP(
-        kid=recipient['key'][CoseKey.Common.KID].encode('utf-8'),
+        kid=recipient['key'][CoseKey.Common.KID],
         crv=recipient['key'][OKP.OKPPrm.CRV],
         alg=alg,
         x=unhexlify(recipient['key'][OKP.OKPPrm.X]),
