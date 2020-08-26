@@ -38,7 +38,7 @@ class X5T:
         digest = h.finalize()
 
         if alg_info.tag_length is not None:
-            digest = digest[-8:]
+            digest = digest[:8]
 
         return digest
 
