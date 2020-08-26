@@ -36,6 +36,12 @@ class HeaderKeys(IntEnum):
     PARTY_V_NONCE = -25
     PARTY_V_OTHER = -26
 
+    # COSE X509 parameters
+    X5_BAG = 32
+    X5_CHAIN = 33
+    X5_T = 34
+    X5_U = 35
+
 
 class CoseBase(metaclass=abc.ABCMeta):
     """ Basic COSE information buckets. """
