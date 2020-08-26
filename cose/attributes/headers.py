@@ -3,12 +3,13 @@ from typing import Any, Callable, List
 from aenum import Enum, MultiValue, skip
 
 from cose import CoseAlgorithms
+from cose.extensions.x509 import X5Bag, X5Chain, X5T, X5U
 from cose.keys.cosekey import CoseKey
 from cose.messages.signer import CounterSignature, CounterSignature0
 
 
 class CoseHeaderKeys(Enum):
-    """ COSE header parameters """
+    """ COSE header parameters. """
 
     _init_ = 'id fullname parser'
     _settings_ = MultiValue
@@ -24,6 +25,12 @@ class CoseHeaderKeys(Enum):
     COUNTER_SIGNATURE = 7, 'COUNTER_SIGNATURE', skip(CounterSignature.from_signature_obj)
     COUNTER_SIGNATURE0 = 9, 'COUNTER_SIGNATURE0', skip(CounterSignature0.from_signature_obj)
     KID_CONTEXT = 10, 'KID_CONTEXT', skip(None)
+
+    # COSE X509 parameters
+    X5_BAG = 32, 'X5_BAG', skip(X5Bag)
+    X5_CHAIN = 33, 'X5_CHAIN', skip(X5Chain)
+    X5_T = 34, 'X5_T', skip(X5T)
+    X5_U = 35, 'X5_U', skip(X5U)
 
     # Elliptic Curve Key identifiers
     EPHEMERAL_KEY = -1, 'EPHEMERAL_KEY', skip(CoseKey.decode)
