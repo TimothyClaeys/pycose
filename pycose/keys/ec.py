@@ -25,6 +25,7 @@ class EC2(CoseKey):
     _d: Optional[bytes] = None
 
     class EC2Prm(IntEnum):
+        """ EC2 COSE key parameters. """
         CRV = -1
         X = -2
         Y = -3
@@ -38,7 +39,12 @@ class EC2(CoseKey):
 
     @classmethod
     def from_cose_key_obj(cls, cose_key_obj: dict) -> 'EC2':
-        """ Returns an initialized COSE_Key object of type EC2."""
+        """
+        Returns an initialized COSE Key object of type EC2.
+
+        :param cose_key_obj: Dict containing integer representations of COSE Key parameters and there values.
+        :return: an initialized EC2 key
+        """
 
         cose_key = cls(
             kid=cose_key_obj.get(cls.Common.KID),
@@ -109,6 +115,7 @@ class EC2(CoseKey):
         self._d = new_d
 
     def encode(self, *argv):
+        """ Encodes specified attributes of the COSE Key object as a dictionary. """
         kws = []
 
         for kw in argv:
@@ -129,7 +136,15 @@ class EC2(CoseKey):
                             context: CoseKDFContext,
                             alg: Optional[AlgorithmIDs] = None,
                             curve: Optional[EllipticCurveType] = None) -> Tuple[bytes, bytes]:
-        """ Derive a CEK with ECDH + HKDF algorithm """
+        """
+        Derives a CEK with ECDH + HKDF algorithm. The parameter 'alg' and 'curve' parameters are optional in case they
+        are already provided by one of the COSE key objects.
+
+        :param public_key: an EC2 key containing public key bytes.
+        :param context: a CoseKDFContext for the HKDF algorithm.
+        :param alg: an optional algorithm parameter (specifies the exact algorithm used for the key derivation).
+        :param curve: an optional curve
+        """
 
         self._check_key_conf(alg, KeyOps.DERIVE_KEY, public_key, curve)
 
@@ -163,7 +178,14 @@ class EC2(CoseKey):
              to_be_signed: bytes,
              alg: Optional[AlgorithmIDs] = None,
              curve: EllipticCurveType = None) -> bytes:
-        """ Sign a message """
+        """
+        Computes a digital signature over 'to_be_signed'. The parameter 'alg' and 'curve' parameters are optional in
+        case they are already provided by one of the COSE key objects.
+
+        :param to_be_signed: data over which the signature is calculated
+        :param alg: an optional algorithm parameter (specifies the exact algorithm used for the signature).
+        :param curve: an optional curve
+        """
 
         self._check_key_conf(algorithm=alg, key_operation=KeyOps.SIGN, curve=curve)
 
@@ -183,7 +205,15 @@ class EC2(CoseKey):
                signature: bytes,
                alg: Optional[AlgorithmIDs] = None,
                curve: Optional[EllipticCurveType] = None) -> bool:
-        """ Verify a message's signature """
+        """
+        Verifies the digital signature over 'to_be_signed'. The parameter 'alg' and 'curve' parameters are optional in
+        case they are already provided by one of the COSE key objects.
+
+        :param to_be_signed: data that was signed
+        :param signature: signature to verify
+        :param alg: an optional algorithm parameter (specifies the exact algorithm used for the signature).
+        :param curve: an optional curve
+        """
 
         self._check_key_conf(algorithm=alg, key_operation=KeyOps.VERIFY, curve=curve)
 
