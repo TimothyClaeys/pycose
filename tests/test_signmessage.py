@@ -50,7 +50,6 @@ def test_sign_encoding(setup_sign_tests: tuple) -> None:
 def test_sign_decoding(setup_sign_tests: tuple) -> None:
     _, test_input, test_output, test_intermediate, fail = setup_sign_tests
 
-
     if fail:
         skip("invalid test input")
 

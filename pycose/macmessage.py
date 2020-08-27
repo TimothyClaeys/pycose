@@ -9,7 +9,7 @@ COSE_Mac = [
 ]
 """
 
-from typing import Optional, List, Union, Tuple, Any
+from typing import Optional, List
 
 import cbor2
 

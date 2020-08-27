@@ -1,5 +1,9 @@
---- 
 language: python
+
+python:
+  - "3.6"
+  - "3.7"
+  - "3.8"
 
 # Handle git submodules yourself
 git:
@@ -10,12 +14,9 @@ before_install:
     - git submodule update --init --recursive
 
 install: 
-  - "pip install -e ."
-
-python: 
-  - "3.6"
-  - "3.7"
-  - "3.8"
+  - pip install -e .
+  - pip install -r dev-requirements.txt
 
 script:
-  - "python -m pytest tests/"
+  - flake8
+  - python -m pytest tests/

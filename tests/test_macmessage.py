@@ -83,4 +83,3 @@ def test_mac_direct_decoding(setup_mac_tests: tuple) -> None:
     kek = SymmetricKey(key_ops=KeyOps.WRAP, alg=AlgorithmIDs.DIRECT)
     cek.key_ops = KeyOps.MAC_CREATE
     assert msg.encode(key=cek, mac_params=[RcptParams(key=kek)]) == unhexlify(test_output)
-
