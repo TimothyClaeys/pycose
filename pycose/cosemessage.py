@@ -1,10 +1,9 @@
 import abc
-from typing import Type, Optional
+from typing import Optional
 
 import cbor2
 
 from pycose.cosebase import CoseBase
-from pycose.keys.cosekey import CoseKey
 
 
 class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
@@ -94,4 +93,3 @@ class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def encode(self, **kwargs) -> bytes:
         raise NotImplementedError
-

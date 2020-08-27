@@ -82,4 +82,3 @@ class Sign1Message(cosemessage.CoseMessage, signcommon.SignCommon):
                f'\t uhdr={self._uhdr}\n' \
                f'\t payload={self._payload}\n' \
                f'\t signature={self.signature}>'
-

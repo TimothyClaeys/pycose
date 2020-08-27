@@ -267,6 +267,13 @@ def test_symmetric_key_derivation(kid, alg, key_ops, base_iv, k, salt, algo, ctx
     assert key.hmac_key_derivation(ctx, algo, salt) == cek
 
 
+ctx_1 = "hAeD9lhAAtH35vJsQ9SGjYfOsjUxYXQKrPH3FjZHmEtSKoSN8cPJz03y/" \
+        "mxjK/eIZBP3bohS2NMJednAIXpCSUG1ygKjqvaD9vb2ghkCAEShATgb"
+
+ctx_2 = "hAeD9lhAAtH35vJsQ9SGjYfOsjUxYXQKrPH3FjZHmEtSKoSN8cPJz03y/" \
+        "mxjK/eIZBP3bohSwncr+1cLLRHSzTxbaIiv7/aD9vb2ghkCAEShATgb"
+
+
 @m.parametrize("kid, alg, key_ops, x, y, d, curve, pub_x, pub_y, ctx_alg, u, v, pub, priv, ctx, cek",
                [(b"meriadoc.brandybuck@buckland.example",
                  AlgorithmIDs.ECDH_ES_HKDF_256,
@@ -300,8 +307,7 @@ def test_symmetric_key_derivation(kid, alg, key_ops, base_iv, k, salt, algo, ctx
                  PartyInfo(),
                  SuppPubInfo(512, unhexlify("A101381B")),
                  b"",
-                 CoseKey.base64decode(
-                     "hAeD9lhAAtH35vJsQ9SGjYfOsjUxYXQKrPH3FjZHmEtSKoSN8cPJz03y/mxjK/eIZBP3bohS2NMJednAIXpCSUG1ygKjqvaD9vb2ghkCAEShATgb"),
+                 CoseKey.base64decode(ctx_1),
                  CoseKey.base64decode(
                      "r7rA5gV0NKGbm0l6M2Sh6RSQ3RBRhvvg15gkle/0GmD3s+YJkJo/3bjlyqX+/GOB+x+8snoGoQz6ToffsMPP/A==")),
 
@@ -325,8 +331,7 @@ def test_symmetric_key_derivation(kid, alg, key_ops, base_iv, k, salt, algo, ctx
                  PartyInfo(),
                  SuppPubInfo(512, unhexlify("A101381B")),
                  b"",
-                 CoseKey.base64decode(
-                     "hAeD9lhAAtH35vJsQ9SGjYfOsjUxYXQKrPH3FjZHmEtSKoSN8cPJz03y/mxjK/eIZBP3bohSwncr+1cLLRHSzTxbaIiv7/aD9vb2ghkCAEShATgb"),
+                 CoseKey.base64decode(ctx_2),
                  CoseKey.base64decode(
                      "3N8VPRYAS1E9VVowWFVhKz0ETwqvZpJzyvo9UijAoSriZnomNlaCa2MTmJWLGMG6NmDWzfFT1goIizCJqayCLA=="))
                 ], ids=["Key_derivation_ECDH_P256_HDKF_SHA_256",

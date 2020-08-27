@@ -3,7 +3,7 @@ from enum import IntEnum
 from typing import Optional, Tuple
 
 import dataclasses
-from cryptography.hazmat.backends import openssl
+from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric.ec import SECP256R1, SECP384R1, SECP521R1, ECDH
 from dataclasses import dataclass
@@ -145,9 +145,9 @@ class EC2(CoseKey):
         except KeyError:
             raise CoseIllegalCurve(curve)
 
-        d = ec.derive_private_key(int(hexlify(self.d), 16), curve, openssl.backend)
+        d = ec.derive_private_key(int(hexlify(self.d), 16), curve, default_backend())
         p = ec.EllipticCurvePublicNumbers(int(hexlify(public_key.x), 16), int(hexlify(public_key.y), 16), curve)
-        p = p.public_key(openssl.backend)
+        p = p.public_key(default_backend())
 
         shared_key = d.exchange(ECDH(), p)
 
@@ -155,7 +155,7 @@ class EC2(CoseKey):
                                                length=int(context.supp_pub_info.key_data_length / 8),
                                                salt=None,
                                                info=context.encode(),
-                                               backend=openssl.backend).derive(shared_key)
+                                               backend=default_backend()).derive(shared_key)
 
         return shared_key, derived_key
 

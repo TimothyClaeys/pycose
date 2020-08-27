@@ -276,7 +276,7 @@ def _fix_key_object(data: dict, key: str) -> None:
             key_attr_to_be_replaced[v] if v in key_attr_to_be_replaced else v for k, v in data[key].items()
     }
     if CoseKey.Common.KID in updated:
-       updated[CoseKey.Common.KID] = updated[CoseKey.Common.KID].encode('utf-8')
+        updated[CoseKey.Common.KID] = updated[CoseKey.Common.KID].encode('utf-8')
     data[key] = updated
 
 
