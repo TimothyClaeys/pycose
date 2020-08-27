@@ -2,7 +2,7 @@ from enum import IntEnum
 from typing import Optional, Tuple
 
 import dataclasses
-from cryptography.hazmat.backends import openssl
+from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PublicKey, X25519PrivateKey
 from dataclasses import dataclass
 
@@ -134,6 +134,6 @@ class OKP(CoseKey):
                                                length=int(context.supp_pub_info.key_data_length / 8),
                                                salt=None,
                                                info=context.encode(),
-                                               backend=openssl.backend).derive(shared_secret)
+                                               backend=default_backend()).derive(shared_secret)
 
         return shared_secret, derived_key

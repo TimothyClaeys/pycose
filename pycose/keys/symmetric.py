@@ -3,7 +3,7 @@ from enum import IntEnum
 from typing import Optional, Union
 
 import dataclasses
-from cryptography.hazmat.backends import openssl
+from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import modes, Cipher
 from cryptography.hazmat.primitives.ciphers.aead import AESCCM, AESGCM
 from dataclasses import dataclass
@@ -114,7 +114,7 @@ class SymmetricKey(CoseKey):
             raise CoseInvalidAlgorithm(err)
 
         if self.alg in {AlgorithmIDs.A128KW, AlgorithmIDs.A192KW, AlgorithmIDs.A256KW}:
-            return algorithm.primitive.aes_key_wrap(self.k, plaintext_key, openssl.backend)
+            return algorithm.primitive.aes_key_wrap(self.k, plaintext_key, default_backend())
         elif self.alg == AlgorithmIDs.DIRECT:
             return b''
         else:
@@ -131,7 +131,7 @@ class SymmetricKey(CoseKey):
         except KeyError as err:
             raise CoseInvalidAlgorithm(err)
 
-        return algorithm.primitive.aes_key_unwrap(self.k, wrapped_key, openssl.backend)
+        return algorithm.primitive.aes_key_unwrap(self.k, wrapped_key, default_backend())
 
     def compute_tag(self, to_be_maced: bytes, alg: Optional[AlgorithmIDs] = None) -> bytes:
         """ Calculate the MAC over the payload """
@@ -151,7 +151,7 @@ class SymmetricKey(CoseKey):
                         AlgorithmIDs.AES_MAC_128_64,
                         AlgorithmIDs.AES_MAC_256_64,
                         AlgorithmIDs.AES_MAC_256_128}:
-            encryptor = Cipher(algorithm.primitive(self.k), modes.CBC(iv), backend=openssl.backend).encryptor()
+            encryptor = Cipher(algorithm.primitive(self.k), modes.CBC(iv), backend=default_backend()).encryptor()
 
             while len(to_be_maced) % 16 != 0:
                 to_be_maced += unhexlify(b"00")
@@ -165,7 +165,7 @@ class SymmetricKey(CoseKey):
             else:
                 digest = ciphertext[-16:]
         else:
-            h = algorithm.primitive(self.k, algorithm.hash(), backend=openssl.backend)
+            h = algorithm.primitive(self.k, algorithm.hash(), backend=default_backend())
             h.update(to_be_maced)
             digest = h.finalize()
 
@@ -206,6 +206,6 @@ class SymmetricKey(CoseKey):
                                                length=int(context.supp_pub_info.key_data_length / 8),
                                                salt=salt,
                                                info=context.encode(),
-                                               backend=openssl.backend).derive(self.k)
+                                               backend=default_backend()).derive(self.k)
 
         return derived_key
