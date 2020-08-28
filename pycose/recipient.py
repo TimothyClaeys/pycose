@@ -42,9 +42,9 @@ class CoseRecipient(CoseMessage):
 
         try:
             recipient_list = recipient_obj.pop(0)
-            msg.recipient_list = [CoseRecipient.from_recipient_obj(r) for r in recipient_list]
+            msg.recipients = [CoseRecipient.from_recipient_obj(r) for r in recipient_list]
         except IndexError:
-            msg.recipient_list = None
+            msg.recipients = []
 
         return msg
 

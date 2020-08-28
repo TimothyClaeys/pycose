@@ -20,7 +20,7 @@ class EncMessage(enccommon.EncCommon):
         try:
             msg.recipients = [CoseRecipient.from_recipient_obj(r) for r in cose_obj.pop(0)]
         except (IndexError, ValueError):
-            msg.recipients = None
+            msg.recipients = []
         return msg
 
     def __init__(self,

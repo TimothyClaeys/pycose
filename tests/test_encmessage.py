@@ -287,7 +287,7 @@ def setup_encrypt_hkdf_hmac_direct_tests(encrypt_hkdf_hmac_direct_test_input: di
 
 
 def test_encrypt_hkdf_hmac_direct_decode(setup_encrypt_hkdf_hmac_direct_tests: tuple) -> None:
-    title, test_input, test_output, test_intermediate, fail = setup_encrypt_hkdf_hmac_direct_tests
+    _, test_input, test_output, test_intermediate, fail = setup_encrypt_hkdf_hmac_direct_tests
 
     # parse message and test for headers
     md: EncMessage = CoseMessage.decode(unhexlify(test_output))
