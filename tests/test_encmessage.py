@@ -6,7 +6,8 @@ from pycose import EncMessage, CoseMessage
 from pycose.algorithms import CoseAlgorithms
 from pycose.context import PartyInfo, SuppPubInfo, CoseKDFContext
 from pycose.cosebase import HeaderKeys
-from pycose.keys.cosekey import KeyOps, CoseKey
+from pycose.keys.cosekey import KeyOps, CoseKey, KTY, EllipticCurveType
+from pycose.keys.ec import EC2
 from pycose.keys.symmetric import SymmetricKey
 from pycose.recipient import CoseRecipient, RcptParams
 from tests.conftest import generic_test_setup, extract_phdr, extract_uhdr, \
@@ -277,8 +278,32 @@ def setup_encrypt_triple_layer_tests(encrypt_triple_layer_test_input: dict) -> t
 
 @mark.decoding
 def test_encrypt_triple_layer_decode(setup_encrypt_triple_layer_tests: tuple):
-    # TODO: fails because the y coordinate of the third later is 'false' ?
-    skip("not implemented")
+    _, test_input, test_output, test_intermediate, fail = setup_encrypt_triple_layer_tests
+
+    # parse message and test headers
+    md: EncMessage = CoseMessage.decode(unhexlify(test_output))
+    assert md.phdr == extract_phdr(test_input, 'enveloped')
+    assert md.uhdr == extract_uhdr(test_input, 'enveloped', 1)
+
+    # check for external data and verify internal _enc_structure
+    md.external_aad = unhexlify(test_input['enveloped'].get('external', b''))
+
+    recipient_layer_1 = test_input['enveloped']['recipients'][0]
+    assert md.recipients[0].phdr == recipient_layer_1.get('protected', {})
+    assert md.recipients[0].uhdr == recipient_layer_1.get('unprotected', {})
+
+    recipient_layer_2 = test_input['enveloped']['recipients'][0]["recipients"][0]
+    assert md.recipients[0].recipients[0].phdr == recipient_layer_2.get('protected', {})
+
+    # set keying material because, final recipient key is False?
+    md.recipients[0].recipients[0].uhdr[HeaderKeys.EPHEMERAL_KEY][EC2.EC2Prm.Y] = \
+        recipient_layer_2.get('unprotected', {}).get(HeaderKeys.EPHEMERAL_KEY, {}).get(EC2.EC2Prm.Y)
+
+    assert md.recipients[0].recipients[0].uhdr[HeaderKeys.KID] == \
+           recipient_layer_2.get('unprotected', {}).get(HeaderKeys.KID)
+
+    assert md.recipients[0].recipients[0].uhdr[HeaderKeys.EPHEMERAL_KEY][CoseKey.Common.KTY] == KTY.EC2
+    assert md.recipients[0].recipients[0].uhdr[HeaderKeys.EPHEMERAL_KEY][EC2.EC2Prm.CRV] == EllipticCurveType.P_256
 
 
 @fixture

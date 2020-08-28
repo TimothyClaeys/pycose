@@ -38,6 +38,9 @@ sign_test_vector_dirs = [os.path.join(path_examples, "sign-tests")]
 countersign_test_vector_dirs = [os.path.join(path_examples, 'countersign')]
 
 algs_to_be_replaced = {
+    'A128KW': CoseAlgorithms.A128KW.id,
+    'A192KW': CoseAlgorithms.A128KW.id,
+    'A256KW': CoseAlgorithms.A128KW.id,
     'A128GCM': CoseAlgorithms.A128GCM.id,
     'A192GCM': CoseAlgorithms.A192GCM.id,
     'A256GCM': CoseAlgorithms.A256GCM.id,
@@ -138,7 +141,7 @@ def pytest_generate_tests(metafunc):
         ids = [test['title'] for test in test_suite]
         metafunc.parametrize("encrypt_x25519_direct_test_input", test_suite, ids=ids)
     if "encrypt_triple_layer_test_input" in metafunc.fixturenames:
-        test_suite = encrypt_x25519_direct_tests()
+        test_suite = encrypt_triple_layer_tests()
         ids = [test['title'] for test in test_suite]
         metafunc.parametrize("encrypt_triple_layer_test_input", test_suite, ids=ids)
     if "encrypt_hkdf_hmac_direct_test_input" in metafunc.fixturenames:
@@ -201,7 +204,7 @@ def encrypt_x25519_direct_tests():
 
 
 def encrypt_triple_layer_tests():
-    return _build_test_cases('enveloped', triple_layer_enc_test_vector_dirs)
+    return _build_test_cases('enveloped', triple_layer_enc_test_vector_dirs, "RFC8152/Appendix_B.json")
 
 
 def encrypt_hkdf_hmac_direct_tests():
@@ -216,8 +219,12 @@ def sign_tests():
     return _build_test_cases('sign', sign_test_vector_dirs)
 
 
-def _build_test_cases(key: str, test_dirs: List[str]):
+def _build_test_cases(key: str, test_dirs: List[str], single_file: Optional[str] = None):
     test_files = [os.path.join(path_examples, td, file) for td in test_dirs for file in os.listdir(td)]
+
+    if single_file is not None and os.path.join(path_examples, single_file) in test_files:
+        test_files = [os.path.join(path_examples, single_file)]
+
     fixed_test_cases = []
 
     for file in test_files:
@@ -277,6 +284,7 @@ def _fix_key_object(data: dict, key: str) -> None:
     }
     if CoseKey.Common.KID in updated:
         updated[CoseKey.Common.KID] = updated[CoseKey.Common.KID].encode('utf-8')
+
     data[key] = updated
 
 
@@ -290,6 +298,10 @@ def _fix_header_algorithm_names(data: dict, key) -> None:
     if "epk" in header_dict:
         _fix_key_object(header_dict, "epk")
         temp = header_dict["epk"]
+        if EC2.EC2Prm.X in temp and isinstance(temp[EC2.EC2Prm.X], str):
+            temp[EC2.EC2Prm.X] = CoseKey.base64decode(temp[EC2.EC2Prm.X])
+        if EC2.EC2Prm.Y in temp and isinstance(temp[EC2.EC2Prm.Y], str):
+            temp[EC2.EC2Prm.Y] = CoseKey.base64decode(temp[EC2.EC2Prm.Y])
         del header_dict["epk"]
 
     header_dict = {k: (v if v not in algs_to_be_replaced else algs_to_be_replaced[v]) for k, v in header_dict.items()}
