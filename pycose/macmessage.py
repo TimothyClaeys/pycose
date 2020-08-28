@@ -14,7 +14,7 @@ from typing import Optional, List
 import cbor2
 
 from pycose import cosemessage, maccommon
-from pycose.algorithms import AlgorithmIDs
+from pycose.algorithms import CoseAlgorithms
 from pycose.keys.symmetric import SymmetricKey
 from pycose.recipient import CoseRecipient, RcptParams
 
@@ -56,7 +56,7 @@ class MacMessage(maccommon.MacCommon):
 
     def encode(self,
                key: SymmetricKey,
-               alg: Optional[AlgorithmIDs] = None,
+               alg: Optional[CoseAlgorithms] = None,
                mac_params: Optional[List[RcptParams]] = None,
                tagged: bool = True,
                mac: bool = True) -> bytes:

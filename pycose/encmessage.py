@@ -3,7 +3,7 @@ from typing import List, Optional
 import cbor2
 
 from pycose import cosemessage, enccommon
-from pycose.algorithms import AlgorithmIDs
+from pycose.algorithms import CoseAlgorithms
 from pycose.keys.symmetric import SymmetricKey
 from pycose.recipient import CoseRecipient, RcptParams
 
@@ -44,7 +44,7 @@ class EncMessage(enccommon.EncCommon):
     def encode(self,
                nonce: bytes,
                key: SymmetricKey,
-               alg: Optional[AlgorithmIDs] = None,
+               alg: Optional[CoseAlgorithms] = None,
                enc_params: Optional[List[RcptParams]] = None,
                tagged: bool = True,
                encrypt: bool = True) -> bytes:

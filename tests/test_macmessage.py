@@ -3,7 +3,7 @@ from binascii import unhexlify
 from pytest import fixture, mark, skip
 
 from pycose import CoseMessage
-from pycose.algorithms import AlgorithmIDs
+from pycose.algorithms import CoseAlgorithms
 from pycose.keys.cosekey import KeyOps
 from pycose.keys.symmetric import SymmetricKey
 from pycose.macmessage import MacMessage
@@ -32,7 +32,7 @@ def test_mac_direct_encoding(setup_mac_tests: tuple) -> None:
 
     # set up the CEK and KEK
     cek = create_cose_key(SymmetricKey, test_input['mac']['recipients'][0]['key'], alg=alg, usage=KeyOps.MAC_CREATE)
-    kek = create_cose_key(SymmetricKey, test_input['mac']['recipients'][0]['key'], alg=AlgorithmIDs.DIRECT,
+    kek = create_cose_key(SymmetricKey, test_input['mac']['recipients'][0]['key'], alg=CoseAlgorithms.DIRECT.id,
                           usage=KeyOps.WRAP)
 
     assert cek.k == unhexlify(test_intermediate["CEK_hex"])
@@ -80,6 +80,6 @@ def test_mac_direct_decoding(setup_mac_tests: tuple) -> None:
     assert msg.verify_tag(cek)
 
     # re-encode and verify we are back where we started
-    kek = SymmetricKey(key_ops=KeyOps.WRAP, alg=AlgorithmIDs.DIRECT)
+    kek = SymmetricKey(key_ops=KeyOps.WRAP, alg=CoseAlgorithms.DIRECT.id)
     cek.key_ops = KeyOps.MAC_CREATE
     assert msg.encode(key=cek, mac_params=[RcptParams(key=kek)]) == unhexlify(test_output)

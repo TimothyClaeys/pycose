@@ -12,7 +12,7 @@ from typing import Optional
 import cbor2
 
 from pycose import cosemessage, maccommon
-from pycose.algorithms import AlgorithmIDs
+from pycose.algorithms import CoseAlgorithms
 from pycose.keys.symmetric import SymmetricKey
 
 
@@ -42,7 +42,7 @@ class Mac0Message(maccommon.MacCommon):
 
     def encode(self,
                key: SymmetricKey,
-               alg: Optional[AlgorithmIDs] = None,
+               alg: Optional[CoseAlgorithms] = None,
                tagged: bool = True,
                mac: bool = True) -> bytes:
         """ Encode and protect the COSE_Mac0 message. """

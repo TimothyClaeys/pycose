@@ -2,7 +2,7 @@ import abc
 from typing import Optional, Union
 
 from pycose import cosebase
-from pycose.algorithms import AlgorithmIDs
+from pycose.algorithms import CoseAlgorithms
 from pycose.exceptions import CoseIllegalKeyType, CoseInvalidAlgorithm, CoseIllegalCurve
 from pycose.keys.cosekey import EllipticCurveType
 from pycose.keys.ec import EC2
@@ -34,7 +34,7 @@ class SignCommon(cosebase.CoseBase, metaclass=abc.ABCMeta):
 
     def verify_signature(self,
                          public_key: Union[EC2, OKP],
-                         alg: Optional[AlgorithmIDs] = None,
+                         alg: Optional[CoseAlgorithms] = None,
                          curve: Optional[EllipticCurveType] = None) -> bool:
         """
         Verifies the signature of a received message
@@ -46,7 +46,7 @@ class SignCommon(cosebase.CoseBase, metaclass=abc.ABCMeta):
 
     def compute_signature(self,
                           private_key: Union[EC2, OKP] = None,
-                          alg: Optional[AlgorithmIDs] = None,
+                          alg: Optional[CoseAlgorithms] = None,
                           curve: Optional[EllipticCurveType] = None) -> bytes:
         """
         Computes the signature of a COSE message
@@ -60,7 +60,7 @@ class SignCommon(cosebase.CoseBase, metaclass=abc.ABCMeta):
     @classmethod
     def _sanitize_args(cls,
                        key: Union[EC2, OKP],
-                       alg: Optional[AlgorithmIDs] = None,
+                       alg: Optional[CoseAlgorithms] = None,
                        curve: Optional[EllipticCurveType] = None) -> None:
         """ Sanitize parameters for encryption/decryption algorithms. """
 

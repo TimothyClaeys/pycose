@@ -3,7 +3,7 @@ from binascii import unhexlify
 import pytest
 
 from pycose import CoseMessage, Enc0Message
-from pycose.algorithms import AlgorithmIDs
+from pycose.algorithms import CoseAlgorithms
 from pycose.cosebase import HeaderKeys
 from pycose.enccommon import EncCommon
 
@@ -20,11 +20,11 @@ def test_msg_creation(cls, parent_cls):
 @pytest.mark.parametrize("params, encoded_phdr",
                          [
                              ({1: 10}, b'A1010A'),
-                             ({HeaderKeys.ALG: AlgorithmIDs.AES_CCM_16_64_128}, b'A1010A'),
-                             ({1: AlgorithmIDs.AES_CCM_16_64_128}, b'A1010A'),
+                             ({HeaderKeys.ALG: CoseAlgorithms.AES_CCM_16_64_128}, b'A1010A'),
+                             ({1: CoseAlgorithms.AES_CCM_16_64_128}, b'A1010A'),
                              ({HeaderKeys.ALG: 10}, b'A1010A'),
                              pytest.param({HeaderKeys.ALG: None}, b'A1010A', marks=pytest.mark.xfail),
-                             ({HeaderKeys.ALG: AlgorithmIDs.AES_CCM_16_128_128}, b'A101181E')
+                             ({HeaderKeys.ALG: CoseAlgorithms.AES_CCM_16_128_128}, b'A101181E')
                          ], ids=["unprotected_header_creation_" + str(i) for i in range(6)])
 def test_indirect_phdr_creation(params, encoded_phdr):
     enc0_msg = Enc0Message()
@@ -38,8 +38,8 @@ def test_indirect_phdr_creation(params, encoded_phdr):
                          [
                              ({1: 10}, {1: 10}),
                              ({HeaderKeys.ALG: 10}, {1: 10}),
-                             ({HeaderKeys.ALG: AlgorithmIDs.AES_CCM_16_64_128}, {1: 10}),
-                             ({1: AlgorithmIDs.AES_CCM_16_64_128}, {1: 10}),
+                             ({HeaderKeys.ALG: CoseAlgorithms.AES_CCM_16_64_128}, {1: 10}),
+                             ({1: CoseAlgorithms.AES_CCM_16_64_128}, {1: 10}),
                              ({HeaderKeys.ALG: 10, HeaderKeys.IV: b'02D1F7E6F26C43D4868D87CE'},
                               {1: 10, 5: b'02D1F7E6F26C43D4868D87CE'}),
                              ({HeaderKeys.PARTIAL_IV: b'61a7'}, {6: b'61a7'}),
@@ -59,7 +59,7 @@ def test_indirect_uhdr_creation(params, encoded_uhdr):
                              ({1: 1, 5: b'02D1F7E6F26C43D4868D87CE'}, {1: 1, 5: b'02D1F7E6F26C43D4868D87CE'}),
                              ({HeaderKeys.ALG: 10, HeaderKeys.IV: b'02D1F7E6F26C43D4868D87CE'},
                               {1: 10, 5: b'02D1F7E6F26C43D4868D87CE'}),
-                             ({HeaderKeys.ALG: AlgorithmIDs.A256GCM, HeaderKeys.IV: b'ae8987be9874f98ebb'},
+                             ({HeaderKeys.ALG: CoseAlgorithms.A256GCM, HeaderKeys.IV: b'ae8987be9874f98ebb'},
                               {1: 3, 5: b'ae8987be9874f98ebb'}),
                          ], ids=["unprotected_header_update_" + str(i) for i in range(3)])
 def test_update_uhdr(params, encoded_uhdr):
@@ -107,10 +107,10 @@ def test_overwrite_attr_phdr(param1, param2, expected):
 
 
 @pytest.mark.parametrize("params, expected", [({1: -25}, b'a1013818'),
-                                              ({1: AlgorithmIDs.ES256}, b'a10126'),
+                                              ({1: CoseAlgorithms.ES256}, b'a10126'),
                                               ({'reserved': False, 2: ["reserved"]},
                                                b'a2687265736572766564f40281687265736572766564'),
-                                              ({HeaderKeys.ALG: AlgorithmIDs.EDDSA,
+                                              ({HeaderKeys.ALG: CoseAlgorithms.EDDSA,
                                                 HeaderKeys.CONTENT_TYPE: 0}, b'A201270300'),
                                               (None, b'')
                                               ],
@@ -122,7 +122,7 @@ def test_direct_phdr_creation(params, expected):
 
 @pytest.mark.parametrize("params, expected",
                          [
-                             ({1: AlgorithmIDs.DIRECT, HeaderKeys.KID: b'our-secret'}, {1: -6, 4: b'our-secret'}),
+                             ({1: CoseAlgorithms.DIRECT, HeaderKeys.KID: b'our-secret'}, {1: -6, 4: b'our-secret'}),
                              ({HeaderKeys.KID: 11}, {4: 11}),
                              (None, {})
                          ], ids=["constructor_phdr_test_" + str(i) for i in range(3)])

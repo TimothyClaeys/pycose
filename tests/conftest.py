@@ -6,7 +6,7 @@ from typing import List, Type, Union, Optional, Tuple
 
 from pytest import skip
 
-from pycose.algorithms import AlgorithmIDs
+from pycose.algorithms import CoseAlgorithms
 from pycose.cosebase import HeaderKeys
 from pycose.keys.cosekey import KTY, EllipticCurveType, CoseKey, KeyOps
 from pycose.keys.ec import EC2
@@ -38,42 +38,42 @@ sign_test_vector_dirs = [os.path.join(path_examples, "sign-tests")]
 countersign_test_vector_dirs = [os.path.join(path_examples, 'countersign')]
 
 algs_to_be_replaced = {
-    'A128GCM': AlgorithmIDs.A128GCM,
-    'A192GCM': AlgorithmIDs.A192GCM,
-    'A256GCM': AlgorithmIDs.A256GCM,
-    'AES-CCM-16-128/64': AlgorithmIDs.AES_CCM_16_64_128,
-    'AES-CCM-16-256/64': AlgorithmIDs.AES_CCM_16_64_256,
-    'AES-CCM-16-128/128': AlgorithmIDs.AES_CCM_16_128_128,
-    'AES-CCM-64-128/128': AlgorithmIDs.AES_CCM_64_128_128,
-    'AES-CCM-64-128/64': AlgorithmIDs.AES_CCM_64_64_128,
-    'AES-CCM-64-256/64': AlgorithmIDs.AES_CCM_64_64_256,
-    'AES-CCM-16-256/128': AlgorithmIDs.AES_CCM_16_128_256,
-    'AES-CCM-64-256/128': AlgorithmIDs.AES_CCM_64_128_256,
-    'direct': AlgorithmIDs.DIRECT,
-    "ECDH-ES-512": AlgorithmIDs.ECDH_ES_HKDF_512,
-    "ECDH-ES": AlgorithmIDs.ECDH_ES_HKDF_256,
-    "ECDH-SS": AlgorithmIDs.ECDH_SS_HKDF_256,
-    "ECDH-SS-256": AlgorithmIDs.ECDH_SS_HKDF_256,
-    "ECDH-SS-512": AlgorithmIDs.ECDH_SS_HKDF_512,
-    "ECDH-SS-A192KW": AlgorithmIDs.ECDH_SS_A192KW,
-    "ECDH-ES-A256KW": AlgorithmIDs.ECDH_ES_A256KW,
-    "ECDH-SS-A128KW": AlgorithmIDs.ECDH_SS_A128KW,
-    "ECDH-ES-A192KW": AlgorithmIDs.ECDH_ES_A192KW,
-    "ECDH-ES-A128KW": AlgorithmIDs.ECDH_ES_A128KW,
-    "ECDH-SS-A256KW": AlgorithmIDs.ECDH_SS_A256KW,
-    "HS256": AlgorithmIDs.HMAC_256_256,
-    "HS384": AlgorithmIDs.HMAC_384_384,
-    "HS512": AlgorithmIDs.HMAC_512_512,
-    "HS256/64": AlgorithmIDs.HMAC_256_64,
-    "AES-MAC-256/64": AlgorithmIDs.AES_MAC_256_64,
-    "AES-MAC-128/64": AlgorithmIDs.AES_MAC_128_64,
-    "AES-MAC-128/128": AlgorithmIDs.AES_MAC_128_128,
-    "AES-MAC-256/128": AlgorithmIDs.AES_MAC_256_128,
-    "HKDF-HMAC-SHA-256": AlgorithmIDs.DIRECT_HKDF_SHA_256,
-    "HKDF-HMAC-SHA-512": AlgorithmIDs.DIRECT_HKDF_SHA_512,
-    "ES256": AlgorithmIDs.ES256,
-    "ES384": AlgorithmIDs.ES384,
-    "ES512": AlgorithmIDs.ES512,
+    'A128GCM': CoseAlgorithms.A128GCM.id,
+    'A192GCM': CoseAlgorithms.A192GCM.id,
+    'A256GCM': CoseAlgorithms.A256GCM.id,
+    'AES-CCM-16-128/64': CoseAlgorithms.AES_CCM_16_64_128.id,
+    'AES-CCM-16-256/64': CoseAlgorithms.AES_CCM_16_64_256.id,
+    'AES-CCM-16-128/128': CoseAlgorithms.AES_CCM_16_128_128.id,
+    'AES-CCM-64-128/128': CoseAlgorithms.AES_CCM_64_128_128.id,
+    'AES-CCM-64-128/64': CoseAlgorithms.AES_CCM_64_64_128.id,
+    'AES-CCM-64-256/64': CoseAlgorithms.AES_CCM_64_64_256.id,
+    'AES-CCM-16-256/128': CoseAlgorithms.AES_CCM_16_128_256.id,
+    'AES-CCM-64-256/128': CoseAlgorithms.AES_CCM_64_128_256.id,
+    'direct': CoseAlgorithms.DIRECT.id,
+    "ECDH-ES-512": CoseAlgorithms.ECDH_ES_HKDF_512.id,
+    "ECDH-ES": CoseAlgorithms.ECDH_ES_HKDF_256.id,
+    "ECDH-SS": CoseAlgorithms.ECDH_SS_HKDF_256.id,
+    "ECDH-SS-256": CoseAlgorithms.ECDH_SS_HKDF_256.id,
+    "ECDH-SS-512": CoseAlgorithms.ECDH_SS_HKDF_512.id,
+    "ECDH-SS-A192KW": CoseAlgorithms.ECDH_SS_A192KW.id,
+    "ECDH-ES-A256KW": CoseAlgorithms.ECDH_ES_A256KW.id,
+    "ECDH-SS-A128KW": CoseAlgorithms.ECDH_SS_A128KW.id,
+    "ECDH-ES-A192KW": CoseAlgorithms.ECDH_ES_A192KW.id,
+    "ECDH-ES-A128KW": CoseAlgorithms.ECDH_ES_A128KW.id,
+    "ECDH-SS-A256KW": CoseAlgorithms.ECDH_SS_A256KW.id,
+    "HS256": CoseAlgorithms.HMAC_256_256.id,
+    "HS384": CoseAlgorithms.HMAC_384_384.id,
+    "HS512": CoseAlgorithms.HMAC_512_512.id,
+    "HS256/64": CoseAlgorithms.HMAC_256_64.id,
+    "AES-MAC-256/64": CoseAlgorithms.AES_MAC_256_64.id,
+    "AES-MAC-128/64": CoseAlgorithms.AES_MAC_128_64.id,
+    "AES-MAC-128/128": CoseAlgorithms.AES_MAC_128_128.id,
+    "AES-MAC-256/128": CoseAlgorithms.AES_MAC_256_128.id,
+    "HKDF-HMAC-SHA-256": CoseAlgorithms.DIRECT_HKDF_SHA_256.id,
+    "HKDF-HMAC-SHA-512": CoseAlgorithms.DIRECT_HKDF_SHA_512.id,
+    "ES256": CoseAlgorithms.ES256.id,
+    "ES384": CoseAlgorithms.ES384.id,
+    "ES512": CoseAlgorithms.ES512.id,
 }
 
 params_to_be_replaced = {
@@ -317,7 +317,7 @@ def _fix_header_attribute_names(data: dict, key) -> None:
 
 def create_cose_key(key_type: Type[CoseKey],
                     input_data: dict,
-                    alg: Optional[AlgorithmIDs] = None,
+                    alg: Optional[CoseAlgorithms] = None,
                     usage: Optional[KeyOps] = None) -> Union[EC2, SymmetricKey, OKP]:
     if key_type == EC2:
         key = EC2(
@@ -378,7 +378,7 @@ def extract_nonce(test_input: dict, rng_index=0) -> bytes:
         return b""
 
 
-def extract_alg(test_input: dict) -> AlgorithmIDs:
+def extract_alg(test_input: dict) -> CoseAlgorithms:
     alg = test_input.get('protected', {}).get(HeaderKeys.ALG)
     if alg is None:
         alg = test_input.get('unprotected', {}).get(HeaderKeys.ALG)

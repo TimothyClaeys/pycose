@@ -4,7 +4,7 @@ from typing import Optional
 import cbor2
 
 from pycose import cosemessage
-from pycose.algorithms import AlgorithmIDs
+from pycose.algorithms import CoseAlgorithms
 from pycose.exceptions import CoseIllegalKeyType, CoseInvalidAlgorithm
 from pycose.keys.symmetric import SymmetricKey
 
@@ -25,14 +25,14 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
 
         super().__init__(phdr, uhdr, payload, external_aad)
 
-    def decrypt(self, nonce: bytes, key: SymmetricKey, alg: Optional[AlgorithmIDs] = None) -> bytes:
+    def decrypt(self, nonce: bytes, key: SymmetricKey, alg: Optional[CoseAlgorithms] = None) -> bytes:
         """ Decrypts the payload. """
 
         self._sanitize_args(nonce=nonce, key=key, alg=alg)
 
         return key.decrypt(ciphertext=self.payload, aad=self._enc_structure, nonce=nonce, alg=alg)
 
-    def encrypt(self, nonce: bytes, key: SymmetricKey, alg: Optional[AlgorithmIDs] = None) -> bytes:
+    def encrypt(self, nonce: bytes, key: SymmetricKey, alg: Optional[CoseAlgorithms] = None) -> bytes:
         """ Encrypts the payload. The provided arguments overwrite the default ones. """
 
         self._sanitize_args(nonce=nonce, key=key, alg=alg)
@@ -50,7 +50,7 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
         return aad
 
     @classmethod
-    def _sanitize_args(cls, nonce: bytes, key: SymmetricKey, alg: Optional[AlgorithmIDs] = None) -> None:
+    def _sanitize_args(cls, nonce: bytes, key: SymmetricKey, alg: Optional[CoseAlgorithms] = None) -> None:
         """ Sanitize parameters for encryption/decryption algorithms. """
 
         if nonce == b"" or nonce is None:

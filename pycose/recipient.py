@@ -4,7 +4,7 @@ from typing import Union, List, Optional, Tuple
 from dataclasses import dataclass, field
 
 from pycose import CoseMessage
-from pycose.algorithms import AlgorithmIDs
+from pycose.algorithms import CoseAlgorithms
 from pycose.context import CoseKDFContext
 from pycose.exceptions import CoseIllegalKeyType, CoseInvalidAlgorithm
 from pycose.keys.cosekey import EllipticCurveType, CK
@@ -21,7 +21,7 @@ else:
 @dataclass
 class RcptParams:
     key: SymmetricKey
-    alg: Optional[AlgorithmIDs] = None
+    alg: Optional[CoseAlgorithms] = None
     params: List['RcptParams'] = field(default_factory=list)
     encrypt_or_mac: bool = True
 
@@ -73,14 +73,14 @@ class CoseRecipient(CoseMessage):
 
         return recipient
 
-    def encrypt(self, alg: AlgorithmIDs, key: SymmetricKey) -> bytes:
+    def encrypt(self, alg: CoseAlgorithms, key: SymmetricKey) -> bytes:
         """ Key wrapping. """
 
         self._sanitize_args(key, alg)
 
         return key.key_wrap(self.payload, alg=alg)
 
-    def decrypt(self, alg: Optional[AlgorithmIDs] = None, key: Optional[SymmetricKey] = None) -> bytes:
+    def decrypt(self, alg: Optional[CoseAlgorithms] = None, key: Optional[SymmetricKey] = None) -> bytes:
         """ Key unwrapping. """
 
         self._sanitize_args(key, alg)
@@ -92,7 +92,7 @@ class CoseRecipient(CoseMessage):
     def derive_kek(cls,
                    private_key: CK,
                    public_key: Optional[Union[EC2, OKP]] = None,
-                   alg: Optional[AlgorithmIDs] = None,
+                   alg: Optional[CoseAlgorithms] = None,
                    context: CoseKDFContext = None,
                    curve: Optional[EllipticCurveType] = None,
                    salt: bytes = b'',
@@ -106,7 +106,7 @@ class CoseRecipient(CoseMessage):
     def _(cls,
           private_key: EC2,
           public_key: EC2,
-          alg: Optional[AlgorithmIDs] = None,
+          alg: Optional[CoseAlgorithms] = None,
           context: Optional[CoseKDFContext] = None,
           curve: Optional[EllipticCurveType] = None,
           salt: bytes = b'',
@@ -125,7 +125,7 @@ class CoseRecipient(CoseMessage):
     def _(cls,
           private_key: SymmetricKey,
           public_key=None,
-          alg: Optional[AlgorithmIDs] = None,
+          alg: Optional[CoseAlgorithms] = None,
           context: CoseKDFContext = None,
           curve=None,
           salt: bytes = b'',
@@ -146,7 +146,7 @@ class CoseRecipient(CoseMessage):
     def _(cls,
           private_key: OKP,
           public_key: OKP,
-          alg: Optional[AlgorithmIDs] = None,
+          alg: Optional[CoseAlgorithms] = None,
           context: CoseKDFContext = None,
           curve: Optional[EllipticCurveType] = None,
           salt: bytes = None,
@@ -161,7 +161,7 @@ class CoseRecipient(CoseMessage):
             return kek
 
     @classmethod
-    def _sanitize_args(cls, key: SymmetricKey, alg: Optional[AlgorithmIDs] = None) -> None:
+    def _sanitize_args(cls, key: SymmetricKey, alg: Optional[CoseAlgorithms] = None) -> None:
         """ Sanitize parameters for encryption/decryption algorithms. """
 
         if key is None:

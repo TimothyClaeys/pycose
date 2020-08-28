@@ -3,7 +3,7 @@ from binascii import unhexlify
 from pytest import fixture, mark, skip
 
 from pycose import EncMessage, CoseMessage
-from pycose.algorithms import AlgorithmIDs
+from pycose.algorithms import CoseAlgorithms
 from pycose.context import PartyInfo, SuppPubInfo, CoseKDFContext
 from pycose.cosebase import HeaderKeys
 from pycose.keys.cosekey import KeyOps, CoseKey
@@ -36,7 +36,7 @@ def test_encrypt_encoding(setup_encrypt_tests: tuple) -> None:
 
     # set up the CEK and KEK
     cek = create_cose_key(SymmetricKey, test_input['enveloped']['recipients'][0]['key'], alg=alg, usage=KeyOps.ENCRYPT)
-    kek = create_cose_key(SymmetricKey, test_input['enveloped']['recipients'][0]['key'], alg=AlgorithmIDs.DIRECT,
+    kek = create_cose_key(SymmetricKey, test_input['enveloped']['recipients'][0]['key'], alg=CoseAlgorithms.DIRECT.id,
                           usage=KeyOps.WRAP)
 
     # create the recipients
@@ -87,7 +87,7 @@ def test_encrypt_decoding(setup_encrypt_tests: tuple) -> None:
     assert msg.decrypt(nonce=nonce, key=cek) == test_input['plaintext'].encode('utf-8')
 
     # re-encode and verify we are back where we started
-    kek = SymmetricKey(key_ops=KeyOps.WRAP, alg=AlgorithmIDs.DIRECT)
+    kek = SymmetricKey(key_ops=KeyOps.WRAP, alg=CoseAlgorithms.DIRECT.id)
     assert msg.encode(encrypt=False, nonce=nonce, key=cek, enc_params=[RcptParams(key=kek)]) == unhexlify(test_output)
 
 
@@ -165,7 +165,7 @@ def test_encrypt_ecdh_direct_decode_encode(setup_encrypt_ecdh_direct_tests: tupl
 
     # set up cek
     cek = SymmetricKey(k=kek_bytes, alg=alg)
-    kek = SymmetricKey(k=kek_bytes, alg=AlgorithmIDs.DIRECT)
+    kek = SymmetricKey(k=kek_bytes, alg=CoseAlgorithms.DIRECT.id)
 
     # without sorting probably does not match because the order of the recipient elements is not the same
     assert sorted(me.encode(key=cek, nonce=nonce, enc_params=[RcptParams(key=kek)])) == sorted(unhexlify(test_output))
@@ -200,12 +200,12 @@ def test_encrypt_ecdh_wrap_decode(setup_encrypt_ecdh_wrap_tests: tuple):
     # create context KDF
     s = SuppPubInfo(len(test_intermediate['recipients'][0]['KEK_hex']) * 4, md.recipients[0].encode_phdr())
 
-    if md.recipients[0].phdr[HeaderKeys.ALG] in {AlgorithmIDs.ECDH_ES_A192KW, AlgorithmIDs.ECDH_SS_A192KW}:
-        kdf_ctx = CoseKDFContext(AlgorithmIDs.A192KW, PartyInfo(), PartyInfo(), s)
-    elif md.recipients[0].phdr[HeaderKeys.ALG] in {AlgorithmIDs.ECDH_ES_A128KW, AlgorithmIDs.ECDH_SS_A128KW}:
-        kdf_ctx = CoseKDFContext(AlgorithmIDs.A128KW, PartyInfo(), PartyInfo(), s)
-    elif md.recipients[0].phdr[HeaderKeys.ALG] in {AlgorithmIDs.ECDH_ES_A256KW, AlgorithmIDs.ECDH_SS_A256KW}:
-        kdf_ctx = CoseKDFContext(AlgorithmIDs.A256KW, PartyInfo(), PartyInfo(), s)
+    if md.recipients[0].phdr[HeaderKeys.ALG] in {CoseAlgorithms.ECDH_ES_A192KW.id, CoseAlgorithms.ECDH_SS_A192KW.id}:
+        kdf_ctx = CoseKDFContext(CoseAlgorithms.A192KW.id, PartyInfo(), PartyInfo(), s)
+    elif md.recipients[0].phdr[HeaderKeys.ALG] in {CoseAlgorithms.ECDH_ES_A128KW.id, CoseAlgorithms.ECDH_SS_A128KW.id}:
+        kdf_ctx = CoseKDFContext(CoseAlgorithms.A128KW.id, PartyInfo(), PartyInfo(), s)
+    elif md.recipients[0].phdr[HeaderKeys.ALG] in {CoseAlgorithms.ECDH_ES_A256KW.id, CoseAlgorithms.ECDH_SS_A256KW.id}:
+        kdf_ctx = CoseKDFContext(CoseAlgorithms.A256KW.id, PartyInfo(), PartyInfo(), s)
     else:
         raise ValueError("Missed an algorithm?")
 

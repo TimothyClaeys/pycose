@@ -8,7 +8,7 @@ from cryptography.hazmat.primitives.ciphers import modes, Cipher
 from cryptography.hazmat.primitives.ciphers.aead import AESCCM, AESGCM
 from dataclasses import dataclass
 
-from pycose.algorithms import AlgID2Crypto, AlgoParam, AlgorithmIDs
+from pycose.algorithms import CoseAlgorithms, config
 from pycose.context import CoseKDFContext
 from pycose.exceptions import CoseInvalidAlgorithm, CoseInvalidTag
 from pycose.keys.cosekey import CoseKey, KTY, KeyOps
@@ -69,7 +69,7 @@ class SymmetricKey(CoseKey):
         output.extend(self._base_repr(k, v) if k not in [-1] else self._key_repr(k, v) for k, v in content.items())
         return "\n".join(output)
 
-    def encrypt(self, plaintext: bytes, aad: bytes, nonce: bytes, alg: Optional[AlgorithmIDs]) -> bytes:
+    def encrypt(self, plaintext: bytes, aad: bytes, nonce: bytes, alg: Optional[CoseAlgorithms]) -> bytes:
         self._check_key_conf(alg, KeyOps.ENCRYPT)
 
         try:
@@ -80,7 +80,7 @@ class SymmetricKey(CoseKey):
 
         return ciphertext
 
-    def decrypt(self, ciphertext: bytes, aad: bytes, nonce: bytes, alg: Optional[AlgorithmIDs] = None) -> bytes:
+    def decrypt(self, ciphertext: bytes, aad: bytes, nonce: bytes, alg: Optional[CoseAlgorithms] = None) -> bytes:
         self._check_key_conf(alg, KeyOps.DECRYPT)
 
         try:
@@ -92,48 +92,42 @@ class SymmetricKey(CoseKey):
         return plaintext
 
     def _prepare_cipher(self):
-        alg = self.alg.name if hasattr(self.alg, "name") else AlgorithmIDs(self.alg).name
+        alg_cfg = config(CoseAlgorithms(self.alg))
 
-        algorithm: AlgoParam = AlgID2Crypto[alg].value
-
-        if algorithm.tag_length is not None:
-            cipher: Union[AESGCM, AESCCM] = algorithm.primitive(self.k, tag_length=algorithm.tag_length)
+        if alg_cfg.tag_length is not None:
+            cipher: Union[AESGCM, AESCCM] = alg_cfg.primitive(self.k, tag_length=alg_cfg.tag_length)
         else:
-            cipher = algorithm.primitive(self.k)
+            cipher = alg_cfg.primitive(self.k)
 
         return cipher
 
-    def key_wrap(self, plaintext_key: bytes, alg: Optional[AlgorithmIDs] = None) -> bytes:
+    def key_wrap(self, plaintext_key: bytes, alg: Optional[CoseAlgorithms] = None) -> bytes:
         self._check_key_conf(alg, KeyOps.WRAP)
 
         try:
-            alg = self.alg.name if hasattr(self.alg, "name") else AlgorithmIDs(self.alg).name
-
-            algorithm: AlgoParam = AlgID2Crypto[alg].value
+            alg_cfg = config(CoseAlgorithms(self.alg))
         except KeyError as err:
             raise CoseInvalidAlgorithm(err)
 
-        if self.alg in {AlgorithmIDs.A128KW, AlgorithmIDs.A192KW, AlgorithmIDs.A256KW}:
-            return algorithm.primitive.aes_key_wrap(self.k, plaintext_key, default_backend())
-        elif self.alg == AlgorithmIDs.DIRECT:
+        if self.alg in {CoseAlgorithms.A128KW, CoseAlgorithms.A192KW, CoseAlgorithms.A256KW}:
+            return alg_cfg.primitive.aes_key_wrap(self.k, plaintext_key, default_backend())
+        elif self.alg == CoseAlgorithms.DIRECT:
             return b''
         else:
             raise CoseInvalidAlgorithm(f"Key wrap requires one of the following algorithms: \
-            {(AlgorithmIDs.A256KW, AlgorithmIDs.A192KW, AlgorithmIDs.A128KW, AlgorithmIDs.DIRECT)}")
+            {(CoseAlgorithms.A256KW, CoseAlgorithms.A192KW, CoseAlgorithms.A128KW, CoseAlgorithms.DIRECT)}")
 
-    def key_unwrap(self, wrapped_key: bytes, alg: Optional[AlgorithmIDs] = None) -> bytes:
+    def key_unwrap(self, wrapped_key: bytes, alg: Optional[CoseAlgorithms] = None) -> bytes:
         self._check_key_conf(alg, KeyOps.UNWRAP)
 
         try:
-            alg = self.alg.name if hasattr(self.alg, "name") else AlgorithmIDs(self.alg).name
-
-            algorithm: AlgoParam = AlgID2Crypto[alg].value
+            alg_cfg = config(CoseAlgorithms(self.alg))
         except KeyError as err:
             raise CoseInvalidAlgorithm(err)
 
-        return algorithm.primitive.aes_key_unwrap(self.k, wrapped_key, default_backend())
+        return alg_cfg.primitive.aes_key_unwrap(self.k, wrapped_key, default_backend())
 
-    def compute_tag(self, to_be_maced: bytes, alg: Optional[AlgorithmIDs] = None) -> bytes:
+    def compute_tag(self, to_be_maced: bytes, alg: Optional[CoseAlgorithms] = None) -> bytes:
         """ Calculate the MAC over the payload """
 
         self._check_key_conf(alg, KeyOps.MAC_CREATE)
@@ -141,41 +135,39 @@ class SymmetricKey(CoseKey):
         iv = unhexlify(b"".join([b"00"] * 16))
 
         try:
-            alg = self.alg.name if hasattr(self.alg, "name") else AlgorithmIDs(self.alg).name
-
-            algorithm: AlgoParam = AlgID2Crypto[alg].value
+            alg_cfg = config(CoseAlgorithms(self.alg))
         except KeyError as err:
             raise CoseInvalidAlgorithm(err)
 
-        if self.alg in {AlgorithmIDs.AES_MAC_128_128,
-                        AlgorithmIDs.AES_MAC_128_64,
-                        AlgorithmIDs.AES_MAC_256_64,
-                        AlgorithmIDs.AES_MAC_256_128}:
-            encryptor = Cipher(algorithm.primitive(self.k), modes.CBC(iv), backend=default_backend()).encryptor()
+        if self.alg in {CoseAlgorithms.AES_MAC_128_128,
+                        CoseAlgorithms.AES_MAC_128_64,
+                        CoseAlgorithms.AES_MAC_256_64,
+                        CoseAlgorithms.AES_MAC_256_128}:
+            encryptor = Cipher(alg_cfg.primitive(self.k), modes.CBC(iv), backend=default_backend()).encryptor()
 
             while len(to_be_maced) % 16 != 0:
                 to_be_maced += unhexlify(b"00")
 
             ciphertext = encryptor.update(to_be_maced) + encryptor.finalize()
 
-            if algorithm.tag_length is not None:
+            if alg_cfg.tag_length is not None:
                 # truncate the result to the first 64 bits
                 ciphertext = ciphertext[:-8]
                 digest = ciphertext[-8:]
             else:
                 digest = ciphertext[-16:]
         else:
-            h = algorithm.primitive(self.k, algorithm.hash(), backend=default_backend())
+            h = alg_cfg.primitive(self.k, alg_cfg.hash(), backend=default_backend())
             h.update(to_be_maced)
             digest = h.finalize()
 
-            if AlgorithmIDs[alg] == AlgorithmIDs.HMAC_256_64:
+            if CoseAlgorithms(self.alg) == CoseAlgorithms.HMAC_256_64:
                 # truncate the result to the first 64 bits
                 digest = digest[:8]
 
         return digest
 
-    def verify_tag(self, tag: bytes, to_be_maced: bytes, alg: Optional[AlgorithmIDs] = None) -> bool:
+    def verify_tag(self, tag: bytes, to_be_maced: bytes, alg: Optional[CoseAlgorithms] = None) -> bool:
         """ Verify the MAC over the payload """
 
         self._check_key_conf(alg, KeyOps.MAC_VERIFY)
@@ -190,22 +182,20 @@ class SymmetricKey(CoseKey):
 
     def hmac_key_derivation(self,
                             context: CoseKDFContext,
-                            alg: Optional[AlgorithmIDs] = None,
+                            alg: Optional[CoseAlgorithms] = None,
                             salt: bytes = b'') -> bytes:
 
         self._check_key_conf(alg, KeyOps.DERIVE_KEY)
 
         try:
-            alg = self.alg.name if hasattr(self.alg, "name") else AlgorithmIDs(self.alg).name
-
-            algorithm: AlgoParam = AlgID2Crypto[alg].value
+            alg_cfg = config(CoseAlgorithms(self.alg))
         except KeyError as err:
             raise CoseInvalidAlgorithm(err)
 
-        derived_key = algorithm.key_derivation(algorithm=algorithm.hash(),
-                                               length=int(context.supp_pub_info.key_data_length / 8),
-                                               salt=salt,
-                                               info=context.encode(),
-                                               backend=default_backend()).derive(self.k)
+        derived_key = alg_cfg.kdf(algorithm=alg_cfg.hash(),
+                                  length=int(context.supp_pub_info.key_data_length / 8),
+                                  salt=salt,
+                                  info=context.encode(),
+                                  backend=default_backend()).derive(self.k)
 
         return derived_key

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from enum import IntEnum, unique
 from typing import List, Union, Dict, Optional, TypeVar, TYPE_CHECKING, Type, Callable
 
-from pycose.algorithms import AlgorithmIDs
+from pycose.algorithms import CoseAlgorithms
 from pycose.exceptions import CoseIllegalKeyOps
 
 if TYPE_CHECKING:
@@ -61,7 +61,7 @@ class CoseKey(metaclass=ABCMeta):
 
     _kty: Optional[KTY]
     _kid: Optional[Union[int, bytes]]
-    _alg: Optional[AlgorithmIDs]
+    _alg: Optional[CoseAlgorithms]
     _key_ops: Optional[KeyOps]
     _base_iv: Optional[bytes]
 
@@ -159,14 +159,16 @@ class CoseKey(metaclass=ABCMeta):
         self._kty = new_kty
 
     @property
-    def alg(self) -> Optional[AlgorithmIDs]:
+    def alg(self) -> Optional[CoseAlgorithms]:
         return self._alg
 
     @alg.setter
-    def alg(self, new_alg: AlgorithmIDs) -> None:
+    def alg(self, new_alg: CoseAlgorithms) -> None:
         if new_alg is not None:
-            _ = AlgorithmIDs(new_alg)  # check if the new value is a known COSE Algorithm
-        self._alg = new_alg
+            _ = CoseAlgorithms(new_alg)  # check if the new value is a known COSE Algorithm
+            self._alg = CoseAlgorithms(new_alg)
+        else:
+            self._alg = None
 
     @property
     def kid(self) -> Optional[bytes]:
@@ -212,13 +214,13 @@ class CoseKey(metaclass=ABCMeta):
         raise NotImplementedError
 
     def _check_key_conf(self,
-                        algorithm: AlgorithmIDs,
+                        algorithm: CoseAlgorithms,
                         key_operation: KeyOps,
                         peer_key: Optional[Union['EC2', 'OKP']] = None,
                         curve: Optional[EllipticCurveType] = None):
         """ Helper function that checks the configuration of the COSE key object. """
 
-        if self.alg is not None and algorithm is not None and self.alg != algorithm:
+        if self.alg is not None and algorithm is not None and CoseAlgorithms(self.alg) != CoseAlgorithms(algorithm):
             raise ValueError("COSE key algorithm does not match with parameter 'algorithm'.")
 
         if algorithm is not None:

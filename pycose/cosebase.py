@@ -108,6 +108,8 @@ class CoseBase(metaclass=abc.ABCMeta):
     def encode_phdr(self) -> bytes:
         """ Encode the protected header. """
         if len(self._phdr):
+            if HeaderKeys.ALG in self._phdr:
+                self._phdr[HeaderKeys.ALG] = int(self._phdr[HeaderKeys.ALG])
             return cbor2.dumps(self._phdr)
         else:
             return b''
