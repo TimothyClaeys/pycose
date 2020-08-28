@@ -3,9 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-**********************************
-Welcome to pycose's documentation!
-**********************************
+*********************
+Welcome to ``pycose``
+*********************
 
 What is COSE
 ************
@@ -54,17 +54,19 @@ cryptographic keys. There are three main key types:
 
 .. toctree::
    :maxdepth: 2
-   :caption: COSE messages:
+   :caption: COSE messages
 
    cosemessages/index.rst
 
 .. toctree::
    :maxdepth: 2
-   :caption: COSE keys:
+   :caption: COSE keys
 
    cosekeys/index.rst
 
-..toctree::
+.. toctree::
    :maxdepth: 1
-   :caption:
+   :caption: Misc
+
+   algorithms.rst
 
