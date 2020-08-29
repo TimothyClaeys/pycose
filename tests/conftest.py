@@ -204,7 +204,7 @@ def encrypt_x25519_direct_tests():
 
 
 def encrypt_triple_layer_tests():
-    return _build_test_cases('enveloped', triple_layer_enc_test_vector_dirs, "RFC8152/Appendix_B.json")
+    return _build_test_cases('enveloped', triple_layer_enc_test_vector_dirs, os.path.join("RFC8152", "Appendix_B.json"))
 
 
 def encrypt_hkdf_hmac_direct_tests():
