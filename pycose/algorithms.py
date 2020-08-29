@@ -1,5 +1,5 @@
 from hashlib import sha512, sha384, sha256
-from typing import Any, Optional, NamedTuple
+from typing import Any, Optional, NamedTuple, List
 
 from aenum import MultiValue, Enum, skip
 from cryptography.hazmat.primitives import keywrap
@@ -81,7 +81,7 @@ class CoseAlgorithms(Enum):
         return f'<{self.__class__.__name__}.{self.fullname}: {self.id}>'
 
     def __eq__(self, other):
-        return self.id == other
+        return self.id == other or self.fullname == other
 
     def __hash__(self):
         return hash(self.id)
@@ -89,3 +89,7 @@ class CoseAlgorithms(Enum):
 
 def config(algorithm: CoseAlgorithms) -> _AlgorithmConfig:
     return algorithm.config.value
+
+
+def list_ciphers() -> List[CoseAlgorithms]:
+    return [k for k in CoseAlgorithms.__members__.keys()]
