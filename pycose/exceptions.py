@@ -16,4 +16,3 @@ class CoseIllegalKeyOps(Exception):
 
 class CoseIllegalKeyType(Exception):
     pass
-

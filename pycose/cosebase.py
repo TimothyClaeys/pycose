@@ -6,7 +6,7 @@ import cbor2
 
 
 @unique
-class HeaderKeys(IntEnum):
+class CoseHeaderKeys(IntEnum):
     """ COSE header parameters """
     # Common Parameters
     RESERVED = 0
@@ -107,13 +107,17 @@ class CoseBase(metaclass=abc.ABCMeta):
 
     def encode_phdr(self) -> bytes:
         """ Encode the protected header. """
+
         if len(self._phdr):
+            if CoseHeaderKeys.ALG in self._phdr:
+                self._phdr[CoseHeaderKeys.ALG] = int(self._phdr[CoseHeaderKeys.ALG])
             return cbor2.dumps(self._phdr)
         else:
             return b''
 
     def encode_uhdr(self) -> dict:
         """ Encode the unprotected header. """
+
         return self._uhdr
 
     @abc.abstractmethod

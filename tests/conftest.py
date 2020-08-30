@@ -6,9 +6,9 @@ from typing import List, Type, Union, Optional, Tuple
 
 from pytest import skip
 
-from pycose.algorithms import AlgorithmIDs
-from pycose.cosebase import HeaderKeys
-from pycose.keys.cosekey import KTY, EllipticCurveTypes, CoseKey, KeyOps
+from pycose.algorithms import CoseAlgorithms
+from pycose.cosebase import CoseHeaderKeys
+from pycose.keys.cosekey import KTY, EllipticCurveType, CoseKey, KeyOps
 from pycose.keys.ec import EC2
 from pycose.keys.okp import OKP
 from pycose.keys.symmetric import SymmetricKey
@@ -38,49 +38,52 @@ sign_test_vector_dirs = [os.path.join(path_examples, "sign-tests")]
 countersign_test_vector_dirs = [os.path.join(path_examples, 'countersign')]
 
 algs_to_be_replaced = {
-    'A128GCM': AlgorithmIDs.A128GCM,
-    'A192GCM': AlgorithmIDs.A192GCM,
-    'A256GCM': AlgorithmIDs.A256GCM,
-    'AES-CCM-16-128/64': AlgorithmIDs.AES_CCM_16_64_128,
-    'AES-CCM-16-256/64': AlgorithmIDs.AES_CCM_16_64_256,
-    'AES-CCM-16-128/128': AlgorithmIDs.AES_CCM_16_128_128,
-    'AES-CCM-64-128/128': AlgorithmIDs.AES_CCM_64_128_128,
-    'AES-CCM-64-128/64': AlgorithmIDs.AES_CCM_64_64_128,
-    'AES-CCM-64-256/64': AlgorithmIDs.AES_CCM_64_64_256,
-    'AES-CCM-16-256/128': AlgorithmIDs.AES_CCM_16_128_256,
-    'AES-CCM-64-256/128': AlgorithmIDs.AES_CCM_64_128_256,
-    'direct': AlgorithmIDs.DIRECT,
-    "ECDH-ES-512": AlgorithmIDs.ECDH_ES_HKDF_512,
-    "ECDH-ES": AlgorithmIDs.ECDH_ES_HKDF_256,
-    "ECDH-SS": AlgorithmIDs.ECDH_SS_HKDF_256,
-    "ECDH-SS-256": AlgorithmIDs.ECDH_SS_HKDF_256,
-    "ECDH-SS-512": AlgorithmIDs.ECDH_SS_HKDF_512,
-    "ECDH-SS-A192KW": AlgorithmIDs.ECDH_SS_A192KW,
-    "ECDH-ES-A256KW": AlgorithmIDs.ECDH_ES_A256KW,
-    "ECDH-SS-A128KW": AlgorithmIDs.ECDH_SS_A128KW,
-    "ECDH-ES-A192KW": AlgorithmIDs.ECDH_ES_A192KW,
-    "ECDH-ES-A128KW": AlgorithmIDs.ECDH_ES_A128KW,
-    "ECDH-SS-A256KW": AlgorithmIDs.ECDH_SS_A256KW,
-    "HS256": AlgorithmIDs.HMAC_256_256,
-    "HS384": AlgorithmIDs.HMAC_384_384,
-    "HS512": AlgorithmIDs.HMAC_512_512,
-    "HS256/64": AlgorithmIDs.HMAC_256_64,
-    "AES-MAC-256/64": AlgorithmIDs.AES_MAC_256_64,
-    "AES-MAC-128/64": AlgorithmIDs.AES_MAC_128_64,
-    "AES-MAC-128/128": AlgorithmIDs.AES_MAC_128_128,
-    "AES-MAC-256/128": AlgorithmIDs.AES_MAC_256_128,
-    "HKDF-HMAC-SHA-256": AlgorithmIDs.DIRECT_HKDF_SHA_256,
-    "HKDF-HMAC-SHA-512": AlgorithmIDs.DIRECT_HKDF_SHA_512,
-    "ES256": AlgorithmIDs.ES256,
-    "ES384": AlgorithmIDs.ES384,
-    "ES512": AlgorithmIDs.ES512,
+    'A128KW': CoseAlgorithms.A128KW.id,
+    'A192KW': CoseAlgorithms.A128KW.id,
+    'A256KW': CoseAlgorithms.A128KW.id,
+    'A128GCM': CoseAlgorithms.A128GCM.id,
+    'A192GCM': CoseAlgorithms.A192GCM.id,
+    'A256GCM': CoseAlgorithms.A256GCM.id,
+    'AES-CCM-16-128/64': CoseAlgorithms.AES_CCM_16_64_128.id,
+    'AES-CCM-16-256/64': CoseAlgorithms.AES_CCM_16_64_256.id,
+    'AES-CCM-16-128/128': CoseAlgorithms.AES_CCM_16_128_128.id,
+    'AES-CCM-64-128/128': CoseAlgorithms.AES_CCM_64_128_128.id,
+    'AES-CCM-64-128/64': CoseAlgorithms.AES_CCM_64_64_128.id,
+    'AES-CCM-64-256/64': CoseAlgorithms.AES_CCM_64_64_256.id,
+    'AES-CCM-16-256/128': CoseAlgorithms.AES_CCM_16_128_256.id,
+    'AES-CCM-64-256/128': CoseAlgorithms.AES_CCM_64_128_256.id,
+    'direct': CoseAlgorithms.DIRECT.id,
+    "ECDH-ES-512": CoseAlgorithms.ECDH_ES_HKDF_512.id,
+    "ECDH-ES": CoseAlgorithms.ECDH_ES_HKDF_256.id,
+    "ECDH-SS": CoseAlgorithms.ECDH_SS_HKDF_256.id,
+    "ECDH-SS-256": CoseAlgorithms.ECDH_SS_HKDF_256.id,
+    "ECDH-SS-512": CoseAlgorithms.ECDH_SS_HKDF_512.id,
+    "ECDH-SS-A192KW": CoseAlgorithms.ECDH_SS_A192KW.id,
+    "ECDH-ES-A256KW": CoseAlgorithms.ECDH_ES_A256KW.id,
+    "ECDH-SS-A128KW": CoseAlgorithms.ECDH_SS_A128KW.id,
+    "ECDH-ES-A192KW": CoseAlgorithms.ECDH_ES_A192KW.id,
+    "ECDH-ES-A128KW": CoseAlgorithms.ECDH_ES_A128KW.id,
+    "ECDH-SS-A256KW": CoseAlgorithms.ECDH_SS_A256KW.id,
+    "HS256": CoseAlgorithms.HMAC_256_256.id,
+    "HS384": CoseAlgorithms.HMAC_384_384.id,
+    "HS512": CoseAlgorithms.HMAC_512_512.id,
+    "HS256/64": CoseAlgorithms.HMAC_256_64.id,
+    "AES-MAC-256/64": CoseAlgorithms.AES_MAC_256_64.id,
+    "AES-MAC-128/64": CoseAlgorithms.AES_MAC_128_64.id,
+    "AES-MAC-128/128": CoseAlgorithms.AES_MAC_128_128.id,
+    "AES-MAC-256/128": CoseAlgorithms.AES_MAC_256_128.id,
+    "HKDF-HMAC-SHA-256": CoseAlgorithms.DIRECT_HKDF_SHA_256.id,
+    "HKDF-HMAC-SHA-512": CoseAlgorithms.DIRECT_HKDF_SHA_512.id,
+    "ES256": CoseAlgorithms.ES256.id,
+    "ES384": CoseAlgorithms.ES384.id,
+    "ES512": CoseAlgorithms.ES512.id,
 }
 
 params_to_be_replaced = {
-    'ctyp': HeaderKeys.CONTENT_TYPE,
-    'kid': HeaderKeys.KID,
-    'alg': HeaderKeys.ALG,
-    'partialIV_hex': HeaderKeys.PARTIAL_IV,
+    'ctyp': CoseHeaderKeys.CONTENT_TYPE,
+    'kid': CoseHeaderKeys.KID,
+    'alg': CoseHeaderKeys.ALG,
+    'partialIV_hex': CoseHeaderKeys.PARTIAL_IV,
 }
 
 key_param_to_be_replaced = {
@@ -99,11 +102,11 @@ key_param_to_be_replaced = {
 key_attr_to_be_replaced = {
     "EC": KTY.EC2,
     "OKP": KTY.OKP,
-    "P-256": EllipticCurveTypes.P_256,
-    "P-384": EllipticCurveTypes.P_384,
-    "P-521": EllipticCurveTypes.P_521,
-    "X25519": EllipticCurveTypes.X25519,
-    "X448": EllipticCurveTypes.X448,
+    "P-256": EllipticCurveType.P_256,
+    "P-384": EllipticCurveType.P_384,
+    "P-521": EllipticCurveType.P_521,
+    "X25519": EllipticCurveType.X25519,
+    "X448": EllipticCurveType.X448,
     "oct": KTY.SYMMETRIC,
 }
 
@@ -138,7 +141,7 @@ def pytest_generate_tests(metafunc):
         ids = [test['title'] for test in test_suite]
         metafunc.parametrize("encrypt_x25519_direct_test_input", test_suite, ids=ids)
     if "encrypt_triple_layer_test_input" in metafunc.fixturenames:
-        test_suite = encrypt_x25519_direct_tests()
+        test_suite = encrypt_triple_layer_tests()
         ids = [test['title'] for test in test_suite]
         metafunc.parametrize("encrypt_triple_layer_test_input", test_suite, ids=ids)
     if "encrypt_hkdf_hmac_direct_test_input" in metafunc.fixturenames:
@@ -201,7 +204,7 @@ def encrypt_x25519_direct_tests():
 
 
 def encrypt_triple_layer_tests():
-    return _build_test_cases('enveloped', triple_layer_enc_test_vector_dirs)
+    return _build_test_cases('enveloped', triple_layer_enc_test_vector_dirs, os.path.join("RFC8152", "Appendix_B.json"))
 
 
 def encrypt_hkdf_hmac_direct_tests():
@@ -216,8 +219,12 @@ def sign_tests():
     return _build_test_cases('sign', sign_test_vector_dirs)
 
 
-def _build_test_cases(key: str, test_dirs: List[str]):
+def _build_test_cases(key: str, test_dirs: List[str], single_file: Optional[str] = None):
     test_files = [os.path.join(path_examples, td, file) for td in test_dirs for file in os.listdir(td)]
+
+    if single_file is not None and os.path.join(path_examples, single_file) in test_files:
+        test_files = [os.path.join(path_examples, single_file)]
+
     fixed_test_cases = []
 
     for file in test_files:
@@ -275,6 +282,9 @@ def _fix_key_object(data: dict, key: str) -> None:
         (key_param_to_be_replaced[k] if k in key_param_to_be_replaced else k):
             key_attr_to_be_replaced[v] if v in key_attr_to_be_replaced else v for k, v in data[key].items()
     }
+    if CoseKey.Common.KID in updated:
+        updated[CoseKey.Common.KID] = updated[CoseKey.Common.KID].encode('utf-8')
+
     data[key] = updated
 
 
@@ -288,12 +298,16 @@ def _fix_header_algorithm_names(data: dict, key) -> None:
     if "epk" in header_dict:
         _fix_key_object(header_dict, "epk")
         temp = header_dict["epk"]
+        if EC2.EC2Prm.X in temp and isinstance(temp[EC2.EC2Prm.X], str):
+            temp[EC2.EC2Prm.X] = CoseKey.base64decode(temp[EC2.EC2Prm.X])
+        if EC2.EC2Prm.Y in temp and isinstance(temp[EC2.EC2Prm.Y], str):
+            temp[EC2.EC2Prm.Y] = CoseKey.base64decode(temp[EC2.EC2Prm.Y])
         del header_dict["epk"]
 
     header_dict = {k: (v if v not in algs_to_be_replaced else algs_to_be_replaced[v]) for k, v in header_dict.items()}
 
     if temp is not None:
-        header_dict[HeaderKeys.EPHEMERAL_KEY] = temp
+        header_dict[CoseHeaderKeys.EPHEMERAL_KEY] = temp
     data[key] = header_dict
 
 
@@ -306,16 +320,16 @@ def _fix_header_attribute_names(data: dict, key) -> None:
     header_dict = {(k if k not in params_to_be_replaced else params_to_be_replaced[k]): v for k, v in
                    header_dict.items()}
 
-    if HeaderKeys.KID in header_dict and type(header_dict[HeaderKeys.KID]) == str:
-        header_dict[HeaderKeys.KID] = header_dict[HeaderKeys.KID].encode('utf-8')
-    if HeaderKeys.PARTIAL_IV in header_dict and type(header_dict[HeaderKeys.PARTIAL_IV]) == str:
-        header_dict[HeaderKeys.PARTIAL_IV] = unhexlify(header_dict[HeaderKeys.PARTIAL_IV].encode('utf-8'))
+    if CoseHeaderKeys.KID in header_dict and type(header_dict[CoseHeaderKeys.KID]) == str:
+        header_dict[CoseHeaderKeys.KID] = header_dict[CoseHeaderKeys.KID].encode('utf-8')
+    if CoseHeaderKeys.PARTIAL_IV in header_dict and type(header_dict[CoseHeaderKeys.PARTIAL_IV]) == str:
+        header_dict[CoseHeaderKeys.PARTIAL_IV] = unhexlify(header_dict[CoseHeaderKeys.PARTIAL_IV].encode('utf-8'))
     data[key] = header_dict
 
 
 def create_cose_key(key_type: Type[CoseKey],
                     input_data: dict,
-                    alg: Optional[AlgorithmIDs] = None,
+                    alg: Optional[CoseAlgorithms] = None,
                     usage: Optional[KeyOps] = None) -> Union[EC2, SymmetricKey, OKP]:
     if key_type == EC2:
         key = EC2(
@@ -358,7 +372,7 @@ def extract_uhdr(test_input: dict, key: str, rng_index=0) -> dict:
 
     if key == 'encrypted' or key == 'enveloped':
         if 'rng_stream' in test_input:
-            base.update({HeaderKeys.IV: unhexlify(test_input['rng_stream'][rng_index])})
+            base.update({CoseHeaderKeys.IV: unhexlify(test_input['rng_stream'][rng_index])})
     return base
 
 
@@ -376,21 +390,21 @@ def extract_nonce(test_input: dict, rng_index=0) -> bytes:
         return b""
 
 
-def extract_alg(test_input: dict) -> AlgorithmIDs:
-    alg = test_input.get('protected', {}).get(HeaderKeys.ALG)
+def extract_alg(test_input: dict) -> CoseAlgorithms:
+    alg = test_input.get('protected', {}).get(CoseHeaderKeys.ALG)
     if alg is None:
-        alg = test_input.get('unprotected', {}).get(HeaderKeys.ALG)
+        alg = test_input.get('unprotected', {}).get(CoseHeaderKeys.ALG)
 
     return alg
 
 
 def setup_ec_receiver_keys(recipient: dict, received_key_obj) -> Tuple[EC2, EC2]:
-    alg = recipient.get("protected", {}).get(HeaderKeys.ALG)
+    alg = recipient.get("protected", {}).get(CoseHeaderKeys.ALG)
     if alg is None:
-        alg = recipient.get("unprotected", {}).get(HeaderKeys.ALG)
+        alg = recipient.get("unprotected", {}).get(CoseHeaderKeys.ALG)
 
     rcvr_static_key = EC2(
-        kid=recipient['key'][CoseKey.Common.KID].encode('utf-8'),
+        kid=recipient['key'][CoseKey.Common.KID],
         crv=recipient['key'][EC2.EC2Prm.CRV],
         alg=alg,
         x=CoseKey.base64decode(recipient['key'][EC2.EC2Prm.X]),
@@ -417,12 +431,12 @@ def setup_ec_receiver_keys(recipient: dict, received_key_obj) -> Tuple[EC2, EC2]
 
 
 def setup_okp_receiver_keys(recipient: dict, received_key_obj) -> Tuple[OKP, OKP]:
-    alg = recipient.get("protected", {}).get(HeaderKeys.ALG)
+    alg = recipient.get("protected", {}).get(CoseHeaderKeys.ALG)
     if alg is None:
-        alg = recipient.get("unprotected", {}).get(HeaderKeys.ALG)
+        alg = recipient.get("unprotected", {}).get(CoseHeaderKeys.ALG)
 
     rcvr_static_key = OKP(
-        kid=recipient['key'][CoseKey.Common.KID].encode('utf-8'),
+        kid=recipient['key'][CoseKey.Common.KID],
         crv=recipient['key'][OKP.OKPPrm.CRV],
         alg=alg,
         x=unhexlify(recipient['key'][OKP.OKPPrm.X]),

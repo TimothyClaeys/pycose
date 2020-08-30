@@ -11,8 +11,8 @@ from typing import Optional
 
 import cbor2
 
-from pycose import cosemessage, enccommon
-from pycose.algorithms import AlgorithmIDs
+from pycose import cosemessage, enccommon, CoseMessage
+from pycose.algorithms import CoseAlgorithms
 from pycose.keys.symmetric import SymmetricKey
 
 
@@ -40,7 +40,7 @@ class Enc0Message(enccommon.EncCommon):
     def encode(self,
                nonce: bytes,
                key: SymmetricKey,
-               alg: Optional[AlgorithmIDs] = None,
+               alg: Optional[CoseAlgorithms] = None,
                tagged: bool = True,
                encrypt: bool = True) -> bytes:
         """ Encode and protect the COSE_Encrypt0 message. """
@@ -57,8 +57,5 @@ class Enc0Message(enccommon.EncCommon):
 
         return res
 
-    def __repr__(self):
-        return f'<COSE_Encrypt0:\n' \
-               f'\t phdr={self._phdr}\n' \
-               f'\t uhdr={self._uhdr}\n' \
-               f'\t payload={self._payload}>'
+    def __repr__(self) -> str:
+        return f'<COSE_Encrypt0: [{self._phdr}, {self._uhdr}, {CoseMessage._truncate(self._payload)}]>'

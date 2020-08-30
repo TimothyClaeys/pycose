@@ -4,8 +4,8 @@ from binascii import hexlify, unhexlify
 from pytest import mark, fixture, skip
 
 from pycose import CoseMessage
-from pycose.algorithms import AlgorithmIDs
-from pycose.cosebase import HeaderKeys
+from pycose.algorithms import CoseAlgorithms
+from pycose.cosebase import CoseHeaderKeys
 from pycose.enc0message import Enc0Message
 from pycose.keys.cosekey import KeyOps, CoseKey
 from pycose.keys.symmetric import SymmetricKey
@@ -82,54 +82,54 @@ def test_encrypt0_decoding(setup_encrypt0_tests: tuple) -> None:
 
 @mark.parametrize("phdr, uhdr, payload, key",
                   [
-                      ({HeaderKeys.ALG: AlgorithmIDs.A128GCM},
-                       {HeaderKeys.IV: unhexlify(b'89F52F65A1C580933B5261A72F')},
+                      ({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM},
+                       {CoseHeaderKeys.IV: unhexlify(b'89F52F65A1C580933B5261A72F')},
                        b'',
-                       SymmetricKey(kid=b'you_know', k=os.urandom(16), alg=AlgorithmIDs.A128GCM)),
-                      ({HeaderKeys.ALG: AlgorithmIDs.A192GCM},
-                       {HeaderKeys.IV: unhexlify(b'89F52F65A1C580933B5261A72F')},
+                       SymmetricKey(kid=b'you_know', k=os.urandom(16), alg=CoseAlgorithms.A128GCM)),
+                      ({CoseHeaderKeys.ALG: CoseAlgorithms.A192GCM},
+                       {CoseHeaderKeys.IV: unhexlify(b'89F52F65A1C580933B5261A72F')},
                        os.urandom(50),
-                       SymmetricKey(kid=b'you_know', k=os.urandom(16), alg=AlgorithmIDs.A192GCM)),
-                      ({HeaderKeys.ALG: AlgorithmIDs.A256GCM},
-                       {HeaderKeys.IV: unhexlify(b'89F52F65A1C580933B5261A72F')},
+                       SymmetricKey(kid=b'you_know', k=os.urandom(16), alg=CoseAlgorithms.A192GCM)),
+                      ({CoseHeaderKeys.ALG: CoseAlgorithms.A256GCM},
+                       {CoseHeaderKeys.IV: unhexlify(b'89F52F65A1C580933B5261A72F')},
                        os.urandom(100),
-                       SymmetricKey(kid=b'you_know', k=os.urandom(16), alg=AlgorithmIDs.A256GCM))
+                       SymmetricKey(kid=b'you_know', k=os.urandom(16), alg=CoseAlgorithms.A256GCM))
                   ], ids=['test_encode_decode_1', 'test_encode_decode_2', 'test_encode_decode_3'])
 def test_encode_decode_encrypt0(phdr, uhdr, payload, key):
     # create and encode a message
     original: Enc0Message = Enc0Message(phdr, uhdr, payload)
-    encoded = original.encode(key=key, nonce=original.uhdr[HeaderKeys.IV])
+    encoded = original.encode(key=key, nonce=original.uhdr[CoseHeaderKeys.IV])
 
     # decode the message
     decoded: Enc0Message = CoseMessage.decode(encoded)
 
     # verify the different parts
     assert type(decoded) == Enc0Message
-    assert original.encrypt(key=key, nonce=original.uhdr[HeaderKeys.IV]) == decoded.payload
+    assert original.encrypt(key=key, nonce=original.uhdr[CoseHeaderKeys.IV]) == decoded.payload
     assert decoded.phdr == phdr
     assert decoded.uhdr == uhdr
 
     # set the key and decode the message
     key.key_ops = KeyOps.DECRYPT
-    assert decoded.decrypt(key=key, nonce=original.uhdr[HeaderKeys.IV]) == payload
+    assert decoded.decrypt(key=key, nonce=original.uhdr[CoseHeaderKeys.IV]) == payload
 
 
 @mark.parametrize("phdr, uhdr, alg, key1, key2, nonce, expected",
                   [
-                      ({HeaderKeys.ALG: AlgorithmIDs.AES_CCM_16_64_128},
-                       {HeaderKeys.IV: unhexlify(b'89F52F65A1C580933B5261A72F')},
+                      ({CoseHeaderKeys.ALG: CoseAlgorithms.AES_CCM_16_64_128},
+                       {CoseHeaderKeys.IV: unhexlify(b'89F52F65A1C580933B5261A72F')},
                        None,
                        SymmetricKey(
                            kid=b'our-secret',
-                           alg=AlgorithmIDs.AES_CCM_16_64_128,
+                           alg=CoseAlgorithms.AES_CCM_16_64_128,
                            key_ops=KeyOps.ENCRYPT,
                            k=CoseKey.base64decode("hJtXIZ2uSN5kbQfbtTNWbg")),
                        None,
                        unhexlify("89F52F65A1C580933B5261A72F"),
                        b'6899DA0A132BD2D2B9B10915743EE1F7B92A4680E7C51BDBC1B320EA',),
-                      ({HeaderKeys.ALG: AlgorithmIDs.AES_CCM_16_64_128},
+                      ({CoseHeaderKeys.ALG: CoseAlgorithms.AES_CCM_16_64_128},
                        {},
-                       AlgorithmIDs.AES_CCM_16_64_128,
+                       CoseAlgorithms.AES_CCM_16_64_128,
                        SymmetricKey(
                            kid=b'our-secret',
                            key_ops=KeyOps.ENCRYPT,

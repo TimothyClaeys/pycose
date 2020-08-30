@@ -2,8 +2,8 @@ from typing import List, Optional
 
 import cbor2
 
-from pycose import cosemessage, enccommon
-from pycose.algorithms import AlgorithmIDs
+from pycose import cosemessage, enccommon, CoseMessage
+from pycose.algorithms import CoseAlgorithms
 from pycose.keys.symmetric import SymmetricKey
 from pycose.recipient import CoseRecipient, RcptParams
 
@@ -20,7 +20,7 @@ class EncMessage(enccommon.EncCommon):
         try:
             msg.recipients = [CoseRecipient.from_recipient_obj(r) for r in cose_obj.pop(0)]
         except (IndexError, ValueError):
-            msg.recipients = None
+            msg.recipients = []
         return msg
 
     def __init__(self,
@@ -44,7 +44,7 @@ class EncMessage(enccommon.EncCommon):
     def encode(self,
                nonce: bytes,
                key: SymmetricKey,
-               alg: Optional[AlgorithmIDs] = None,
+               alg: Optional[CoseAlgorithms] = None,
                enc_params: Optional[List[RcptParams]] = None,
                tagged: bool = True,
                encrypt: bool = True) -> bytes:
@@ -73,8 +73,5 @@ class EncMessage(enccommon.EncCommon):
         return message
 
     def __repr__(self) -> str:
-        return f'<COSE_Encrypt:\n' \
-               f'\t phdr={self._phdr}\n' \
-               f'\t uhdr={self._uhdr}\n' \
-               f'\t payload={self._payload}\n' \
-               f'\t recipients={self.recipients}>'
+        return \
+            f'<COSE_Encrypt: [{self._phdr}, {self._uhdr}, {CoseMessage._truncate(self._payload)}, {self.recipients}]>'

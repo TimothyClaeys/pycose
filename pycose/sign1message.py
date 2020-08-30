@@ -2,9 +2,9 @@ from typing import Optional, Union
 
 import cbor2
 
-from pycose import cosemessage, signcommon
-from pycose.algorithms import AlgorithmIDs
-from pycose.keys.cosekey import EllipticCurveTypes
+from pycose import cosemessage, signcommon, CoseMessage
+from pycose.algorithms import CoseAlgorithms
+from pycose.keys.cosekey import EllipticCurveType
 from pycose.keys.ec import EC2
 from pycose.keys.okp import OKP
 
@@ -55,8 +55,8 @@ class Sign1Message(cosemessage.CoseMessage, signcommon.SignCommon):
 
     def encode(self,
                private_key: Union[EC2, OKP],
-               alg: Optional[AlgorithmIDs] = None,
-               curve: Optional[EllipticCurveTypes] = None,
+               alg: Optional[CoseAlgorithms] = None,
+               curve: Optional[EllipticCurveType] = None,
                tagged: bool = True,
                sign: bool = True) -> bytes:
         """ Encodes the message into a CBOR array with or without a CBOR tag. """
@@ -76,10 +76,6 @@ class Sign1Message(cosemessage.CoseMessage, signcommon.SignCommon):
 
         return res
 
-    def __repr__(self):
-        return f'<COSE_Sign1:\n' \
-               f'\t phdr={self._phdr}\n' \
-               f'\t uhdr={self._uhdr}\n' \
-               f'\t payload={self._payload}\n' \
-               f'\t signature={self.signature}>'
-
+    def __repr__(self) -> str:
+        return f'<COSE_Sign1: [{self._phdr}, {self._uhdr}, {CoseMessage._truncate(self._payload)}, ' \
+               f'{CoseMessage._truncate(self._signature)}]>'

@@ -1,18 +1,33 @@
-# pycose [![Build Status](https://travis-ci.org/TimothyClaeys/pycose.svg?branch=master)](https://travis-ci.org/TimothyClaeys/pycose)
+.. pycose documentation master file, created by
+   sphinx-quickstart on Fri Aug 21 15:42:18 2020.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
 
-This project is a Python (>=3.6) implementation of the IETF CBOR Encoded Message Syntax (COSE). COSE has reached RFC status and is now available at RFC 8152.
+*********************
+Welcome to ``pycose``
+*********************
 
-In addition to the core document the following have also become RFCs:
+What is COSE
+************
 
-- RFC 8230 How to use RSA algorithms with COSE. (Not currently supported)
+CBOR Object Signing and Encryption (COSE) is a data format for concise representation of small messages. It is optimized for
+low-power devices. The basic COSE format consists of two header information buckets, called *protected header* and *unprotected header*,
+and the *payload*.
 
-The project is implemented using pyca/cryptography for the crypto libraries and additionally uses python-ecdsa (https://github.com/warner/python-ecdsa) for the deterministic ECDSA algorithm. The pyca/cryptography currently only supports the ECDSA version that requires strong random numbers for each signature.
+.. image:: ../images/basic_structure.png
+    :width: 400px
+    :align: center
 
-## What is COSE
-CBOR Encoded Message Syntax (COSE) is a data format for concise representation of small messages. It is optimized for low power devices. COSE messages can be encrypted, MAC'ed and signed. There are 6 different types of COSE messages:
+COSE messages can be encrypted, MAC'ed and signed. There are 6 different types of COSE messages:
 
 - **Encrypt0**: An encrypted COSE message with a single recipient. The payload and AAD are protected by a shared CEK (Content Encryption Keys)
 - **Encrypt**: An encrypted COSE message can have multiple recipients. For each recipient the CEK is encrypted with a KEK (Key Encryption Key) - using AES key wrap - and added to the message.
+
+
+.. image:: ../images/cose_encryption.png
+    :width: 700px
+    :align: center
+
 - **MAC0**: An authenticated COSE message with one recipient.
 - **MAC**: An authenticated COSE message that can have multiple recipients. For each recipient, the authentication key is encrypted with a KEK and added to the message.
 - **Sign0**: A signed COSE message with a single signature.
@@ -29,17 +44,29 @@ Additionally, based on the message type, other message fields can be added:
 - MAC or signature
 - COSE recipients or COSE signatures
 
-## How to install
 
-1. Clone the repository
-2. `cd COSE-PYTHON`
-3. Run `git submodule init` && `git submodule update`
-4. Install the python package (pycose) with pip: `pip3 install -e .`
+Besides the different COSE messages, the RFC also defines COSE Key objects. COSE Keys are used to store and transport
+cryptographic keys. There are three main key types:
 
-You should now be able to run the unit tests in the `tests/` directory,
-e.g.:
+- **EC2 key**
+- **OKP keys**
+- **Symmetric keys**
 
-`python3 test_crypto.py`
+.. toctree::
+   :maxdepth: 2
+   :caption: COSE messages
 
-## Usage
+   cosemessages/index.rst
+
+.. toctree::
+   :maxdepth: 2
+   :caption: COSE keys
+
+   cosekeys/index.rst
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Miscellaneous
+
+   algorithms.rst
 
