@@ -141,14 +141,6 @@ class CoseKey(metaclass=ABCMeta):
         """
         return base64.b64encode(to_encode).decode("utf-8")
 
-    @classmethod
-    def _base_repr(cls, k: int, v: bytes) -> str:
-        return f"\t{repr(k):<16} = {repr(v)}"
-
-    @classmethod
-    def _key_repr(cls, k: int, v: bytes) -> str:
-        return f"\t{repr(k):<16} = {hexlify(v)}"
-
     @property
     def kty(self) -> KTY:
         return self._kty
@@ -209,10 +201,6 @@ class CoseKey(metaclass=ABCMeta):
 
         return {self.Common[kw[1:].upper()]: dataclasses.asdict(self)[kw] for kw in key_words}
 
-    @abstractmethod
-    def __repr__(self):
-        raise NotImplementedError
-
     def _check_key_conf(self,
                         algorithm: CoseAlgorithms,
                         key_operation: KeyOps,
@@ -259,6 +247,10 @@ class CoseKey(metaclass=ABCMeta):
                 raise ValueError("Key operation for private and public key do not match")
             else:
                 peer_key.key_ops = self.key_ops
+
+    @abstractmethod
+    def __repr__(self):
+        raise NotImplementedError
 
 
 CK = TypeVar('CK', bound=CoseKey)

@@ -104,12 +104,6 @@ class OKP(CoseKey):
 
         return {**super().encode(*argv), **{self.OKPPrm[kw[1:].upper()]: dataclasses.asdict(self)[kw] for kw in kws}}
 
-    def __repr__(self):
-        content = self.encode()
-        output = ['<COSE_Key(OKP)>']
-        output.extend(self._base_repr(k, v) if k not in [-2, -4] else self._key_repr(k, v) for k, v in content.items())
-        return "\n".join(output)
-
     def x25519_key_derivation(self,
                               public_key: 'OKP',
                               context: CoseKDFContext = b'',
@@ -135,3 +129,8 @@ class OKP(CoseKey):
                                   backend=default_backend()).derive(shared_secret)
 
         return shared_secret, derived_key
+
+    def __repr__(self):
+        hdr = '<COSE_Key(OKP): {'
+        output = [f'{k[1:]}: {v}' for k, v in dataclasses.asdict(self).items() if v is not None]
+        return hdr + ", ".join(output)[2:] + '}>'

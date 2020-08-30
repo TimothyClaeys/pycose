@@ -63,12 +63,6 @@ class SymmetricKey(CoseKey):
         kws = [kw for kw in argv if self.SymPrm.has_member(kw.upper())]
         return {**super().encode(*argv), **{self.SymPrm[kw.upper()]: dataclasses.asdict(self)[kw] for kw in kws}}
 
-    def __repr__(self):
-        content = self.encode()
-        output = ['<COSE_Key(SymmetricKey)>']
-        output.extend(self._base_repr(k, v) if k not in [-1] else self._key_repr(k, v) for k, v in content.items())
-        return "\n".join(output)
-
     def encrypt(self, plaintext: bytes, aad: bytes, nonce: bytes, alg: Optional[CoseAlgorithms]) -> bytes:
         self._check_key_conf(alg, KeyOps.ENCRYPT)
 
@@ -199,3 +193,10 @@ class SymmetricKey(CoseKey):
                                   backend=default_backend()).derive(self.k)
 
         return derived_key
+
+    def __repr__(self):
+        hdr = '<COSE_Key(Symmetric): {'
+        output = [f'{k[1:]}: {v}' for k, v in dataclasses.asdict(self).items() if v is not None]
+        return hdr + ", ".join(output) + '}>'
+
+

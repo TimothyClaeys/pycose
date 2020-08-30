@@ -124,13 +124,6 @@ class EC2(CoseKey):
 
         return {**super().encode(*argv), **{self.EC2Prm[kw[1:].upper()]: dataclasses.asdict(self)[kw] for kw in kws}}
 
-    def __repr__(self):
-        content = self.encode()
-        output = ['<COSE_Key(EC2)>']
-        output.extend(
-            self._base_repr(k, v) if k not in [-2, -3, -4] else self._key_repr(k, v) for k, v in content.items())
-        return "\n".join(output)
-
     def ecdh_key_derivation(self,
                             public_key: 'EC2',
                             context: CoseKDFContext,
@@ -222,3 +215,10 @@ class EC2(CoseKey):
         vk = VerifyingKey.from_public_point(p, alg_cfg.curve, alg_cfg.hash, validate_point=True)
 
         return vk.verify(signature, to_be_signed)
+
+    def __repr__(self):
+        hdr = '<COSE_Key(EC2): {'
+        output = [f'{k[1:]}: {v}' for k, v in dataclasses.asdict(self).items() if v is not None]
+        return hdr + ", ".join(output)[2:] + '}>'
+
+
