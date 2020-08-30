@@ -7,7 +7,7 @@ from typing import List, Type, Union, Optional, Tuple
 from pytest import skip
 
 from pycose.algorithms import CoseAlgorithms
-from pycose.cosebase import HeaderKeys
+from pycose.cosebase import CoseHeaderKeys
 from pycose.keys.cosekey import KTY, EllipticCurveType, CoseKey, KeyOps
 from pycose.keys.ec import EC2
 from pycose.keys.okp import OKP
@@ -80,10 +80,10 @@ algs_to_be_replaced = {
 }
 
 params_to_be_replaced = {
-    'ctyp': HeaderKeys.CONTENT_TYPE,
-    'kid': HeaderKeys.KID,
-    'alg': HeaderKeys.ALG,
-    'partialIV_hex': HeaderKeys.PARTIAL_IV,
+    'ctyp': CoseHeaderKeys.CONTENT_TYPE,
+    'kid': CoseHeaderKeys.KID,
+    'alg': CoseHeaderKeys.ALG,
+    'partialIV_hex': CoseHeaderKeys.PARTIAL_IV,
 }
 
 key_param_to_be_replaced = {
@@ -307,7 +307,7 @@ def _fix_header_algorithm_names(data: dict, key) -> None:
     header_dict = {k: (v if v not in algs_to_be_replaced else algs_to_be_replaced[v]) for k, v in header_dict.items()}
 
     if temp is not None:
-        header_dict[HeaderKeys.EPHEMERAL_KEY] = temp
+        header_dict[CoseHeaderKeys.EPHEMERAL_KEY] = temp
     data[key] = header_dict
 
 
@@ -320,10 +320,10 @@ def _fix_header_attribute_names(data: dict, key) -> None:
     header_dict = {(k if k not in params_to_be_replaced else params_to_be_replaced[k]): v for k, v in
                    header_dict.items()}
 
-    if HeaderKeys.KID in header_dict and type(header_dict[HeaderKeys.KID]) == str:
-        header_dict[HeaderKeys.KID] = header_dict[HeaderKeys.KID].encode('utf-8')
-    if HeaderKeys.PARTIAL_IV in header_dict and type(header_dict[HeaderKeys.PARTIAL_IV]) == str:
-        header_dict[HeaderKeys.PARTIAL_IV] = unhexlify(header_dict[HeaderKeys.PARTIAL_IV].encode('utf-8'))
+    if CoseHeaderKeys.KID in header_dict and type(header_dict[CoseHeaderKeys.KID]) == str:
+        header_dict[CoseHeaderKeys.KID] = header_dict[CoseHeaderKeys.KID].encode('utf-8')
+    if CoseHeaderKeys.PARTIAL_IV in header_dict and type(header_dict[CoseHeaderKeys.PARTIAL_IV]) == str:
+        header_dict[CoseHeaderKeys.PARTIAL_IV] = unhexlify(header_dict[CoseHeaderKeys.PARTIAL_IV].encode('utf-8'))
     data[key] = header_dict
 
 
@@ -372,7 +372,7 @@ def extract_uhdr(test_input: dict, key: str, rng_index=0) -> dict:
 
     if key == 'encrypted' or key == 'enveloped':
         if 'rng_stream' in test_input:
-            base.update({HeaderKeys.IV: unhexlify(test_input['rng_stream'][rng_index])})
+            base.update({CoseHeaderKeys.IV: unhexlify(test_input['rng_stream'][rng_index])})
     return base
 
 
@@ -391,17 +391,17 @@ def extract_nonce(test_input: dict, rng_index=0) -> bytes:
 
 
 def extract_alg(test_input: dict) -> CoseAlgorithms:
-    alg = test_input.get('protected', {}).get(HeaderKeys.ALG)
+    alg = test_input.get('protected', {}).get(CoseHeaderKeys.ALG)
     if alg is None:
-        alg = test_input.get('unprotected', {}).get(HeaderKeys.ALG)
+        alg = test_input.get('unprotected', {}).get(CoseHeaderKeys.ALG)
 
     return alg
 
 
 def setup_ec_receiver_keys(recipient: dict, received_key_obj) -> Tuple[EC2, EC2]:
-    alg = recipient.get("protected", {}).get(HeaderKeys.ALG)
+    alg = recipient.get("protected", {}).get(CoseHeaderKeys.ALG)
     if alg is None:
-        alg = recipient.get("unprotected", {}).get(HeaderKeys.ALG)
+        alg = recipient.get("unprotected", {}).get(CoseHeaderKeys.ALG)
 
     rcvr_static_key = EC2(
         kid=recipient['key'][CoseKey.Common.KID],
@@ -431,9 +431,9 @@ def setup_ec_receiver_keys(recipient: dict, received_key_obj) -> Tuple[EC2, EC2]
 
 
 def setup_okp_receiver_keys(recipient: dict, received_key_obj) -> Tuple[OKP, OKP]:
-    alg = recipient.get("protected", {}).get(HeaderKeys.ALG)
+    alg = recipient.get("protected", {}).get(CoseHeaderKeys.ALG)
     if alg is None:
-        alg = recipient.get("unprotected", {}).get(HeaderKeys.ALG)
+        alg = recipient.get("unprotected", {}).get(CoseHeaderKeys.ALG)
 
     rcvr_static_key = OKP(
         kid=recipient['key'][CoseKey.Common.KID],
