@@ -5,7 +5,7 @@ import cbor2
 
 from pycose import cosemessage
 from pycose.algorithms import CoseAlgorithms
-from pycose.exceptions import CoseIllegalKeyType, CoseInvalidAlgorithm
+from pycose.exceptions import CoseIllegalKeyType
 from pycose.keys.symmetric import SymmetricKey
 
 

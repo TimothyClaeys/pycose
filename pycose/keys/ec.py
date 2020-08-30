@@ -220,5 +220,3 @@ class EC2(CoseKey):
         hdr = '<COSE_Key(EC2): {'
         output = [f'{k[1:]}: {v}' for k, v in dataclasses.asdict(self).items() if v is not None]
         return hdr + ", ".join(output)[2:] + '}>'
-
-

@@ -198,5 +198,3 @@ class SymmetricKey(CoseKey):
         hdr = '<COSE_Key(Symmetric): {'
         output = [f'{k[1:]}: {v}' for k, v in dataclasses.asdict(self).items() if v is not None]
         return hdr + ", ".join(output) + '}>'
-
-

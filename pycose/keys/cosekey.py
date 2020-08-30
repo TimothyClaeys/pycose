@@ -1,10 +1,10 @@
 import base64
-import dataclasses
 from abc import ABCMeta, abstractmethod
-from binascii import hexlify
-from dataclasses import dataclass
 from enum import IntEnum, unique
 from typing import List, Union, Dict, Optional, TypeVar, TYPE_CHECKING, Type, Callable
+
+import dataclasses
+from dataclasses import dataclass
 
 from pycose.algorithms import CoseAlgorithms
 from pycose.exceptions import CoseIllegalKeyOps

@@ -4,7 +4,7 @@ from typing import Union, List, Optional, Tuple, TYPE_CHECKING
 from dataclasses import dataclass, field
 
 from pycose import CoseMessage
-from pycose.exceptions import CoseIllegalKeyType, CoseInvalidAlgorithm
+from pycose.exceptions import CoseIllegalKeyType
 from pycose.keys.ec import EC2
 from pycose.keys.okp import OKP
 from pycose.keys.symmetric import SymmetricKey
