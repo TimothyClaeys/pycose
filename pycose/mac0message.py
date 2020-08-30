@@ -11,7 +11,7 @@ from typing import Optional
 
 import cbor2
 
-from pycose import cosemessage, maccommon
+from pycose import cosemessage, maccommon, CoseMessage
 from pycose.algorithms import CoseAlgorithms
 from pycose.keys.symmetric import SymmetricKey
 
@@ -60,8 +60,5 @@ class Mac0Message(maccommon.MacCommon):
         return res
 
     def __repr__(self) -> str:
-        return f'<COSE_Mac0:\n' \
-               f'\t phdr={self._phdr}\n' \
-               f'\t uhdr={self._uhdr}\n' \
-               f'\t payload={self._payload}\n' \
-               f'\t tag={self.auth_tag}>'
+        return f'<COSE_Mac0: [{self._phdr}, {self._uhdr}, {CoseMessage._truncate(self._payload)}, ' \
+               f'{CoseMessage._truncate(self.auth_tag)}]>'

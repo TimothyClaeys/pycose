@@ -2,7 +2,7 @@ from typing import Optional, Union
 
 import cbor2
 
-from pycose import cosemessage, signcommon
+from pycose import cosemessage, signcommon, CoseMessage
 from pycose.algorithms import CoseAlgorithms
 from pycose.keys.cosekey import EllipticCurveType
 from pycose.keys.ec import EC2
@@ -76,9 +76,6 @@ class Sign1Message(cosemessage.CoseMessage, signcommon.SignCommon):
 
         return res
 
-    def __repr__(self):
-        return f'<COSE_Sign1:\n' \
-               f'\t phdr={self._phdr}\n' \
-               f'\t uhdr={self._uhdr}\n' \
-               f'\t payload={self._payload}\n' \
-               f'\t signature={self.signature}>'
+    def __repr__(self) -> str:
+        return f'<COSE_Sign1: [{self._phdr}, {self._uhdr}, {CoseMessage._truncate(self._payload)}, ' \
+               f'{CoseMessage._truncate(self._signature)}]>'

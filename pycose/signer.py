@@ -3,7 +3,7 @@ from typing import Optional, Union, TYPE_CHECKING
 import cbor2
 from dataclasses import dataclass
 
-from pycose import signcommon
+from pycose import signcommon, CoseMessage
 from pycose.algorithms import CoseAlgorithms
 from pycose.keys.cosekey import EllipticCurveType
 from pycose.keys.ec import EC2
@@ -78,7 +78,7 @@ class CoseSignature(signcommon.SignCommon):
         return message
 
     def __repr__(self) -> str:
-        pass
+        return f'<COSE_Signature: [{self._phdr}, {self._uhdr}, {CoseMessage._truncate(self._signature)}]>'
 
 
 class CounterSignature(CoseSignature):

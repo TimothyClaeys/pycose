@@ -171,8 +171,5 @@ class CoseRecipient(CoseMessage):
             raise CoseInvalidAlgorithm("COSE algorithm cannot be None")
 
     def __repr__(self) -> str:
-        return f'<COSE_Recipient:\n' \
-               f'\t phdr={self._phdr}\n' \
-               f'\t uhdr={self._uhdr}\n' \
-               f'\t payload={self._payload}\n' \
-               f'\t recipients={self.recipients}>'
+        return \
+            f'<COSE_Recipient: [{self._phdr}, {self._uhdr}, {CoseMessage._truncate(self._payload)}, {self.recipients}]>'

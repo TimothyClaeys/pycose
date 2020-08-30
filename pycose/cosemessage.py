@@ -9,7 +9,8 @@ from pycose.cosebase import CoseBase
 class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
     """ Parent class of all COSE message types. """
 
-    COSE_MSG_ID = {}
+    # private dictionary to record all COSE message types dynamically
+    _COSE_MSG_ID = {}
 
     @classmethod
     def record_cbor_tag(cls, cbor_tag: int):
@@ -18,7 +19,7 @@ class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
         def decorator(the_class):
             if not issubclass(the_class, CoseMessage):
                 raise ValueError("Can only decorate subclass of CoseMessage")
-            cls.COSE_MSG_ID[cbor_tag] = the_class
+            cls._COSE_MSG_ID[cbor_tag] = the_class
             return the_class
 
         return decorator
@@ -37,7 +38,7 @@ class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
 
         if isinstance(cose_obj, list):
             try:
-                return cls.COSE_MSG_ID[cbor_tag].from_cose_obj(cose_obj)
+                return cls._COSE_MSG_ID[cbor_tag].from_cose_obj(cose_obj)
             except KeyError as e:
                 raise KeyError("CBOR tag is not recognized", e)
         else:
@@ -89,6 +90,10 @@ class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
         structure.append(self._external_aad)
 
         return structure
+
+    @classmethod
+    def _truncate(cls, payload: bytes):
+        return f'{payload[:5]} ... ({len(payload)} bytes)'
 
     @abc.abstractmethod
     def encode(self, **kwargs) -> bytes:

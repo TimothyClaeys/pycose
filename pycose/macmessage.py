@@ -13,7 +13,7 @@ from typing import Optional, List
 
 import cbor2
 
-from pycose import cosemessage, maccommon
+from pycose import cosemessage, maccommon, CoseMessage
 from pycose.algorithms import CoseAlgorithms
 from pycose.keys.symmetric import SymmetricKey
 from pycose.recipient import CoseRecipient, RcptParams
@@ -85,9 +85,6 @@ class MacMessage(maccommon.MacCommon):
         return message
 
     def __repr__(self) -> str:
-        return f'<COSE_Mac:\n' \
-               f'\t phdr={self._phdr}\n' \
-               f'\t uhdr={self._uhdr}\n' \
-               f'\t payload={self._payload}\n' \
-               f'\t auth_tag={self.auth_tag}\n' \
-               f'\t recipients={self.recipients}>'
+        return \
+            f'<COSE_Mac0: [{self._phdr}, {self._uhdr}, {CoseMessage._truncate(self._payload)}, ' \
+            f'{CoseMessage._truncate(self.auth_tag)}, {self.recipients}]>'

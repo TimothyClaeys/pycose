@@ -2,7 +2,7 @@ from typing import List, Optional
 
 import cbor2
 
-from pycose import cosemessage, enccommon
+from pycose import cosemessage, enccommon, CoseMessage
 from pycose.algorithms import CoseAlgorithms
 from pycose.keys.symmetric import SymmetricKey
 from pycose.recipient import CoseRecipient, RcptParams
@@ -73,8 +73,5 @@ class EncMessage(enccommon.EncCommon):
         return message
 
     def __repr__(self) -> str:
-        return f'<COSE_Encrypt:\n' \
-               f'\t phdr={self._phdr}\n' \
-               f'\t uhdr={self._uhdr}\n' \
-               f'\t payload={self._payload}\n' \
-               f'\t recipients={self.recipients}>'
+        return \
+            f'<COSE_Encrypt: [{self._phdr}, {self._uhdr}, {CoseMessage._truncate(self._payload)}, {self.recipients}]>'
