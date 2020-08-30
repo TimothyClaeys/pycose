@@ -1,12 +1,12 @@
 import base64
-import dataclasses
 from abc import ABCMeta, abstractmethod
-from binascii import hexlify
-from dataclasses import dataclass
 from enum import IntEnum, unique
 from typing import List, Union, Dict, Optional, TypeVar, TYPE_CHECKING, Type, Callable
 
-from pycose.algorithms import AlgorithmIDs
+import dataclasses
+from dataclasses import dataclass
+
+from pycose.algorithms import CoseAlgorithms
 from pycose.exceptions import CoseIllegalKeyOps
 
 if TYPE_CHECKING:
@@ -61,7 +61,7 @@ class CoseKey(metaclass=ABCMeta):
 
     _kty: Optional[KTY]
     _kid: Optional[Union[int, bytes]]
-    _alg: Optional[AlgorithmIDs]
+    _alg: Optional[CoseAlgorithms]
     _key_ops: Optional[KeyOps]
     _base_iv: Optional[bytes]
 
@@ -141,14 +141,6 @@ class CoseKey(metaclass=ABCMeta):
         """
         return base64.b64encode(to_encode).decode("utf-8")
 
-    @classmethod
-    def _base_repr(cls, k: int, v: bytes) -> str:
-        return f"\t{repr(k):<16} = {repr(v)}"
-
-    @classmethod
-    def _key_repr(cls, k: int, v: bytes) -> str:
-        return f"\t{repr(k):<16} = {hexlify(v)}"
-
     @property
     def kty(self) -> KTY:
         return self._kty
@@ -159,14 +151,16 @@ class CoseKey(metaclass=ABCMeta):
         self._kty = new_kty
 
     @property
-    def alg(self) -> Optional[AlgorithmIDs]:
+    def alg(self) -> Optional[CoseAlgorithms]:
         return self._alg
 
     @alg.setter
-    def alg(self, new_alg: AlgorithmIDs) -> None:
+    def alg(self, new_alg: CoseAlgorithms) -> None:
         if new_alg is not None:
-            _ = AlgorithmIDs(new_alg)  # check if the new value is a known COSE Algorithm
-        self._alg = new_alg
+            _ = CoseAlgorithms(new_alg)  # check if the new value is a known COSE Algorithm
+            self._alg = CoseAlgorithms(new_alg)
+        else:
+            self._alg = None
 
     @property
     def kid(self) -> Optional[bytes]:
@@ -207,18 +201,14 @@ class CoseKey(metaclass=ABCMeta):
 
         return {self.Common[kw[1:].upper()]: dataclasses.asdict(self)[kw] for kw in key_words}
 
-    @abstractmethod
-    def __repr__(self):
-        raise NotImplementedError
-
     def _check_key_conf(self,
-                        algorithm: AlgorithmIDs,
+                        algorithm: CoseAlgorithms,
                         key_operation: KeyOps,
                         peer_key: Optional[Union['EC2', 'OKP']] = None,
                         curve: Optional[EllipticCurveType] = None):
         """ Helper function that checks the configuration of the COSE key object. """
 
-        if self.alg is not None and algorithm is not None and self.alg != algorithm:
+        if self.alg is not None and algorithm is not None and CoseAlgorithms(self.alg) != CoseAlgorithms(algorithm):
             raise ValueError("COSE key algorithm does not match with parameter 'algorithm'.")
 
         if algorithm is not None:
@@ -257,6 +247,10 @@ class CoseKey(metaclass=ABCMeta):
                 raise ValueError("Key operation for private and public key do not match")
             else:
                 peer_key.key_ops = self.key_ops
+
+    @abstractmethod
+    def __repr__(self):
+        raise NotImplementedError
 
 
 CK = TypeVar('CK', bound=CoseKey)

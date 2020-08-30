@@ -6,7 +6,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PublicKey, X25519PrivateKey
 from dataclasses import dataclass
 
-from pycose.algorithms import AlgorithmIDs, AlgoParam, AlgID2Crypto
+from pycose.algorithms import CoseAlgorithms, config
 from pycose.context import CoseKDFContext
 from pycose.exceptions import CoseInvalidAlgorithm
 from pycose.keys.cosekey import CoseKey, KTY, EllipticCurveType, KeyOps
@@ -104,24 +104,16 @@ class OKP(CoseKey):
 
         return {**super().encode(*argv), **{self.OKPPrm[kw[1:].upper()]: dataclasses.asdict(self)[kw] for kw in kws}}
 
-    def __repr__(self):
-        content = self.encode()
-        output = ['<COSE_Key(OKP)>']
-        output.extend(self._base_repr(k, v) if k not in [-2, -4] else self._key_repr(k, v) for k, v in content.items())
-        return "\n".join(output)
-
     def x25519_key_derivation(self,
                               public_key: 'OKP',
                               context: CoseKDFContext = b'',
-                              alg: Optional[AlgorithmIDs] = None,
+                              alg: Optional[CoseAlgorithms] = None,
                               curve: Optional[EllipticCurveType] = None) -> Tuple[bytes, bytes]:
 
         self._check_key_conf(alg, KeyOps.DERIVE_KEY, public_key, curve)
 
         try:
-            alg = self.alg.name if hasattr(self.alg, "name") else AlgorithmIDs(self.alg).name
-
-            algorithm: AlgoParam = AlgID2Crypto[alg].value
+            alg_cfg = config(CoseAlgorithms(self.alg))
         except KeyError as err:
             raise CoseInvalidAlgorithm(err)
 
@@ -130,10 +122,15 @@ class OKP(CoseKey):
 
         shared_secret = d.exchange(p)
 
-        derived_key = algorithm.key_derivation(algorithm=algorithm.hash(),
-                                               length=int(context.supp_pub_info.key_data_length / 8),
-                                               salt=None,
-                                               info=context.encode(),
-                                               backend=default_backend()).derive(shared_secret)
+        derived_key = alg_cfg.kdf(algorithm=alg_cfg.hash(),
+                                  length=int(context.supp_pub_info.key_data_length / 8),
+                                  salt=None,
+                                  info=context.encode(),
+                                  backend=default_backend()).derive(shared_secret)
 
         return shared_secret, derived_key
+
+    def __repr__(self):
+        hdr = '<COSE_Key(OKP): {'
+        output = [f'{k[1:]}: {v}' for k, v in dataclasses.asdict(self).items() if v is not None]
+        return hdr + ", ".join(output)[2:] + '}>'

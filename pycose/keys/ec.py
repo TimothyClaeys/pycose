@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from ecdsa import SigningKey, VerifyingKey
 from ecdsa.ellipticcurve import Point
 
-from pycose.algorithms import AlgorithmIDs, AlgoParam, AlgID2Crypto
+from pycose.algorithms import CoseAlgorithms, config
 from pycose.context import CoseKDFContext
 from pycose.exceptions import CoseIllegalCurve, CoseInvalidAlgorithm
 from pycose.keys.cosekey import CoseKey, KTY, EllipticCurveType, KeyOps
@@ -25,6 +25,7 @@ class EC2(CoseKey):
     _d: Optional[bytes] = None
 
     class EC2Prm(IntEnum):
+        """ EC2 COSE key parameters. """
         CRV = -1
         X = -2
         Y = -3
@@ -38,7 +39,12 @@ class EC2(CoseKey):
 
     @classmethod
     def from_cose_key_obj(cls, cose_key_obj: dict) -> 'EC2':
-        """ Returns an initialized COSE_Key object of type EC2."""
+        """
+        Returns an initialized COSE Key object of type EC2.
+
+        :param cose_key_obj: Dict containing integer representations of COSE Key parameters and there values.
+        :return: an initialized EC2 key
+        """
 
         cose_key = cls(
             kid=cose_key_obj.get(cls.Common.KID),
@@ -109,6 +115,7 @@ class EC2(CoseKey):
         self._d = new_d
 
     def encode(self, *argv):
+        """ Encodes specified attributes of the COSE Key object as a dictionary. """
         kws = []
 
         for kw in argv:
@@ -117,26 +124,25 @@ class EC2(CoseKey):
 
         return {**super().encode(*argv), **{self.EC2Prm[kw[1:].upper()]: dataclasses.asdict(self)[kw] for kw in kws}}
 
-    def __repr__(self):
-        content = self.encode()
-        output = ['<COSE_Key(EC2)>']
-        output.extend(
-            self._base_repr(k, v) if k not in [-2, -3, -4] else self._key_repr(k, v) for k, v in content.items())
-        return "\n".join(output)
-
     def ecdh_key_derivation(self,
                             public_key: 'EC2',
                             context: CoseKDFContext,
-                            alg: Optional[AlgorithmIDs] = None,
+                            alg: Optional[CoseAlgorithms] = None,
                             curve: Optional[EllipticCurveType] = None) -> Tuple[bytes, bytes]:
-        """ Derive a CEK with ECDH + HKDF algorithm """
+        """
+        Derives a CEK with ECDH + HKDF algorithm. The parameter 'alg' and 'curve' parameters are optional in case they
+        are already provided by one of the COSE key objects.
+
+        :param public_key: an EC2 key containing public key bytes.
+        :param context: a CoseKDFContext for the HKDF algorithm.
+        :param alg: an optional algorithm parameter (specifies the exact algorithm used for the key derivation).
+        :param curve: an optional curve
+        """
 
         self._check_key_conf(alg, KeyOps.DERIVE_KEY, public_key, curve)
 
         try:
-            alg = self.alg.name if hasattr(self.alg, "name") else AlgorithmIDs(self.alg).name
-
-            algorithm: AlgoParam = AlgID2Crypto[alg].value
+            alg_cfg = config(CoseAlgorithms(self.alg))
         except KeyError as err:
             raise CoseInvalidAlgorithm(err)
 
@@ -151,50 +157,66 @@ class EC2(CoseKey):
 
         shared_key = d.exchange(ECDH(), p)
 
-        derived_key = algorithm.key_derivation(algorithm=algorithm.hash(),
-                                               length=int(context.supp_pub_info.key_data_length / 8),
-                                               salt=None,
-                                               info=context.encode(),
-                                               backend=default_backend()).derive(shared_key)
+        derived_key = alg_cfg.kdf(algorithm=alg_cfg.hash(),
+                                  length=int(context.supp_pub_info.key_data_length / 8),
+                                  salt=None,
+                                  info=context.encode(),
+                                  backend=default_backend()).derive(shared_key)
 
         return shared_key, derived_key
 
     def sign(self,
              to_be_signed: bytes,
-             alg: Optional[AlgorithmIDs] = None,
+             alg: Optional[CoseAlgorithms] = None,
              curve: EllipticCurveType = None) -> bytes:
-        """ Sign a message """
+        """
+        Computes a digital signature over 'to_be_signed'. The parameter 'alg' and 'curve' parameters are optional in
+        case they are already provided by one of the COSE key objects.
+
+        :param to_be_signed: data over which the signature is calculated
+        :param alg: an optional algorithm parameter (specifies the exact algorithm used for the signature).
+        :param curve: an optional curve
+        """
 
         self._check_key_conf(algorithm=alg, key_operation=KeyOps.SIGN, curve=curve)
 
         try:
-            alg = self.alg.name if hasattr(self.alg, "name") else AlgorithmIDs(self.alg).name
-
-            algorithm: AlgoParam = AlgID2Crypto[alg].value
+            alg_cfg = config(CoseAlgorithms(self.alg))
         except KeyError as err:
             raise CoseInvalidAlgorithm(err)
 
-        sk = SigningKey.from_secret_exponent(int(hexlify(self.d), 16), curve=algorithm.curve)
+        sk = SigningKey.from_secret_exponent(int(hexlify(self.d), 16), curve=alg_cfg.curve)
 
-        return sk.sign_deterministic(to_be_signed, hashfunc=algorithm.hash)
+        return sk.sign_deterministic(to_be_signed, hashfunc=alg_cfg.hash)
 
     def verify(self,
                to_be_signed: bytes,
                signature: bytes,
-               alg: Optional[AlgorithmIDs] = None,
+               alg: Optional[CoseAlgorithms] = None,
                curve: Optional[EllipticCurveType] = None) -> bool:
-        """ Verify a message's signature """
+        """
+        Verifies the digital signature over 'to_be_signed'. The parameter 'alg' and 'curve' parameters are optional in
+        case they are already provided by one of the COSE key objects.
+
+        :param to_be_signed: data that was signed
+        :param signature: signature to verify
+        :param alg: an optional algorithm parameter (specifies the exact algorithm used for the signature).
+        :param curve: an optional curve
+        """
 
         self._check_key_conf(algorithm=alg, key_operation=KeyOps.VERIFY, curve=curve)
 
         try:
-            alg = self.alg.name if hasattr(self.alg, "name") else AlgorithmIDs(self.alg).name
-
-            algorithm: AlgoParam = AlgID2Crypto[alg].value
+            alg_cfg = config(CoseAlgorithms(self.alg))
         except KeyError as err:
             raise CoseInvalidAlgorithm(err)
 
-        p = Point(curve=algorithm.curve.curve, x=int(hexlify(self.x), 16), y=int(hexlify(self.y), 16))
-        vk = VerifyingKey.from_public_point(p, algorithm.curve, algorithm.hash, validate_point=True)
+        p = Point(curve=alg_cfg.curve.curve, x=int(hexlify(self.x), 16), y=int(hexlify(self.y), 16))
+        vk = VerifyingKey.from_public_point(p, alg_cfg.curve, alg_cfg.hash, validate_point=True)
 
         return vk.verify(signature, to_be_signed)
+
+    def __repr__(self):
+        hdr = '<COSE_Key(EC2): {'
+        output = [f'{k[1:]}: {v}' for k, v in dataclasses.asdict(self).items() if v is not None]
+        return hdr + ", ".join(output)[2:] + '}>'

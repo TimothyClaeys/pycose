@@ -3,7 +3,7 @@ from binascii import unhexlify
 from pytest import fixture, mark, skip
 
 from pycose import CoseMessage
-from pycose.cosebase import HeaderKeys
+from pycose.cosebase import CoseHeaderKeys
 from pycose.keys.cosekey import KeyOps
 from pycose.keys.ec import EC2
 from pycose.signer import SignerParams
@@ -66,7 +66,7 @@ def test_sign_decoding(setup_sign_tests: tuple) -> None:
     # set up potential external data and keys
     cose_msg.signers[0].external_aad = unhexlify(test_input['sign']['signers'][0].get('external', b''))
 
-    alg = cose_msg.signers[0].phdr[HeaderKeys.ALG]
+    alg = cose_msg.signers[0].phdr[CoseHeaderKeys.ALG]
     public_key = create_cose_key(EC2, test_input['sign']['signers'][0]['key'], usage=KeyOps.VERIFY, alg=alg)
 
     assert cose_msg.signers[0]._sig_structure == unhexlify(test_intermediate['signers'][0]["ToBeSign_hex"])

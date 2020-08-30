@@ -1,13 +1,10 @@
 import sys
-from typing import Union, List, Optional, Tuple
+from typing import Union, List, Optional, Tuple, TYPE_CHECKING
 
 from dataclasses import dataclass, field
 
 from pycose import CoseMessage
-from pycose.algorithms import AlgorithmIDs
-from pycose.context import CoseKDFContext
-from pycose.exceptions import CoseIllegalKeyType, CoseInvalidAlgorithm
-from pycose.keys.cosekey import EllipticCurveType, CK
+from pycose.exceptions import CoseIllegalKeyType
 from pycose.keys.ec import EC2
 from pycose.keys.okp import OKP
 from pycose.keys.symmetric import SymmetricKey
@@ -17,11 +14,16 @@ if sys.version_info.minor < 8:
 else:
     from functools import singledispatchmethod
 
+if TYPE_CHECKING:
+    from pycose.context import CoseKDFContext
+    from pycose.algorithms import CoseAlgorithms
+    from pycose.keys.cosekey import EllipticCurveType, CK
+
 
 @dataclass
 class RcptParams:
     key: SymmetricKey
-    alg: Optional[AlgorithmIDs] = None
+    alg: Optional['CoseAlgorithms'] = None
     params: List['RcptParams'] = field(default_factory=list)
     encrypt_or_mac: bool = True
 
@@ -42,9 +44,9 @@ class CoseRecipient(CoseMessage):
 
         try:
             recipient_list = recipient_obj.pop(0)
-            msg.recipient_list = [CoseRecipient.from_recipient_obj(r) for r in recipient_list]
+            msg.recipients = [CoseRecipient.from_recipient_obj(r) for r in recipient_list]
         except IndexError:
-            msg.recipient_list = None
+            msg.recipients = []
 
         return msg
 
@@ -60,7 +62,7 @@ class CoseRecipient(CoseMessage):
 
     def encode(self, parameters: RcptParams) -> list:
         if parameters.encrypt_or_mac:
-            recipient = [self.encode_phdr(), self.encode_uhdr(), self.encrypt(parameters.alg, parameters.key)]
+            recipient = [self.encode_phdr(), self.encode_uhdr(), self.encrypt(key=parameters.key, alg=parameters.alg)]
         else:
             recipient = [self.encode_phdr(), self.encode_uhdr(), self.payload]
 
@@ -73,28 +75,30 @@ class CoseRecipient(CoseMessage):
 
         return recipient
 
-    def encrypt(self, alg: AlgorithmIDs, key: SymmetricKey) -> bytes:
+    def encrypt(self, key: SymmetricKey, alg: Optional['CoseAlgorithms'] = None) -> bytes:
         """ Key wrapping. """
 
-        self._sanitize_args(key, alg)
+        if key is None:
+            raise CoseIllegalKeyType("COSE Key cannot be None")
 
         return key.key_wrap(self.payload, alg=alg)
 
-    def decrypt(self, alg: Optional[AlgorithmIDs] = None, key: Optional[SymmetricKey] = None) -> bytes:
+    def decrypt(self, key: SymmetricKey, alg: Optional['CoseAlgorithms'] = None) -> bytes:
         """ Key unwrapping. """
 
-        self._sanitize_args(key, alg)
+        if key is None:
+            raise CoseIllegalKeyType("COSE Key cannot be None")
 
         return key.key_unwrap(self.payload, alg=alg)
 
     @singledispatchmethod
     @classmethod
     def derive_kek(cls,
-                   private_key: CK,
+                   private_key: 'CK',
                    public_key: Optional[Union[EC2, OKP]] = None,
-                   alg: Optional[AlgorithmIDs] = None,
-                   context: CoseKDFContext = None,
-                   curve: Optional[EllipticCurveType] = None,
+                   alg: Optional['CoseAlgorithms'] = None,
+                   context: 'CoseKDFContext' = None,
+                   curve: Optional['EllipticCurveType'] = None,
                    salt: bytes = b'',
                    expose_secret: bool = False) -> Union[Tuple[bytes, bytes], bytes]:
         """ Derive the Key Encryption Key (KEK) which protects the CEK (Content Encryption Key) """
@@ -106,9 +110,9 @@ class CoseRecipient(CoseMessage):
     def _(cls,
           private_key: EC2,
           public_key: EC2,
-          alg: Optional[AlgorithmIDs] = None,
-          context: Optional[CoseKDFContext] = None,
-          curve: Optional[EllipticCurveType] = None,
+          alg: Optional['CoseAlgorithms'] = None,
+          context: Optional['CoseKDFContext'] = None,
+          curve: Optional['EllipticCurveType'] = None,
           salt: bytes = b'',
           expose_secret: bool = False) -> Union[Tuple[bytes, bytes], bytes]:
         _ = salt
@@ -125,8 +129,8 @@ class CoseRecipient(CoseMessage):
     def _(cls,
           private_key: SymmetricKey,
           public_key=None,
-          alg: Optional[AlgorithmIDs] = None,
-          context: CoseKDFContext = None,
+          alg: Optional['CoseAlgorithms'] = None,
+          context: 'CoseKDFContext' = None,
           curve=None,
           salt: bytes = b'',
           expose_secret: bool = False):
@@ -146,9 +150,9 @@ class CoseRecipient(CoseMessage):
     def _(cls,
           private_key: OKP,
           public_key: OKP,
-          alg: Optional[AlgorithmIDs] = None,
-          context: CoseKDFContext = None,
-          curve: Optional[EllipticCurveType] = None,
+          alg: Optional['CoseAlgorithms'] = None,
+          context: 'CoseKDFContext' = None,
+          curve: Optional['EllipticCurveType'] = None,
           salt: bytes = None,
           expose_secret: bool = False):
         _ = salt
@@ -160,19 +164,6 @@ class CoseRecipient(CoseMessage):
         else:
             return kek
 
-    @classmethod
-    def _sanitize_args(cls, key: SymmetricKey, alg: Optional[AlgorithmIDs] = None) -> None:
-        """ Sanitize parameters for encryption/decryption algorithms. """
-
-        if key is None:
-            raise CoseIllegalKeyType("COSE Key cannot be None")
-
-        if key.alg is None and alg is None:
-            raise CoseInvalidAlgorithm("COSE algorithm cannot be None")
-
     def __repr__(self) -> str:
-        return f'<COSE_Recipient:\n' \
-               f'\t phdr={self._phdr}\n' \
-               f'\t uhdr={self._uhdr}\n' \
-               f'\t payload={self._payload}\n' \
-               f'\t recipients={self.recipients}>'
+        return \
+            f'<COSE_Recipient: [{self._phdr}, {self._uhdr}, {CoseMessage._truncate(self._payload)}, {self.recipients}]>'

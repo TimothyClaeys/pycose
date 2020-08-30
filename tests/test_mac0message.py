@@ -16,7 +16,7 @@ def setup_mac0_tests(mac0_test_input: dict) -> tuple:
 
 @mark.decoding
 def test_mac0_encoding(setup_mac0_tests: tuple) -> None:
-    _, test_input, test_output, test_intermediate, fail = setup_mac0_tests
+    title, test_input, test_output, test_intermediate, fail = setup_mac0_tests
 
     mac0: Mac0Message = Mac0Message(
         phdr=test_input['mac0'].get('protected', {}),

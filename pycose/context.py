@@ -51,7 +51,8 @@ class CoseKDFContext:
 
     def encode(self) -> bytes:
         context = \
-            [self.algorithm_id, self.party_u_info.encode(), self.party_v_info.encode(), self.supp_pub_info.encode()]
+            [int(self.algorithm_id), self.party_u_info.encode(), self.party_v_info.encode(),
+             self.supp_pub_info.encode()]
 
         if self.supp_priv_info != b"":
             context.append(self.supp_priv_info)

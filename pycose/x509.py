@@ -1,13 +1,10 @@
-from typing import List, Union, TYPE_CHECKING
+from typing import List, Union
 
 from cryptography.hazmat.backends import openssl
 from cryptography.hazmat.primitives.hashes import Hash
 
-from pycose.algorithms import AlgID2Crypto
+from pycose.algorithms import CoseAlgorithms, config
 from pycose.exceptions import CoseInvalidAlgorithm
-
-if TYPE_CHECKING:
-    from pycose.algorithms import AlgorithmIDs, AlgoParam
 
 
 class X5Bag:
@@ -22,22 +19,21 @@ class X5Bag:
 
 
 class X5T:
-    def __init__(self, alg_id: 'AlgorithmIDs', certificate: bytes):
+    def __init__(self, alg_id: 'CoseAlgorithms', certificate: bytes):
         self.alg = alg_id
         self.certificate = certificate
 
     def compute_hash(self) -> bytes:
         try:
-            alg = self.alg.name if hasattr(self.alg, "name") else AlgorithmIDs(self.alg).name
-            alg_info: AlgoParam = AlgID2Crypto[alg].value
+            alg_cfg = config(CoseAlgorithms(self.alg))
         except KeyError as err:
             raise CoseInvalidAlgorithm(err)
 
-        h = Hash(algorithm=alg_info.hash(), backend=openssl.backend)
+        h = Hash(algorithm=alg_cfg.hash(), backend=openssl.backend)
         h.update(self.certificate)
         digest = h.finalize()
 
-        if alg_info.tag_length is not None:
+        if alg_cfg.tag_length is not None:
             digest = digest[:8]
 
         return digest

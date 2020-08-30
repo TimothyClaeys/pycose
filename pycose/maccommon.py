@@ -4,7 +4,7 @@ from typing import Optional
 import cbor2
 
 from pycose import cosemessage
-from pycose.algorithms import AlgorithmIDs
+from pycose.algorithms import CoseAlgorithms
 from pycose.exceptions import CoseIllegalKeyType, CoseInvalidAlgorithm
 from pycose.keys.symmetric import SymmetricKey
 
@@ -25,14 +25,14 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
 
         self.auth_tag = b''
 
-    def verify_tag(self, key: SymmetricKey, alg: Optional[AlgorithmIDs] = None) -> bool:
+    def verify_tag(self, key: SymmetricKey, alg: Optional[CoseAlgorithms] = None) -> bool:
         """ Verifies the authentication tag of a received message. """
 
         self._sanitize_args(key, alg)
 
         return key.verify_tag(self.auth_tag, self._mac_structure, alg)
 
-    def compute_tag(self, key: SymmetricKey, alg: Optional[AlgorithmIDs] = None) -> bytes:
+    def compute_tag(self, key: SymmetricKey, alg: Optional[CoseAlgorithms] = None) -> bytes:
         """ Computes the authentication tag of a COSE_Mac or COSE_Mac0 message. """
 
         self._sanitize_args(key, alg)
@@ -55,7 +55,7 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
         return cbor2.dumps(mac_structure)
 
     @classmethod
-    def _sanitize_args(cls, key: SymmetricKey, alg: Optional[AlgorithmIDs] = None) -> None:
+    def _sanitize_args(cls, key: SymmetricKey, alg: Optional[CoseAlgorithms] = None) -> None:
         """ Sanitize parameters for encryption/decryption algorithms. """
 
         if key is None:

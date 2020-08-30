@@ -10,7 +10,7 @@ from typing import Optional, List
 
 import cbor2
 
-from pycose import cosemessage
+from pycose import cosemessage, CoseMessage
 from pycose.signer import CoseSignature, SignerParams
 
 
@@ -83,9 +83,5 @@ class SignMessage(cosemessage.CoseMessage):
         signer._parent_msg = self
         self._signers.append(signer)
 
-    def __repr__(self):
-        return f'<COSE_Sign:\n' \
-               f'\t phdr={self._phdr}\n' \
-               f'\t uhdr={self._uhdr}\n' \
-               f'\t payload={self._payload}\n' \
-               f'\t signatures={self.signers}>'
+    def __repr__(self) -> str:
+        return f'<COSE_Sign: [{self._phdr}, {self._uhdr}, {CoseMessage._truncate(self._payload)}, {self._signers}]>'

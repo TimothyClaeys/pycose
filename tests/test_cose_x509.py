@@ -2,7 +2,7 @@ from binascii import unhexlify
 
 from pytest import mark
 
-from pycose.algorithms import AlgorithmIDs
+from pycose.algorithms import CoseAlgorithms
 from pycose.x509 import X5T
 
 certificate = "47624dc9cdc6824b2a4c52e95ec9d6b0534b71c2b49e4bf9031500cee6869979c297bb5a8b381e98db714108415e5c50db" \
@@ -12,7 +12,7 @@ certificate = "47624dc9cdc6824b2a4c52e95ec9d6b0534b71c2b49e4bf9031500cee6869979c
 
 @mark.parametrize("alg_id, cert, result",
                   [
-                      (AlgorithmIDs.SHA_256_64,
+                      (CoseAlgorithms.SHA_256_64,
                        unhexlify(certificate),
                        [-15, unhexlify("FC79990F2431A3F5")])
                   ], ids=["base_x5t_encoding_test"])

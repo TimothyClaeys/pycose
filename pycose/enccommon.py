@@ -4,8 +4,8 @@ from typing import Optional
 import cbor2
 
 from pycose import cosemessage
-from pycose.algorithms import AlgorithmIDs
-from pycose.exceptions import CoseIllegalKeyType, CoseInvalidAlgorithm
+from pycose.algorithms import CoseAlgorithms
+from pycose.exceptions import CoseIllegalKeyType
 from pycose.keys.symmetric import SymmetricKey
 
 
@@ -25,17 +25,47 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
 
         super().__init__(phdr, uhdr, payload, external_aad)
 
-    def decrypt(self, nonce: bytes, key: SymmetricKey, alg: Optional[AlgorithmIDs] = None) -> bytes:
-        """ Decrypts the payload. """
+    def decrypt(self, nonce: bytes, key: SymmetricKey, alg: Optional[CoseAlgorithms] = None) -> bytes:
+        """
+        Decrypts the payload.
 
-        self._sanitize_args(nonce=nonce, key=key, alg=alg)
+        :param nonce: Nonce for decryption. Length tof the nonce depends on the AEAD. Nonce cannot be empty or None.
+        :param key: A Symmetric COSE key object containing the symmetric key bytes and a optionally an AEAD algorithm.
+        :param alg: If the 'alg' parameter is unset in the COSE key object, this parameter cannot be None.
+
+        :raises ValueError: When the nonce is empty or None
+        :raises CoseIllegalKeyType: When the key is not of type 'SymmetricKey'.
+
+        :returns: plaintext as bytes
+        """
+
+        if nonce == b"" or nonce is None:
+            raise ValueError(f"{nonce} is not a valid nonce value")
+
+        if not isinstance(key, SymmetricKey):
+            raise CoseIllegalKeyType("Illegal COSE key type: {}".format(type(key)))
 
         return key.decrypt(ciphertext=self.payload, aad=self._enc_structure, nonce=nonce, alg=alg)
 
-    def encrypt(self, nonce: bytes, key: SymmetricKey, alg: Optional[AlgorithmIDs] = None) -> bytes:
-        """ Encrypts the payload. The provided arguments overwrite the default ones. """
+    def encrypt(self, nonce: bytes, key: SymmetricKey, alg: Optional[CoseAlgorithms] = None) -> bytes:
+        """
+        Encrypts the payload.
 
-        self._sanitize_args(nonce=nonce, key=key, alg=alg)
+        :param nonce: Nonce for decryption. Length tof the nonce depends on the AEAD. Nonce cannot be empty or None.
+        :param key: A Symmetric COSE key object containing the symmetric key bytes and a optionally an AEAD algorithm.
+        :param alg: If the 'alg' parameter is unset in the COSE key object, this parameter cannot be None.
+
+        :raises ValueError: When the nonce is empty or None
+        :raises CoseIllegalKeyType: When the key is not of type 'SymmetricKey'.
+
+        :returns: ciphertext as bytes
+        """
+
+        if nonce == b"" or nonce is None:
+            raise ValueError(f"{nonce} is not a valid nonce value")
+
+        if not isinstance(key, SymmetricKey):
+            raise CoseIllegalKeyType("Illegal COSE key type: {}".format(type(key)))
 
         return key.encrypt(plaintext=self.payload, aad=self._enc_structure, nonce=nonce, alg=alg)
 
@@ -48,16 +78,3 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
         enc_structure = self._base_structure(enc_structure)
         aad = cbor2.dumps(enc_structure)
         return aad
-
-    @classmethod
-    def _sanitize_args(cls, nonce: bytes, key: SymmetricKey, alg: Optional[AlgorithmIDs] = None) -> None:
-        """ Sanitize parameters for encryption/decryption algorithms. """
-
-        if nonce == b"" or nonce is None:
-            raise ValueError(f"{nonce} is not a valid nonce value")
-
-        if key is None:
-            raise CoseIllegalKeyType("COSE Key cannot be None")
-
-        if key.alg is None and alg is None:
-            raise CoseInvalidAlgorithm("COSE algorithm cannot be None")
