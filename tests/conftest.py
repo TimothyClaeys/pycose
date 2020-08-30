@@ -420,12 +420,7 @@ def setup_ec_receiver_keys(recipient: dict, received_key_obj) -> Tuple[EC2, EC2]
             x=CoseKey.base64decode(recipient['sender_key'][EC2.EC2Prm.X]),
             y=CoseKey.base64decode(recipient['sender_key'][EC2.EC2Prm.Y]))
     else:
-        sender_key = EC2(
-            crv=received_key_obj.get(EC2.EC2Prm.CRV),
-            alg=alg,
-            x=received_key_obj.get(EC2.EC2Prm.X),
-            y=received_key_obj.get(EC2.EC2Prm.Y),
-        )
+        sender_key = received_key_obj
 
     return rcvr_static_key, sender_key
 
@@ -449,9 +444,6 @@ def setup_okp_receiver_keys(recipient: dict, received_key_obj) -> Tuple[OKP, OKP
             crv=recipient["sender_key"][OKP.OKPPrm.CRV],
             x=unhexlify(recipient['sender_key'][OKP.OKPPrm.X]))
     else:
-        sender_key = OKP(
-            crv=received_key_obj.get(EC2.EC2Prm.CRV),
-            alg=alg,
-            x=received_key_obj.get(EC2.EC2Prm.X))
+        sender_key = received_key_obj
 
     return rcvr_static_key, sender_key

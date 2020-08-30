@@ -75,8 +75,9 @@ class EC2(CoseKey):
     @crv.setter
     def crv(self, new_crv: Optional[CoseEllipticCurves]) -> None:
         if new_crv is not None:
-            _ = CoseEllipticCurves(new_crv)
-        self._crv = new_crv
+            self._crv = CoseEllipticCurves(new_crv)
+        else:
+            self._crv = None
 
     @property
     def x(self) -> bytes:
@@ -213,5 +214,5 @@ class EC2(CoseKey):
 
     def __repr__(self):
         hdr = '<COSE_Key(EC2): {'
-        output = [f'{k[1:]}: {v}' for k, v in dataclasses.asdict(self).items() if v is not None]
+        output = [f'{k[1:]}: {v.__repr__()}' for k, v in dataclasses.asdict(self).items() if v is not None]
         return hdr + ", ".join(output)[2:] + '}>'

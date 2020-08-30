@@ -1,9 +1,10 @@
 import base64
 from abc import ABCMeta, abstractmethod
-from enum import IntEnum, unique
+from enum import IntEnum
 from typing import List, Union, Dict, Optional, TypeVar, TYPE_CHECKING, Type, Callable
 
 import dataclasses
+from aenum import Enum, MultiValue
 from dataclasses import dataclass
 
 from pycose.attributes.algorithms import CoseAlgorithms, CoseEllipticCurves
@@ -14,30 +15,63 @@ if TYPE_CHECKING:
     from pycose.keys.okp import OKP
 
 
-@unique
-class KTY(IntEnum):
+class KTY(Enum):
     """ The different COSE key types. """
+    _init_ = 'id fullname'
+    _settings_ = MultiValue
 
-    RESERVED = 0
-    OKP = 1
-    EC2 = 2
-    SYMMETRIC = 4
+    RESERVED = 0, "RESERVED"
+    OKP = 1, "OKP"
+    EC2 = 2, "EC2"
+    SYMMETRIC = 4, "SYMMETRIC"
+
+    def __int__(self):
+        return self.id
+
+    def __str__(self):
+        return self.fullname
+
+    def __repr__(self):
+        return f'<{self.__class__.__name__}.{self.fullname}: {self.id}>'
+
+    def __eq__(self, other):
+        return self.id == other or self.fullname == other
+
+    def __hash__(self):
+        return hash(self.id)
 
 
-@unique
-class KeyOps(IntEnum):
+class KeyOps(Enum):
     """ Supported COSE key operations. """
 
-    SIGN = 1
-    VERIFY = 2
-    ENCRYPT = 3
-    DECRYPT = 4
-    WRAP = 5
-    UNWRAP = 6
-    DERIVE_KEY = 7
-    DERIVE_BITS = 8
-    MAC_CREATE = 9
-    MAC_VERIFY = 10
+    _init_ = 'id fullname'
+    _settings_ = MultiValue
+
+    SIGN = 1, 'SIGN'
+    VERIFY = 2, 'VERIFY'
+    ENCRYPT = 3, 'ENCRYPT'
+    DECRYPT = 4, 'DECRYPT'
+    WRAP = 5, 'WRAP'
+    UNWRAP = 6, 'UNWRAP'
+    DERIVE_KEY = 7, 'DERIVE_KEY'
+    DERIVE_BITS = 8, 'DERIVE_BITS'
+    MAC_CREATE = 9, 'MAC_CREATE'
+    MAC_VERIFY = 10, 'MAC_VERIFY'
+
+    def __int__(self):
+        return self.id
+
+    def __str__(self):
+        return self.fullname
+
+    def __repr__(self):
+        return f'<{self.__class__.__name__}.{self.fullname}: {self.id}>'
+
+    def __eq__(self, other):
+        return self.id == other or self.fullname == other
+
+    def __hash__(self):
+        return hash(self.id)
 
 
 @dataclass(init=False)
@@ -132,17 +166,18 @@ class CoseKey(metaclass=ABCMeta):
 
     @kty.setter
     def kty(self, new_kty: KTY) -> None:
-        _ = KTY(new_kty)  # check if the new value is a known COSE KTY, should never be None!
-        self._kty = new_kty
+        if new_kty is not None:
+            self._kty = KTY(new_kty)  # check if the new value is a known COSE KTY, should never be None!
+        else:
+            raise ValueError("Key type cannot be None")
 
     @property
     def alg(self) -> Optional[CoseAlgorithms]:
         return self._alg
 
     @alg.setter
-    def alg(self, new_alg: CoseAlgorithms) -> None:
+    def alg(self, new_alg: Optional[CoseAlgorithms]) -> None:
         if new_alg is not None:
-            _ = CoseAlgorithms(new_alg)  # check if the new value is a known COSE Algorithm
             self._alg = CoseAlgorithms(new_alg)
         else:
             self._alg = None
@@ -164,8 +199,9 @@ class CoseKey(metaclass=ABCMeta):
     @key_ops.setter
     def key_ops(self, new_key_ops: Optional[KeyOps]) -> None:
         if new_key_ops is not None:
-            _ = KeyOps(new_key_ops)  # check if the new value is a known COSE key operation
-        self._key_ops = new_key_ops
+            self._key_ops = KeyOps(new_key_ops)  # check if the new value is a known COSE key operation
+        else:
+            self._key_ops = None
 
     @property
     def base_iv(self) -> Optional[bytes]:

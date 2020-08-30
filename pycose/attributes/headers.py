@@ -1,3 +1,5 @@
+from typing import Any, Callable, List
+
 from aenum import Enum, MultiValue, skip
 
 from pycose import CoseAlgorithms
@@ -53,3 +55,11 @@ class CoseHeaderKeys(Enum):
 
     def __hash__(self):
         return hash(self.id)
+
+
+def parser(header_key: CoseHeaderKeys) -> Callable[[Any], Any]:
+    return header_key.parser.value
+
+
+def list_header_keys() -> List[CoseHeaderKeys]:
+    return [k for k in CoseHeaderKeys.__members__.keys()]

@@ -64,8 +64,9 @@ class OKP(CoseKey):
     @crv.setter
     def crv(self, new_crv: Optional[CoseEllipticCurves]) -> None:
         if new_crv is not None:
-            _ = CoseEllipticCurves(new_crv)
-        self._crv = new_crv
+            self._crv = CoseEllipticCurves(new_crv)
+        else:
+            self._crv = None
 
     @property
     def x(self) -> Optional[bytes]:
@@ -86,14 +87,6 @@ class OKP(CoseKey):
         if type(new_d) is not bytes and new_d is not None:
             raise ValueError("private key must be of type 'bytes'")
         self._d = new_d
-
-    @property
-    def public_bytes(self) -> Optional[bytes]:
-        return self.x
-
-    @property
-    def private_bytes(self) -> Optional[bytes]:
-        return self.d
 
     def encode(self, *argv):
         kws = []
@@ -132,5 +125,5 @@ class OKP(CoseKey):
 
     def __repr__(self):
         hdr = '<COSE_Key(OKP): {'
-        output = [f'{k[1:]}: {v}' for k, v in dataclasses.asdict(self).items() if v is not None]
+        output = [f'{k[1:]}: {v.__repr__()}' for k, v in dataclasses.asdict(self).items() if v is not None]
         return hdr + ", ".join(output)[2:] + '}>'

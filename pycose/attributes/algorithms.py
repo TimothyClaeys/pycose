@@ -130,5 +130,3 @@ def list_ciphers() -> List[CoseAlgorithms]:
 
 def list_curves() -> List[CoseEllipticCurves]:
     return [k for k in CoseEllipticCurves.__members__.keys()]
-
-

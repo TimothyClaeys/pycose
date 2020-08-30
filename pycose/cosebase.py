@@ -2,7 +2,7 @@ import abc
 from typing import Optional
 
 import cbor2
-from pycose import attributes
+from pycose import attributes as attr
 
 
 class CoseBase(metaclass=abc.ABCMeta):
@@ -11,12 +11,12 @@ class CoseBase(metaclass=abc.ABCMeta):
     @classmethod
     def from_cose_obj(cls, cose_obj: list):
         try:
-            phdr = cbor2.loads(cose_obj.pop(0))
+            phdr = cls._parse_header(cbor2.loads(cose_obj.pop(0)))
         except (ValueError, EOFError):
             phdr = {}
 
         try:
-            uhdr = cose_obj.pop(0)
+            uhdr = cls._parse_header(cose_obj.pop(0))
         except ValueError:
             uhdr = {}
 
@@ -83,6 +83,18 @@ class CoseBase(metaclass=abc.ABCMeta):
     @classmethod
     def _special_cbor_encoder(cls, encoder, special_hdr_value):
         encoder.encode(int(special_hdr_value))
+
+    @classmethod
+    def _parse_header(cls, hdr):
+        new_hdr = {}
+        for k, v in hdr.items():
+            parse_func = attr.headers.parser(attr.headers.CoseHeaderKeys(k))
+            if parse_func is not None:
+                new_hdr[attr.headers.CoseHeaderKeys(k)] = parse_func(v)
+            else:
+                new_hdr[attr.headers.CoseHeaderKeys(k)] = v
+
+        return new_hdr
 
     def encode_uhdr(self) -> dict:
         """ Encode the unprotected header. """
