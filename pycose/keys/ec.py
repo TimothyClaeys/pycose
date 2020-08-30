@@ -5,21 +5,21 @@ from typing import Optional, Tuple
 import dataclasses
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives.asymmetric.ec import SECP256R1, SECP384R1, SECP521R1, ECDH
+from cryptography.hazmat.primitives.asymmetric.ec import ECDH
 from dataclasses import dataclass
 from ecdsa import SigningKey, VerifyingKey
 from ecdsa.ellipticcurve import Point
 
-from pycose.algorithms import CoseAlgorithms, config
+from pycose.algorithms import CoseAlgorithms, config, CoseEllipticCurves
 from pycose.context import CoseKDFContext
-from pycose.exceptions import CoseIllegalCurve, CoseInvalidAlgorithm
-from pycose.keys.cosekey import CoseKey, KTY, EllipticCurveType, KeyOps
+from pycose.exceptions import CoseInvalidAlgorithm
+from pycose.keys.cosekey import CoseKey, KTY, KeyOps
 
 
 @CoseKey.record_kty(KTY.EC2)
 @dataclass(init=False)
 class EC2(CoseKey):
-    _crv: Optional[EllipticCurveType] = None
+    _crv: Optional[CoseEllipticCurves] = None
     _x: Optional[bytes] = None
     _y: Optional[bytes] = None
     _d: Optional[bytes] = None
@@ -30,12 +30,6 @@ class EC2(CoseKey):
         X = -2
         Y = -3
         D = -4
-
-    KEY_DERIVATION_CURVES = {
-        EllipticCurveType.P_256: SECP256R1,
-        EllipticCurveType.P_384: SECP384R1,
-        EllipticCurveType.P_521: SECP521R1,
-    }
 
     @classmethod
     def from_cose_key_obj(cls, cose_key_obj: dict) -> 'EC2':
@@ -64,7 +58,7 @@ class EC2(CoseKey):
                  alg: Optional[int] = None,
                  key_ops: Optional[int] = None,
                  base_iv: Optional[bytes] = None,
-                 crv: Optional[EllipticCurveType] = None,
+                 crv: Optional[CoseEllipticCurves] = None,
                  x: Optional[bytes] = None,
                  y: Optional[bytes] = None,
                  d: Optional[bytes] = None):
@@ -75,13 +69,13 @@ class EC2(CoseKey):
         self.d = d
 
     @property
-    def crv(self) -> Optional[EllipticCurveType]:
+    def crv(self) -> Optional[CoseEllipticCurves]:
         return self._crv
 
     @crv.setter
-    def crv(self, new_crv: Optional[EllipticCurveType]) -> None:
+    def crv(self, new_crv: Optional[CoseEllipticCurves]) -> None:
         if new_crv is not None:
-            _ = EllipticCurveType(new_crv)
+            _ = CoseEllipticCurves(new_crv)
         self._crv = new_crv
 
     @property
@@ -128,7 +122,7 @@ class EC2(CoseKey):
                             public_key: 'EC2',
                             context: CoseKDFContext,
                             alg: Optional[CoseAlgorithms] = None,
-                            curve: Optional[EllipticCurveType] = None) -> Tuple[bytes, bytes]:
+                            curve: Optional[CoseEllipticCurves] = None) -> Tuple[bytes, bytes]:
         """
         Derives a CEK with ECDH + HKDF algorithm. The parameter 'alg' and 'curve' parameters are optional in case they
         are already provided by one of the COSE key objects.
@@ -147,12 +141,13 @@ class EC2(CoseKey):
             raise CoseInvalidAlgorithm(err)
 
         try:
-            curve = self.KEY_DERIVATION_CURVES[self.crv]()
-        except KeyError:
-            raise CoseIllegalCurve(curve)
+            crv_cfg = config(CoseEllipticCurves(self.crv))
+        except KeyError as err:
+            raise CoseInvalidAlgorithm(err)
 
-        d = ec.derive_private_key(int(hexlify(self.d), 16), curve, default_backend())
-        p = ec.EllipticCurvePublicNumbers(int(hexlify(public_key.x), 16), int(hexlify(public_key.y), 16), curve)
+        d = ec.derive_private_key(int(hexlify(self.d), 16), crv_cfg.curve[1](), default_backend())
+        p = ec.EllipticCurvePublicNumbers(int(hexlify(public_key.x), 16), int(hexlify(public_key.y), 16),
+                                          crv_cfg.curve[1]())
         p = p.public_key(default_backend())
 
         shared_key = d.exchange(ECDH(), p)
@@ -168,7 +163,7 @@ class EC2(CoseKey):
     def sign(self,
              to_be_signed: bytes,
              alg: Optional[CoseAlgorithms] = None,
-             curve: EllipticCurveType = None) -> bytes:
+             curve: CoseEllipticCurves = None) -> bytes:
         """
         Computes a digital signature over 'to_be_signed'. The parameter 'alg' and 'curve' parameters are optional in
         case they are already provided by one of the COSE key objects.
@@ -193,7 +188,7 @@ class EC2(CoseKey):
                to_be_signed: bytes,
                signature: bytes,
                alg: Optional[CoseAlgorithms] = None,
-               curve: Optional[EllipticCurveType] = None) -> bool:
+               curve: Optional[CoseEllipticCurves] = None) -> bool:
         """
         Verifies the digital signature over 'to_be_signed'. The parameter 'alg' and 'curve' parameters are optional in
         case they are already provided by one of the COSE key objects.

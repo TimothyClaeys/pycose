@@ -51,9 +51,9 @@ class Enc0Message(enccommon.EncCommon):
             message = [self.encode_phdr(), self.encode_uhdr(), self.payload]
 
         if tagged:
-            res = cbor2.dumps(cbor2.CBORTag(self.cbor_tag, message))
+            res = cbor2.dumps(cbor2.CBORTag(self.cbor_tag, message), default=self._special_cbor_encoder)
         else:
-            res = cbor2.dumps(message)
+            res = cbor2.dumps(message, default=self._special_cbor_encoder)
 
         return res
 

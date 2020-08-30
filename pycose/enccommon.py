@@ -43,7 +43,7 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
             raise ValueError(f"{nonce} is not a valid nonce value")
 
         if not isinstance(key, SymmetricKey):
-            raise CoseIllegalKeyType("Illegal COSE key type: {}".format(type(key)))
+            raise CoseIllegalKeyType("COSE key should be of type 'SymmetricKey', got {}".format(type(key)))
 
         return key.decrypt(ciphertext=self.payload, aad=self._enc_structure, nonce=nonce, alg=alg)
 
@@ -65,7 +65,7 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
             raise ValueError(f"{nonce} is not a valid nonce value")
 
         if not isinstance(key, SymmetricKey):
-            raise CoseIllegalKeyType("Illegal COSE key type: {}".format(type(key)))
+            raise CoseIllegalKeyType("COSE key should be of type 'SymmetricKey', got {}".format(type(key)))
 
         return key.encrypt(plaintext=self.payload, aad=self._enc_structure, nonce=nonce, alg=alg)
 

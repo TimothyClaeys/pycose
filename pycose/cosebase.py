@@ -109,11 +109,13 @@ class CoseBase(metaclass=abc.ABCMeta):
         """ Encode the protected header. """
 
         if len(self._phdr):
-            if CoseHeaderKeys.ALG in self._phdr:
-                self._phdr[CoseHeaderKeys.ALG] = int(self._phdr[CoseHeaderKeys.ALG])
-            return cbor2.dumps(self._phdr)
+            return cbor2.dumps(self._phdr, default=self._special_cbor_encoder)
         else:
             return b''
+
+    @classmethod
+    def _special_cbor_encoder(cls, encoder, special_hdr_value):
+        encoder.encode(int(special_hdr_value))
 
     def encode_uhdr(self) -> dict:
         """ Encode the unprotected header. """

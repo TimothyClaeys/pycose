@@ -78,9 +78,9 @@ class MacMessage(maccommon.MacCommon):
             raise ValueError("List with cryptographic parameters should have the same length as the recipient list.")
 
         if tagged:
-            message = cbor2.dumps(cbor2.CBORTag(self.cbor_tag, message))
+            message = cbor2.dumps(cbor2.CBORTag(self.cbor_tag, message), default=self._special_cbor_encoder)
         else:
-            message = cbor2.dumps(message)
+            message = cbor2.dumps(message, default=self._special_cbor_encoder)
 
         return message
 

@@ -1,12 +1,13 @@
 import abc
-from typing import Optional, Union
+from typing import Optional, Union, TYPE_CHECKING
 
 from pycose import cosebase
-from pycose.algorithms import CoseAlgorithms
-from pycose.exceptions import CoseIllegalKeyType, CoseInvalidAlgorithm, CoseIllegalCurve
-from pycose.keys.cosekey import EllipticCurveType
+from pycose.exceptions import CoseIllegalKeyType
 from pycose.keys.ec import EC2
 from pycose.keys.okp import OKP
+
+if TYPE_CHECKING:
+    from pycose.algorithms import CoseAlgorithms, CoseEllipticCurves
 
 
 class SignCommon(cosebase.CoseBase, metaclass=abc.ABCMeta):
@@ -34,41 +35,27 @@ class SignCommon(cosebase.CoseBase, metaclass=abc.ABCMeta):
 
     def verify_signature(self,
                          public_key: Union[EC2, OKP],
-                         alg: Optional[CoseAlgorithms] = None,
-                         curve: Optional[EllipticCurveType] = None) -> bool:
+                         alg: Optional['CoseAlgorithms'] = None,
+                         curve: Optional['CoseEllipticCurves'] = None) -> bool:
         """
         Verifies the signature of a received message
         :return: True or raises an exception
         """
-        self._sanitize_args(public_key, alg, curve)
+        if not isinstance(public_key, EC2) and not isinstance(public_key, OKP):
+            raise CoseIllegalKeyType("COSE key should be of type 'EC2' or 'OKP', got {}".format(type(public_key)))
 
         return public_key.verify(self._sig_structure, self.signature, alg, curve)
 
     def compute_signature(self,
                           private_key: Union[EC2, OKP] = None,
-                          alg: Optional[CoseAlgorithms] = None,
-                          curve: Optional[EllipticCurveType] = None) -> bytes:
+                          alg: Optional['CoseAlgorithms'] = None,
+                          curve: Optional['CoseEllipticCurves'] = None) -> bytes:
         """
         Computes the signature of a COSE message
         :return: True or raises an exception
         """
 
-        self._sanitize_args(private_key, alg, curve)
+        if not isinstance(private_key, EC2) and not isinstance(private_key, OKP):
+            raise CoseIllegalKeyType("COSE key should be of type 'EC2' or 'OKP', got {}".format(type(private_key)))
 
-        return private_key.sign(self._sig_structure, alg)
-
-    @classmethod
-    def _sanitize_args(cls,
-                       key: Union[EC2, OKP],
-                       alg: Optional[CoseAlgorithms] = None,
-                       curve: Optional[EllipticCurveType] = None) -> None:
-        """ Sanitize parameters for encryption/decryption algorithms. """
-
-        if key is None:
-            raise CoseIllegalKeyType("COSE Key cannot be None")
-
-        if key.alg is None and alg is None:
-            raise CoseInvalidAlgorithm("COSE algorithm cannot be None")
-
-        if key.crv is None and curve is None:
-            raise CoseIllegalCurve("Ellipic curve cannot be None")
+        return private_key.sign(self._sig_structure, alg, curve)

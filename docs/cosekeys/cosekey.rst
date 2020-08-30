@@ -15,11 +15,6 @@ embedded in COSE Headers for transportation inside a COSE message.
     :members:
     :undoc-members:
 
-.. autoclass:: EllipticCurveType
-    :members:
-    :undoc-members:
-
-
 .. autoclass:: CoseKey(abstract class)
     :members:
     :undoc-members:

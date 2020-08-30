@@ -6,7 +6,7 @@ from typing import List, Union, Dict, Optional, TypeVar, TYPE_CHECKING, Type, Ca
 import dataclasses
 from dataclasses import dataclass
 
-from pycose.algorithms import CoseAlgorithms
+from pycose.algorithms import CoseAlgorithms, CoseEllipticCurves
 from pycose.exceptions import CoseIllegalKeyOps
 
 if TYPE_CHECKING:
@@ -38,21 +38,6 @@ class KeyOps(IntEnum):
     DERIVE_BITS = 8
     MAC_CREATE = 9
     MAC_VERIFY = 10
-
-
-@unique
-class EllipticCurveType(IntEnum):
-    """ The (elliptic) curves supported by COSE. """
-
-    RESERVED = 0
-    P_256 = 1
-    P_384 = 2
-    P_521 = 3
-    X25519 = 4
-    X448 = 5
-    ED25519 = 6
-    ED448 = 7
-    SECP256K1 = 8
 
 
 @dataclass(init=False)
@@ -205,7 +190,7 @@ class CoseKey(metaclass=ABCMeta):
                         algorithm: CoseAlgorithms,
                         key_operation: KeyOps,
                         peer_key: Optional[Union['EC2', 'OKP']] = None,
-                        curve: Optional[EllipticCurveType] = None):
+                        curve: Optional[CoseEllipticCurves] = None):
         """ Helper function that checks the configuration of the COSE key object. """
 
         if self.alg is not None and algorithm is not None and CoseAlgorithms(self.alg) != CoseAlgorithms(algorithm):
@@ -224,14 +209,14 @@ class CoseKey(metaclass=ABCMeta):
                 peer_key.alg = self.alg
 
         if hasattr(self, "crv"):
-            if self.crv is not None and curve is not None and self.crv != curve:
+            if self.crv is not None and curve is not None and CoseEllipticCurves(self.crv) != CoseEllipticCurves(curve):
                 raise ValueError("Curve in COSE key clashes with parameter 'curve'.")
 
             if curve is not None:
                 self.crv = curve
 
         if peer_key is not None:
-            if peer_key.crv is not None and self.crv != peer_key.crv:
+            if peer_key.crv is not None and CoseEllipticCurves(self.crv) != CoseEllipticCurves(peer_key.crv):
                 raise ValueError("Curve parameter for private and public key do not match")
             else:
                 peer_key.crv = self.crv

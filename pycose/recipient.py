@@ -17,7 +17,7 @@ else:
 if TYPE_CHECKING:
     from pycose.context import CoseKDFContext
     from pycose.algorithms import CoseAlgorithms
-    from pycose.keys.cosekey import EllipticCurveType, CK
+    from pycose.keys.cosekey import CoseEllipticCurves, CK
 
 
 @dataclass
@@ -98,7 +98,7 @@ class CoseRecipient(CoseMessage):
                    public_key: Optional[Union[EC2, OKP]] = None,
                    alg: Optional['CoseAlgorithms'] = None,
                    context: 'CoseKDFContext' = None,
-                   curve: Optional['EllipticCurveType'] = None,
+                   curve: Optional['CoseEllipticCurves'] = None,
                    salt: bytes = b'',
                    expose_secret: bool = False) -> Union[Tuple[bytes, bytes], bytes]:
         """ Derive the Key Encryption Key (KEK) which protects the CEK (Content Encryption Key) """
@@ -112,7 +112,7 @@ class CoseRecipient(CoseMessage):
           public_key: EC2,
           alg: Optional['CoseAlgorithms'] = None,
           context: Optional['CoseKDFContext'] = None,
-          curve: Optional['EllipticCurveType'] = None,
+          curve: Optional['CoseEllipticCurves'] = None,
           salt: bytes = b'',
           expose_secret: bool = False) -> Union[Tuple[bytes, bytes], bytes]:
         _ = salt
@@ -152,7 +152,7 @@ class CoseRecipient(CoseMessage):
           public_key: OKP,
           alg: Optional['CoseAlgorithms'] = None,
           context: 'CoseKDFContext' = None,
-          curve: Optional['EllipticCurveType'] = None,
+          curve: Optional['CoseEllipticCurves'] = None,
           salt: bytes = None,
           expose_secret: bool = False):
         _ = salt

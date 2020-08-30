@@ -4,20 +4,18 @@ import cbor2
 from dataclasses import dataclass
 
 from pycose import signcommon, CoseMessage
-from pycose.algorithms import CoseAlgorithms
-from pycose.keys.cosekey import EllipticCurveType
 from pycose.keys.ec import EC2
 from pycose.keys.okp import OKP
 
 if TYPE_CHECKING:
-    pass
+    from pycose.algorithms import CoseAlgorithms, CoseEllipticCurves
 
 
 @dataclass
 class SignerParams:
     private_key: Union[EC2, OKP]
-    alg: Optional[CoseAlgorithms] = None
-    curve: Optional[EllipticCurveType] = None
+    alg: Optional['CoseAlgorithms'] = None
+    curve: Optional['CoseEllipticCurves'] = None
     sign: bool = True
 
 

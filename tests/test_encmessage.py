@@ -3,10 +3,10 @@ from binascii import unhexlify
 from pytest import fixture, mark, skip
 
 from pycose import EncMessage, CoseMessage
-from pycose.algorithms import CoseAlgorithms
+from pycose.algorithms import CoseAlgorithms, CoseEllipticCurves
 from pycose.context import PartyInfo, SuppPubInfo, CoseKDFContext
 from pycose.cosebase import CoseHeaderKeys
-from pycose.keys.cosekey import KeyOps, CoseKey, KTY, EllipticCurveType
+from pycose.keys.cosekey import KeyOps, CoseKey, KTY
 from pycose.keys.ec import EC2
 from pycose.keys.symmetric import SymmetricKey
 from pycose.recipient import CoseRecipient, RcptParams
@@ -100,7 +100,7 @@ def setup_encrypt_ecdh_direct_tests(encrypt_ecdh_direct_test_input: dict) -> tup
 @mark.encoding
 @mark.decoding
 def test_encrypt_ecdh_direct_decode_encode(setup_encrypt_ecdh_direct_tests: tuple) -> None:
-    _, test_input, test_output, test_intermediate, fail = setup_encrypt_ecdh_direct_tests
+    title, test_input, test_output, test_intermediate, fail = setup_encrypt_ecdh_direct_tests
 
     # DECODING
 
@@ -303,7 +303,7 @@ def test_encrypt_triple_layer_decode(setup_encrypt_triple_layer_tests: tuple):
            recipient_layer_2.get('unprotected', {}).get(CoseHeaderKeys.KID)
 
     assert md.recipients[0].recipients[0].uhdr[CoseHeaderKeys.EPHEMERAL_KEY][CoseKey.Common.KTY] == KTY.EC2
-    assert md.recipients[0].recipients[0].uhdr[CoseHeaderKeys.EPHEMERAL_KEY][EC2.EC2Prm.CRV] == EllipticCurveType.P_256
+    assert md.recipients[0].recipients[0].uhdr[CoseHeaderKeys.EPHEMERAL_KEY][EC2.EC2Prm.CRV] == CoseEllipticCurves.P_256
 
 
 @fixture

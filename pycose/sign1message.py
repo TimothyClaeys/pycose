@@ -1,12 +1,13 @@
-from typing import Optional, Union
+from typing import Optional, Union, TYPE_CHECKING
 
 import cbor2
 
 from pycose import cosemessage, signcommon, CoseMessage
-from pycose.algorithms import CoseAlgorithms
-from pycose.keys.cosekey import EllipticCurveType
 from pycose.keys.ec import EC2
 from pycose.keys.okp import OKP
+
+if TYPE_CHECKING:
+    from pycose.algorithms import CoseAlgorithms, CoseEllipticCurves
 
 
 @cosemessage.CoseMessage.record_cbor_tag(18)
@@ -55,8 +56,8 @@ class Sign1Message(cosemessage.CoseMessage, signcommon.SignCommon):
 
     def encode(self,
                private_key: Union[EC2, OKP],
-               alg: Optional[CoseAlgorithms] = None,
-               curve: Optional[EllipticCurveType] = None,
+               alg: Optional['CoseAlgorithms'] = None,
+               curve: Optional['CoseEllipticCurves'] = None,
                tagged: bool = True,
                sign: bool = True) -> bytes:
         """ Encodes the message into a CBOR array with or without a CBOR tag. """
@@ -70,9 +71,9 @@ class Sign1Message(cosemessage.CoseMessage, signcommon.SignCommon):
             message = [self.encode_phdr(), self.encode_uhdr(), self.payload]
 
         if tagged:
-            res = cbor2.dumps(cbor2.CBORTag(self.cbor_tag, message))
+            res = cbor2.dumps(cbor2.CBORTag(self.cbor_tag, message), default=self._special_cbor_encoder)
         else:
-            res = cbor2.dumps(message)
+            res = cbor2.dumps(message, default=self._special_cbor_encoder)
 
         return res
 

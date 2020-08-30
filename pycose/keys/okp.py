@@ -6,10 +6,10 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PublicKey, X25519PrivateKey
 from dataclasses import dataclass
 
-from pycose.algorithms import CoseAlgorithms, config
+from pycose.algorithms import CoseAlgorithms, config, CoseEllipticCurves
 from pycose.context import CoseKDFContext
 from pycose.exceptions import CoseInvalidAlgorithm
-from pycose.keys.cosekey import CoseKey, KTY, EllipticCurveType, KeyOps
+from pycose.keys.cosekey import CoseKey, KTY, KeyOps
 
 
 @CoseKey.record_kty(KTY.OKP)
@@ -19,7 +19,7 @@ class OKP(CoseKey):
     Octet Key Pairs: Do not assume that keys using this type are elliptic curves.  This key type could be used for
     other curve types.
     """
-    _crv: Optional[EllipticCurveType] = None
+    _crv: Optional[CoseEllipticCurves] = None
     _x: Optional[bytes] = None
     _d: Optional[bytes] = None
 
@@ -58,13 +58,13 @@ class OKP(CoseKey):
         self.d = d
 
     @property
-    def crv(self) -> Optional[EllipticCurveType]:
+    def crv(self) -> Optional[CoseEllipticCurves]:
         return self._crv
 
     @crv.setter
-    def crv(self, new_crv: Optional[EllipticCurveType]) -> None:
+    def crv(self, new_crv: Optional[CoseEllipticCurves]) -> None:
         if new_crv is not None:
-            _ = EllipticCurveType(new_crv)
+            _ = CoseEllipticCurves(new_crv)
         self._crv = new_crv
 
     @property
@@ -108,7 +108,7 @@ class OKP(CoseKey):
                               public_key: 'OKP',
                               context: CoseKDFContext = b'',
                               alg: Optional[CoseAlgorithms] = None,
-                              curve: Optional[EllipticCurveType] = None) -> Tuple[bytes, bytes]:
+                              curve: Optional[CoseEllipticCurves] = None) -> Tuple[bytes, bytes]:
 
         self._check_key_conf(alg, KeyOps.DERIVE_KEY, public_key, curve)
 

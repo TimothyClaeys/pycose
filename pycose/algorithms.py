@@ -1,14 +1,15 @@
 from hashlib import sha512, sha384, sha256
-from typing import Any, Optional, NamedTuple, List
+from typing import Any, Optional, NamedTuple, List, Union
 
 from aenum import MultiValue, Enum, skip
 from cryptography.hazmat.primitives import keywrap
+from cryptography.hazmat.primitives.asymmetric.ec import SECP256R1, SECP384R1, SECP521R1, SECP256K1
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM, AESCCM
 from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.hashes import SHA384, SHA256, SHA512
 from cryptography.hazmat.primitives.hmac import HMAC
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
-from ecdsa import NIST521p, NIST384p, NIST256p
+from ecdsa import NIST521p, NIST384p, NIST256p, SECP256k1
 
 
 class _AlgorithmConfig(NamedTuple):
@@ -84,12 +85,48 @@ class CoseAlgorithms(Enum):
         return self.id == other or self.fullname == other
 
     def __hash__(self):
-        return hash(self.id)
+        return hash((self.id, self.fullname))
 
 
-def config(algorithm: CoseAlgorithms) -> _AlgorithmConfig:
+class CoseEllipticCurves(Enum):
+    """ The (elliptic) curves supported by COSE. """
+
+    _init_ = 'id fullname config'
+    _settings_ = MultiValue
+
+    RESERVED = 0, 'RESERVED', skip(_AlgorithmConfig())
+    P_256 = 1, 'P_256', skip(_AlgorithmConfig(curve=(NIST256p, SECP256R1)))
+    P_384 = 2, 'P_384', skip(_AlgorithmConfig(curve=(NIST384p, SECP384R1)))
+    P_521 = 3, 'P_521', skip(_AlgorithmConfig(curve=(NIST521p, SECP521R1)))
+    X25519 = 4, 'X25519', skip(_AlgorithmConfig())
+    X448 = 5, 'X448', skip(_AlgorithmConfig())
+    ED25519 = 'Ed25519', 6, skip(_AlgorithmConfig())
+    ED448 = 7, 'Ed448', skip(_AlgorithmConfig())
+    SECP256K1 = 8, 'SECP256K1', skip(_AlgorithmConfig(curve=(SECP256k1, SECP256K1)))
+
+    def __int__(self):
+        return self.id
+
+    def __str__(self):
+        return self.fullname
+
+    def __repr__(self):
+        return f'<{self.__class__.__name__}.{self.fullname}: {self.id}>'
+
+    def __eq__(self, other):
+        return self.id == other or self.fullname == other
+
+    def __hash__(self):
+        return hash((self.id, self.fullname))
+
+
+def config(algorithm: Union[CoseAlgorithms, CoseEllipticCurves]) -> _AlgorithmConfig:
     return algorithm.config.value
 
 
 def list_ciphers() -> List[CoseAlgorithms]:
     return [k for k in CoseAlgorithms.__members__.keys()]
+
+
+def list_curves() -> List[CoseEllipticCurves]:
+    return [k for k in CoseEllipticCurves.__members__.keys()]

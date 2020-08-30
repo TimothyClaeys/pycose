@@ -2,22 +2,22 @@ from binascii import unhexlify
 
 from pytest import mark as m
 
-from pycose.algorithms import CoseAlgorithms
+from pycose.algorithms import CoseAlgorithms, CoseEllipticCurves
 from pycose.context import CoseKDFContext, PartyInfo, SuppPubInfo
-from pycose.keys.cosekey import EllipticCurveType, CoseKey, KTY, KeyOps
+from pycose.keys.cosekey import CoseKey, KTY, KeyOps
 from pycose.keys.ec import EC2
 from pycose.keys.symmetric import SymmetricKey
 
 
 @m.parametrize("crv, x, y, expected",
                [
-                   (EllipticCurveType.P_256,
+                   (CoseEllipticCurves.P_256,
                     CoseKey.base64decode("Ze2loSV3wrroKUN_4zhwGhCqo3Xhu1td4QjeQ5wIVR0"),
                     CoseKey.base64decode("HlLtdXARY_f55A3fnzQbPcm6hgr34Mp8p-nuzQCE0Zw"),
                     {1: 2, -1: 1,
                      -2: unhexlify(b'98F50A4FF6C05861C8860D13A638EA56C3F5AD7590BBFBF054E1C7B4D91D6280'),
                      -3: unhexlify(b'F01400B089867804B8E9FC96C3932161F1934F4223069170D924B7E03BF822BB')}),
-                   (EllipticCurveType.P_521,
+                   (CoseEllipticCurves.P_521,
                     CoseKey.base64decode(
                         "AHKZLLOsCOzz5cY97ewNUajB957y-C-U88c3v13nmGZx6sYl_oJXu9A5RkTKqjqvjyekWF-7ytDyRXYgCF5cj0Kt"),
                     CoseKey.base64decode(
@@ -27,7 +27,7 @@ from pycose.keys.symmetric import SymmetricKey
                          "AA4s46qQ+2nkxki6uiGothas9tnyr3aZiI3Y/5pt8WSwWfaEKtJ90k8Yk/rI1cAyg89gIR+dFxOGYtyPFUfCicKl"),
                      -3: CoseKey.base64decode(
                          "AITVahaCQnRaqZ79qdWNRDnuwKaqQ0kYvFSfV/MfOLLAqA/wuHVDZ/MV0b4dgFu5XaOIDgEDXnYOksqFF9MT9ZHu")}),
-                   (EllipticCurveType.P_256,
+                   (CoseEllipticCurves.P_256,
                     CoseKey.base64decode("7cvYCcdU22WCwW1tZXR8iuzJLWGcd46xfxO1XJs-SPU"),
                     CoseKey.base64decode("DzhJXgz9RI6TseNmwEfLoNVns8UmvONsPzQDop2dKoo"),
                     {-1: 1,
@@ -52,7 +52,7 @@ def test_cosekey_decode(encoded_key_obj):
     key = CoseKey.decode(encoded_key_obj)
     assert type(key) == EC2
     assert key.kty == KTY.EC2
-    assert key.crv == EllipticCurveType.P_256
+    assert key.crv == CoseEllipticCurves.P_256
 
 
 @m.parametrize("kid, alg, key_ops, base_iv, k, pl, aad, nonce, algo, ct",
@@ -275,7 +275,7 @@ ctx_2 = "hAeD9lhAAtH35vJsQ9SGjYfOsjUxYXQKrPH3FjZHmEtSKoSN8cPJz03y/" \
                  CoseKey.base64decode("Ze2loSV3wrroKUN_4zhwGhCqo3Xhu1td4QjeQ5wIVR0"),
                  CoseKey.base64decode("HlLtdXARY_f55A3fnzQbPcm6hgr34Mp8p-nuzQCE0Zw"),
                  CoseKey.base64decode("r_kHyZ-a06rmxM3yESK84r1otSg-aQcVStkRhA-iCM8"),
-                 EllipticCurveType.P_256,
+                 CoseEllipticCurves.P_256,
                  unhexlify("98F50A4FF6C05861C8860D13A638EA56C3F5AD7590BBFBF054E1C7B4D91D6280"),
                  unhexlify("F01400B089867804B8E9FC96C3932161F1934F4223069170D924B7E03BF822BB"),
                  CoseAlgorithms.A128GCM,
@@ -292,7 +292,7 @@ ctx_2 = "hAeD9lhAAtH35vJsQ9SGjYfOsjUxYXQKrPH3FjZHmEtSKoSN8cPJz03y/" \
                  CoseKey.base64decode("Ze2loSV3wrroKUN_4zhwGhCqo3Xhu1td4QjeQ5wIVR0"),
                  CoseKey.base64decode("HlLtdXARY_f55A3fnzQbPcm6hgr34Mp8p-nuzQCE0Zw"),
                  CoseKey.base64decode("r_kHyZ-a06rmxM3yESK84r1otSg-aQcVStkRhA-iCM8"),
-                 EllipticCurveType.P_256,
+                 CoseEllipticCurves.P_256,
                  CoseKey.base64decode("7cvYCcdU22WCwW1tZXR8iuzJLWGcd46xfxO1XJs-SPU"),
                  CoseKey.base64decode("DzhJXgz9RI6TseNmwEfLoNVns8UmvONsPzQDop2dKoo"),
                  CoseAlgorithms.HMAC_512_512,
@@ -314,7 +314,7 @@ ctx_2 = "hAeD9lhAAtH35vJsQ9SGjYfOsjUxYXQKrPH3FjZHmEtSKoSN8cPJz03y/" \
                      "AdymlHvOiLxXkEhayXQnNCvDX4h9htZaCJN34kfmC6pV5OhQHiraVySsUdaQkAgDPrwQrJmbnX9cwlGfP-HqHZR1"),
                  CoseKey.base64decode(
                      "AAhRON2r9cqXX1hg-RoI6R1tX5p2rUAYdmpHZoC1XNM56KtscrX6zbKipQrCW9CGZH3T4ubpnoTKLDYJ_fF3_rJt"),
-                 EllipticCurveType.P_521,
+                 CoseEllipticCurves.P_521,
                  CoseKey.base64decode(
                      "APP1tIC1Ey2__4aekg06nicpK3uvQELX7HPaZUXYf2qd-YCYZlR7L6RqW0CiGjNv9uyJ5srxdRb_St87pwbfZx4B"),
                  CoseKey.base64decode(
@@ -364,7 +364,7 @@ def test_ec_ecdh_key_derivation(kid, alg, key_ops, x, y, d, curve, pub_x, pub_y,
                  CoseKey.base64decode("usWxHK2PmfnHKwXPS54m0kTcGJ90UiglWiGahtagnv8"),
                  CoseKey.base64decode("IBOL-C3BttVivg-lSreASjpkttcsz-1rb7btKLv8EX4"),
                  CoseKey.base64decode("V8kgd2ZBRuh2dgyVINBUqpPDr7BOMGcF22CQMIUHtNM"),
-                 EllipticCurveType.P_256,
+                 CoseEllipticCurves.P_256,
                  unhexlify("85695369676E617475726543A1030043A101264054546869732069732074686520636F6E74656E742E"),
                  CoseKey.base64decode(
                      "1xwF21LJzn8b9arAEzS76srB2GojA+buqokmb0XAHtYCymSer3kNi8mdJFhFfKaocgYZQOevvkjiid+sFGriWA==")),
@@ -377,7 +377,7 @@ def test_ec_ecdh_key_derivation(kid, alg, key_ops, x, y, d, curve, pub_x, pub_y,
                 #      "AdymlHvOiLxXkEhayXQnNCvDX4h9htZaCJN34kfmC6pV5OhQHiraVySsUdaQkAgDPrwQrJmbnX9cwlGfP-HqHZR1"),
                 #  CoseKey.base64decode(
                 #      "AAhRON2r9cqXX1hg-RoI6R1tX5p2rUAYdmpHZoC1XNM56KtscrX6zbKipQrCW9CGZH3T4ubpnoTKLDYJ_fF3_rJt"),
-                #  EllipticCurveType.P_521,
+                #  CoseEllipticCurves.P_521,
                 #  unhexlify("846A5369676E61747572653144A10138234054546869732069732074686520636F6E74656E742E"),
                 #  unhexlify("01664DD6962091B5100D6E1833D503539330EC2BC8FD3E8996950CE9F70259D9A30F73794F603B0D3E7C5E9C4C2A57E10211F76E79DF8FFD1B79D7EF5B9FA7DA109001965FA2D37E093BB13C040399C467B3B9908C09DB2B0F1F4996FE07BB02AAA121A8E1C671F3F997ADE7D651081017057BD3A8A5FBF394972EA71CFDC15E6F8FE2E1"))
                 ])

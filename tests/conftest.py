@@ -6,9 +6,9 @@ from typing import List, Type, Union, Optional, Tuple
 
 from pytest import skip
 
-from pycose.algorithms import CoseAlgorithms
+from pycose.algorithms import CoseAlgorithms, CoseEllipticCurves
 from pycose.cosebase import CoseHeaderKeys
-from pycose.keys.cosekey import KTY, EllipticCurveType, CoseKey, KeyOps
+from pycose.keys.cosekey import KTY, CoseKey, KeyOps
 from pycose.keys.ec import EC2
 from pycose.keys.okp import OKP
 from pycose.keys.symmetric import SymmetricKey
@@ -102,11 +102,11 @@ key_param_to_be_replaced = {
 key_attr_to_be_replaced = {
     "EC": KTY.EC2,
     "OKP": KTY.OKP,
-    "P-256": EllipticCurveType.P_256,
-    "P-384": EllipticCurveType.P_384,
-    "P-521": EllipticCurveType.P_521,
-    "X25519": EllipticCurveType.X25519,
-    "X448": EllipticCurveType.X448,
+    "P-256": CoseEllipticCurves.P_256,
+    "P-384": CoseEllipticCurves.P_384,
+    "P-521": CoseEllipticCurves.P_521,
+    "X25519": CoseEllipticCurves.X25519,
+    "X448": CoseEllipticCurves.X448,
     "oct": KTY.SYMMETRIC,
 }
 
