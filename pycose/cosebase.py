@@ -107,6 +107,7 @@ class CoseBase(metaclass=abc.ABCMeta):
 
     def encode_phdr(self) -> bytes:
         """ Encode the protected header. """
+
         if len(self._phdr):
             if CoseHeaderKeys.ALG in self._phdr:
                 self._phdr[CoseHeaderKeys.ALG] = int(self._phdr[CoseHeaderKeys.ALG])
@@ -116,6 +117,7 @@ class CoseBase(metaclass=abc.ABCMeta):
 
     def encode_uhdr(self) -> dict:
         """ Encode the unprotected header. """
+
         return self._uhdr
 
     @abc.abstractmethod

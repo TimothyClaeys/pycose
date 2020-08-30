@@ -1,6 +1,3 @@
-COSE Signature Messages
-=======================
-
 .. toctree::
    :maxdepth: 1
 

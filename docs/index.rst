@@ -66,7 +66,7 @@ cryptographic keys. There are three main key types:
 
 .. toctree::
    :maxdepth: 1
-   :caption: Misc
+   :caption: Miscellaneous
 
    algorithms.rst
 

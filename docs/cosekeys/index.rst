@@ -1,6 +1,3 @@
-COSE Keys
-=========
-
 .. toctree::
    :maxdepth: 1
 

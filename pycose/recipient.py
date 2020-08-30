@@ -62,7 +62,7 @@ class CoseRecipient(CoseMessage):
 
     def encode(self, parameters: RcptParams) -> list:
         if parameters.encrypt_or_mac:
-            recipient = [self.encode_phdr(), self.encode_uhdr(), self.encrypt(parameters.alg, parameters.key)]
+            recipient = [self.encode_phdr(), self.encode_uhdr(), self.encrypt(key=parameters.key, alg=parameters.alg)]
         else:
             recipient = [self.encode_phdr(), self.encode_uhdr(), self.payload]
 
@@ -75,17 +75,19 @@ class CoseRecipient(CoseMessage):
 
         return recipient
 
-    def encrypt(self, alg: 'CoseAlgorithms', key: SymmetricKey) -> bytes:
+    def encrypt(self, key: SymmetricKey, alg: Optional['CoseAlgorithms'] = None) -> bytes:
         """ Key wrapping. """
 
-        self._sanitize_args(key, alg)
+        if key is None:
+            raise CoseIllegalKeyType("COSE Key cannot be None")
 
         return key.key_wrap(self.payload, alg=alg)
 
-    def decrypt(self, alg: Optional['CoseAlgorithms'] = None, key: Optional[SymmetricKey] = None) -> bytes:
+    def decrypt(self, key: SymmetricKey, alg: Optional['CoseAlgorithms'] = None) -> bytes:
         """ Key unwrapping. """
 
-        self._sanitize_args(key, alg)
+        if key is None:
+            raise CoseIllegalKeyType("COSE Key cannot be None")
 
         return key.key_unwrap(self.payload, alg=alg)
 
@@ -161,16 +163,6 @@ class CoseRecipient(CoseMessage):
             return secret, kek
         else:
             return kek
-
-    @classmethod
-    def _sanitize_args(cls, key: SymmetricKey, alg: Optional['CoseAlgorithms'] = None) -> None:
-        """ Sanitize parameters for encryption/decryption algorithms. """
-
-        if key is None:
-            raise CoseIllegalKeyType("COSE Key cannot be None")
-
-        if key.alg is None and alg is None:
-            raise CoseInvalidAlgorithm("COSE algorithm cannot be None")
 
     def __repr__(self) -> str:
         return \

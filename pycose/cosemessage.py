@@ -1,5 +1,5 @@
 import abc
-from typing import Optional
+from typing import Optional, TypeVar
 
 import cbor2
 
@@ -14,7 +14,7 @@ class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
 
     @classmethod
     def record_cbor_tag(cls, cbor_tag: int):
-        """Decorator to record all the CBOR tags dynamically"""
+        """ Decorator to record all the CBOR tags dynamically. """
 
         def decorator(the_class):
             if not issubclass(the_class, CoseMessage):
@@ -25,8 +25,17 @@ class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
         return decorator
 
     @classmethod
-    def decode(cls, received: bytes):
-        """Decode received COSE message based on the CBOR tag."""
+    def decode(cls, received: bytes) -> 'CM':
+        """
+        Decode received COSE message based on the CBOR tag.
+
+        :param received: COSE messages encoded as bytes
+        :raises AttributeError: When the COSE message, it cannot be decoded properly
+        :raises ValueError: The received parameter must be bytes
+        :raises KeyError: thrown when the CBOR tag, identifying the COSE message is unrecognized
+        :raises TypeError: thrown when the messages cannot be decoded properly
+        :returns: An initialized CoseMessage
+        """
 
         try:
             cbor_tag = cbor2.loads(received).tag
@@ -98,3 +107,6 @@ class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def encode(self, **kwargs) -> bytes:
         raise NotImplementedError
+
+
+CM = TypeVar('CM', bound=CoseMessage)
