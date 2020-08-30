@@ -2,8 +2,8 @@ from binascii import unhexlify
 
 from pytest import mark as m
 
-from pycose.algorithms import CoseAlgorithms, CoseEllipticCurves
-from pycose.context import CoseKDFContext, PartyInfo, SuppPubInfo
+from pycose.attributes.algorithms import CoseAlgorithms, CoseEllipticCurves
+from pycose.attributes.context import CoseKDFContext, PartyInfo, SuppPubInfo
 from pycose.keys.cosekey import CoseKey, KTY, KeyOps
 from pycose.keys.ec import EC2
 from pycose.keys.symmetric import SymmetricKey

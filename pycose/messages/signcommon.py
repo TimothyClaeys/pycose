@@ -7,7 +7,7 @@ from pycose.keys.ec import EC2
 from pycose.keys.okp import OKP
 
 if TYPE_CHECKING:
-    from pycose.algorithms import CoseAlgorithms, CoseEllipticCurves
+    from pycose.attributes.algorithms import CoseAlgorithms, CoseEllipticCurves
 
 
 class SignCommon(cosebase.CoseBase, metaclass=abc.ABCMeta):

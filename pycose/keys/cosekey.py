@@ -6,7 +6,7 @@ from typing import List, Union, Dict, Optional, TypeVar, TYPE_CHECKING, Type, Ca
 import dataclasses
 from dataclasses import dataclass
 
-from pycose.algorithms import CoseAlgorithms, CoseEllipticCurves
+from pycose.attributes.algorithms import CoseAlgorithms, CoseEllipticCurves
 from pycose.exceptions import CoseIllegalKeyOps
 
 if TYPE_CHECKING:

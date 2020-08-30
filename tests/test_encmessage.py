@@ -3,13 +3,13 @@ from binascii import unhexlify
 from pytest import fixture, mark, skip
 
 from pycose import EncMessage, CoseMessage
-from pycose.algorithms import CoseAlgorithms, CoseEllipticCurves
-from pycose.context import PartyInfo, SuppPubInfo, CoseKDFContext
-from pycose.cosebase import CoseHeaderKeys
+from pycose.attributes.algorithms import CoseAlgorithms, CoseEllipticCurves
+from pycose.attributes.context import PartyInfo, SuppPubInfo, CoseKDFContext
+from pycose.attributes.headers import CoseHeaderKeys
 from pycose.keys.cosekey import KeyOps, CoseKey, KTY
 from pycose.keys.ec import EC2
 from pycose.keys.symmetric import SymmetricKey
-from pycose.recipient import CoseRecipient, RcptParams
+from pycose.messages.recipient import CoseRecipient, RcptParams
 from tests.conftest import generic_test_setup, extract_phdr, extract_uhdr, \
     extract_unsent_nonce, create_cose_key, extract_nonce, extract_alg, setup_ec_receiver_keys, setup_okp_receiver_keys
 

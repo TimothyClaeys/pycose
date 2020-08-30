@@ -3,9 +3,9 @@ from binascii import unhexlify
 import pytest
 
 from pycose import CoseMessage, Enc0Message
-from pycose.algorithms import CoseAlgorithms
-from pycose.cosebase import CoseHeaderKeys
-from pycose.enccommon import EncCommon
+from pycose.attributes.algorithms import CoseAlgorithms
+from pycose.attributes.headers import CoseHeaderKeys
+from pycose.messages.enccommon import EncCommon
 
 message_types = [(Enc0Message, CoseMessage), (Enc0Message, EncCommon)]
 

@@ -3,8 +3,8 @@ from typing import Optional
 
 import cbor2
 
-from pycose import cosemessage
-from pycose.algorithms import CoseAlgorithms
+from pycose.messages import cosemessage
+from pycose.attributes.algorithms import CoseAlgorithms
 from pycose.exceptions import CoseIllegalKeyType
 from pycose.keys.symmetric import SymmetricKey
 

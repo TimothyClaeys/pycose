@@ -8,8 +8,8 @@ from cryptography.hazmat.primitives.ciphers import modes, Cipher
 from cryptography.hazmat.primitives.ciphers.aead import AESCCM, AESGCM
 from dataclasses import dataclass
 
-from pycose.algorithms import CoseAlgorithms, config
-from pycose.context import CoseKDFContext
+from pycose.attributes.algorithms import CoseAlgorithms, config
+from pycose.attributes.context import CoseKDFContext
 from pycose.exceptions import CoseInvalidAlgorithm, CoseInvalidTag
 from pycose.keys.cosekey import CoseKey, KTY, KeyOps
 

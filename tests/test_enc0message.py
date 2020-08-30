@@ -4,9 +4,9 @@ from binascii import hexlify, unhexlify
 from pytest import mark, fixture, skip
 
 from pycose import CoseMessage
-from pycose.algorithms import CoseAlgorithms
-from pycose.cosebase import CoseHeaderKeys
-from pycose.enc0message import Enc0Message
+from pycose.attributes.algorithms import CoseAlgorithms
+from pycose.attributes.headers import CoseHeaderKeys
+from pycose.messages.enc0message import Enc0Message
 from pycose.keys.cosekey import KeyOps, CoseKey
 from pycose.keys.symmetric import SymmetricKey
 from tests.conftest import generic_test_setup, extract_phdr, extract_uhdr, extract_alg, extract_nonce, create_cose_key

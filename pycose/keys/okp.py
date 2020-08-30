@@ -6,8 +6,8 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PublicKey, X25519PrivateKey
 from dataclasses import dataclass
 
-from pycose.algorithms import CoseAlgorithms, config, CoseEllipticCurves
-from pycose.context import CoseKDFContext
+from pycose.attributes.algorithms import CoseAlgorithms, config, CoseEllipticCurves
+from pycose.attributes.context import CoseKDFContext
 from pycose.exceptions import CoseInvalidAlgorithm
 from pycose.keys.cosekey import CoseKey, KTY, KeyOps
 

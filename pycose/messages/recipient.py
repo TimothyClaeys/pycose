@@ -15,8 +15,8 @@ else:
     from functools import singledispatchmethod
 
 if TYPE_CHECKING:
-    from pycose.context import CoseKDFContext
-    from pycose.algorithms import CoseAlgorithms
+    from pycose.attributes.context import CoseKDFContext
+    from pycose.attributes.algorithms import CoseAlgorithms
     from pycose.keys.cosekey import CoseEllipticCurves, CK
 
 

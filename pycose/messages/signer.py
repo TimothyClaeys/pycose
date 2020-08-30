@@ -3,12 +3,13 @@ from typing import Optional, Union, TYPE_CHECKING
 import cbor2
 from dataclasses import dataclass
 
-from pycose import signcommon, CoseMessage
+from pycose import CoseMessage
+from pycose.messages import signcommon
 from pycose.keys.ec import EC2
 from pycose.keys.okp import OKP
 
 if TYPE_CHECKING:
-    from pycose.algorithms import CoseAlgorithms, CoseEllipticCurves
+    from pycose.attributes.algorithms import CoseAlgorithms, CoseEllipticCurves
 
 
 @dataclass

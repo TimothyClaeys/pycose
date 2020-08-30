@@ -6,8 +6,8 @@ from typing import List, Type, Union, Optional, Tuple
 
 from pytest import skip
 
-from pycose.algorithms import CoseAlgorithms, CoseEllipticCurves
-from pycose.cosebase import CoseHeaderKeys
+from pycose.attributes.algorithms import CoseAlgorithms, CoseEllipticCurves
+from pycose.attributes.headers import CoseHeaderKeys
 from pycose.keys.cosekey import KTY, CoseKey, KeyOps
 from pycose.keys.ec import EC2
 from pycose.keys.okp import OKP

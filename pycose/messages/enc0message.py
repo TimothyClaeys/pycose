@@ -11,8 +11,9 @@ from typing import Optional
 
 import cbor2
 
-from pycose import cosemessage, enccommon, CoseMessage
-from pycose.algorithms import CoseAlgorithms
+from pycose import CoseMessage
+from pycose.messages import enccommon, cosemessage
+from pycose.attributes.algorithms import CoseAlgorithms
 from pycose.keys.symmetric import SymmetricKey
 
 
