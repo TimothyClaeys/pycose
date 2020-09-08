@@ -156,6 +156,10 @@ def pytest_generate_tests(metafunc):
         test_suite = sign_tests()
         ids = [test['title'] for test in test_suite]
         metafunc.parametrize("sign_test_input", test_suite, ids=ids)
+    if "countersign_test_input" in metafunc.fixturenames:
+        test_suite = countersign_tests()
+        ids = [test['title'] for test in test_suite]
+        metafunc.parametrize("countersign_test_input", test_suite, ids=ids)
 
 
 def generic_test_setup(generic_test_input: dict) -> tuple:
@@ -176,50 +180,55 @@ def generic_test_setup(generic_test_input: dict) -> tuple:
 
 
 def mac0_tests():
-    return _build_test_cases('mac0', mac0_test_vector_dirs)
+    return _build_test_cases(['mac0'], mac0_test_vector_dirs)
 
 
 def mac_tests():
-    return _build_test_cases('mac', mac_test_vector_dirs)
+    return _build_test_cases(['mac'], mac_test_vector_dirs)
 
 
 def encrypt0_tests():
-    return _build_test_cases('encrypted', enc0_test_vector_dirs)
+    return _build_test_cases(['encrypted'], enc0_test_vector_dirs)
 
 
 def encrypt_tests():
-    return _build_test_cases('enveloped', enc_test_vector_dirs)
+    return _build_test_cases(['enveloped'], enc_test_vector_dirs)
 
 
 def encrypt_ecdh_direct_tests():
-    return _build_test_cases('enveloped', ecdh_direct_test_vector_dirs)
+    return _build_test_cases(['enveloped'], ecdh_direct_test_vector_dirs)
 
 
 def encrypt_ecdh_wrap_tests():
-    return _build_test_cases('enveloped', ecdh_wrap_test_vector_dirs)
+    return _build_test_cases(['enveloped'], ecdh_wrap_test_vector_dirs)
 
 
 def encrypt_x25519_direct_tests():
-    return _build_test_cases('enveloped', x25519_direct_test_vector_dirs)
+    return _build_test_cases(['enveloped'], x25519_direct_test_vector_dirs)
 
 
 def encrypt_triple_layer_tests():
-    return _build_test_cases('enveloped', triple_layer_enc_test_vector_dirs, os.path.join("RFC8152", "Appendix_B.json"))
+    return _build_test_cases(['enveloped'], triple_layer_enc_test_vector_dirs,
+                             os.path.join("RFC8152", "Appendix_B.json"))
 
 
 def encrypt_hkdf_hmac_direct_tests():
-    return _build_test_cases('enveloped', mac_hkdf_hmac_direct_test_vectors_dirs)
+    return _build_test_cases(['enveloped'], mac_hkdf_hmac_direct_test_vectors_dirs)
 
 
 def sign1_tests():
-    return _build_test_cases('sign0', sign1_test_vector_dirs)
+    return _build_test_cases(['sign0'], sign1_test_vector_dirs)
 
 
 def sign_tests():
-    return _build_test_cases('sign', sign_test_vector_dirs)
+    return _build_test_cases(['sign'], sign_test_vector_dirs)
 
 
-def _build_test_cases(key: str, test_dirs: List[str], single_file: Optional[str] = None):
+def countersign_tests():
+    return _build_test_cases(['sign'], sign_test_vector_dirs)
+
+
+def _build_test_cases(keys: List[str], test_dirs: List[str], single_file: Optional[str] = None):
     test_files = [os.path.join(path_examples, td, file) for td in test_dirs for file in os.listdir(td)]
 
     if single_file is not None and os.path.join(path_examples, single_file) in test_files:
@@ -229,30 +238,31 @@ def _build_test_cases(key: str, test_dirs: List[str], single_file: Optional[str]
 
     for file in test_files:
         test_case = json.load(open(file, 'r'))
-        if key in test_case['input']:
-            _fix_header_attribute_names(test_case['input'][key], 'protected')
-            _fix_header_attribute_names(test_case['input'][key], 'unprotected')
-            _fix_header_algorithm_names(test_case['input'][key], 'protected')
-            _fix_header_algorithm_names(test_case['input'][key], 'unprotected')
+        for key in keys:
+            if key in test_case['input']:
+                _fix_header_attribute_names(test_case['input'][key], 'protected')
+                _fix_header_attribute_names(test_case['input'][key], 'unprotected')
+                _fix_header_algorithm_names(test_case['input'][key], 'protected')
+                _fix_header_algorithm_names(test_case['input'][key], 'unprotected')
 
-            try:
-                recipients = test_case['input'][key]['recipients']
-                _fix_recipients(recipients)
-            except KeyError:
-                pass
+                try:
+                    recipients = test_case['input'][key]['recipients']
+                    _fix_recipients(recipients)
+                except KeyError:
+                    pass
 
-            try:
-                signers = test_case['input'][key]['signers']
-                _fix_recipients(signers)
-            except KeyError:
-                pass
+                try:
+                    signers = test_case['input'][key]['signers']
+                    _fix_recipients(signers)
+                except KeyError:
+                    pass
 
-            try:
-                _fix_key_object(test_case['input'][key], 'key')
-            except KeyError:
-                pass
+                try:
+                    _fix_key_object(test_case['input'][key], 'key')
+                except KeyError:
+                    pass
 
-            fixed_test_cases.append(test_case)
+                fixed_test_cases.append(test_case)
 
     return fixed_test_cases
 
