@@ -1,3 +1,4 @@
+from binascii import hexlify
 from enum import IntEnum
 from typing import Optional, Tuple
 
@@ -5,6 +6,7 @@ import dataclasses
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PublicKey, X25519PrivateKey
 from dataclasses import dataclass
+from nacl.signing import SigningKey, VerifyKey
 
 from pycose.algorithms import CoseAlgorithms, config
 from pycose.context import CoseKDFContext
@@ -129,6 +131,60 @@ class OKP(CoseKey):
                                   backend=default_backend()).derive(shared_secret)
 
         return shared_secret, derived_key
+
+    def sign(self,
+             to_be_signed: bytes,
+             alg: Optional[CoseAlgorithms] = None,
+             curve: EllipticCurveType = None) -> bytes:
+        """
+        Computes a digital signature over 'to_be_signed'. The parameter 'alg' and 'curve' parameters are optional in
+        case they are already provided by one of the COSE key objects.
+
+        :param to_be_signed: data over which the signature is calculated
+        :param alg: an optional algorithm parameter (specifies the exact algorithm used for the signature).
+        :param curve: an optional curve
+        """
+
+        self._check_key_conf(algorithm=alg, key_operation=KeyOps.SIGN, curve=curve)
+
+        try:
+            alg_cfg = config(CoseAlgorithms(self.alg))
+        except KeyError as err:
+            raise CoseInvalidAlgorithm(err)
+
+        sk = SigningKey(self.d)
+
+        return sk.sign(to_be_signed)[:64]
+
+    def verify(self,
+               to_be_signed: bytes,
+               signature: bytes,
+               alg: Optional[CoseAlgorithms] = None,
+               curve: Optional[EllipticCurveType] = None) -> bool:
+        """
+        Verifies the digital signature over 'to_be_signed'. The parameter 'alg' and 'curve' parameters are optional in
+        case they are already provided by one of the COSE key objects.
+
+        :param to_be_signed: data that was signed
+        :param signature: signature to verify
+        :param alg: an optional algorithm parameter (specifies the exact algorithm used for the signature).
+        :param curve: an optional curve
+        """
+
+        self._check_key_conf(algorithm=alg, key_operation=KeyOps.VERIFY, curve=curve)
+
+        try:
+            alg_cfg = config(CoseAlgorithms(self.alg))
+        except KeyError as err:
+            raise CoseInvalidAlgorithm(err)
+
+        vk = VerifyKey(self.x)
+
+        try:
+            vk.verify(to_be_signed, signature)
+            return True
+        except Exception as e:
+            raise e
 
     def __repr__(self):
         hdr = '<COSE_Key(OKP): {'
