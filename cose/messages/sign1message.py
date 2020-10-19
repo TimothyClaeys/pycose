@@ -2,13 +2,13 @@ from typing import Optional, Union, TYPE_CHECKING
 
 import cbor2
 
-from pycose import CoseMessage
-from pycose.messages import cosemessage, signcommon
-from pycose.keys.ec import EC2
-from pycose.keys.okp import OKP
+from cose import CoseMessage
+from cose.messages import cosemessage, signcommon
+from cose.keys.ec import EC2
+from cose.keys.okp import OKP
 
 if TYPE_CHECKING:
-    from pycose.attributes.algorithms import CoseAlgorithms, CoseEllipticCurves
+    from cose.attributes.algorithms import CoseAlgorithms, CoseEllipticCurves
 
 
 @cosemessage.CoseMessage.record_cbor_tag(18)

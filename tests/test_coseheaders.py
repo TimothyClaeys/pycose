@@ -2,10 +2,10 @@ from binascii import unhexlify
 
 import pytest
 
-from pycose import CoseMessage, Enc0Message
-from pycose.attributes.algorithms import CoseAlgorithms
-from pycose.attributes.headers import CoseHeaderKeys
-from pycose.messages.enccommon import EncCommon
+from cose import CoseMessage, Enc0Message
+from cose.attributes.algorithms import CoseAlgorithms
+from cose.attributes.headers import CoseHeaderKeys
+from cose.messages.enccommon import EncCommon
 
 message_types = [(Enc0Message, CoseMessage), (Enc0Message, EncCommon)]
 

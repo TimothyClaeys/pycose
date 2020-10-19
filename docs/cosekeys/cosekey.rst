@@ -2,7 +2,7 @@ COSE Key
 =============
 
 
-.. module:: pycose.keys.cosekey
+.. module:: cose.keys.cosekey
 
 COSE Key objects hold cryptographic keys. They can be encoded as a CBOR map and can be
 embedded in COSE Headers for transportation inside a COSE message.

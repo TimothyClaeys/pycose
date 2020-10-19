@@ -1,7 +1,7 @@
 COSE Algorithms
 ===============
 
-.. module:: pycose.algorithms
+.. module:: cose.algorithms
 
 The full list with COSE algorithms and their identifiers can be found at the
 `IANA registry <https://www.iana.org/assignments/cose/cose.xhtml>`_
@@ -21,11 +21,37 @@ The full list with COSE algorithms and their identifiers can be found at the
 .. class:: CoseAlgorithms
 
     An enumeration for all supported COSE algorithms. Used by
-    :class:`~pycose.keys.cosekey.CoseKey` to perform cryptographic operations.
+    :class:`~cose.keys.cosekey.CoseKey` to perform cryptographic operations.
 
     .. code-block:: pycon
 
-        >>> from pycose.algorithms import CoseAlgorithms
+            >>> from cose.algorithms import CoseAlgorithms
+            >>> CoseAlgorithms.ES256
+            <CoseAlgorithms.ES256: -7>
+            >>> CoseAlgorithms.ES256.id
+            -7
+            >>> CoseAlgorithms.ES256 == -7
+            True
+            >>> CoseAlgorithms.ES256 == "ES256"
+            True
+            >>> config(CoseAlgorithms.ES256)
+            _AlgorithmConfig(primitive=None, kdf=None, curve=NIST256p, tag_length=None, hash=SHA256)
+
+
+            >>> from cose.algorithms import CoseAlgorithms
+            >>> CoseAlgorithms.ES256
+            <CoseAlgorithms.ES256: -7>
+            >>> CoseAlgorithms.ES256.id
+            -7
+            >>> CoseAlgorithms.ES256 == -7
+            True
+            >>> CoseAlgorithms.ES256 == "ES256"
+            True
+            >>> config(CoseAlgorithms.ES256)
+            _AlgorithmConfig(primitive=None, kdf=None, curve=NIST256p, tag_length=None, hash=SHA256)
+
+
+        >>> from cose.algorithms import CoseAlgorithms
         >>> CoseAlgorithms.ES256
         <CoseAlgorithms.ES256: -7>
         >>> CoseAlgorithms.ES256.id

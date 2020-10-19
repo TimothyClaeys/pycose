@@ -7,12 +7,12 @@ import dataclasses
 from aenum import Enum, MultiValue
 from dataclasses import dataclass
 
-from pycose.attributes.algorithms import CoseAlgorithms, CoseEllipticCurves
-from pycose.exceptions import CoseIllegalKeyOps
+from cose.attributes.algorithms import CoseAlgorithms, CoseEllipticCurves
+from cose.exceptions import CoseIllegalKeyOps
 
 if TYPE_CHECKING:
-    from pycose.keys.ec import EC2
-    from pycose.keys.okp import OKP
+    from cose.keys.ec import EC2
+    from cose.keys.okp import OKP
 
 
 class KTY(Enum):

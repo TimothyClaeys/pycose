@@ -3,10 +3,10 @@ from typing import Optional
 
 import cbor2
 
-from pycose.messages import cosemessage
-from pycose.attributes.algorithms import CoseAlgorithms
-from pycose.exceptions import CoseIllegalKeyType
-from pycose.keys.symmetric import SymmetricKey
+from cose.messages import cosemessage
+from cose.attributes.algorithms import CoseAlgorithms
+from cose.exceptions import CoseIllegalKeyType
+from cose.keys.symmetric import SymmetricKey
 
 
 class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):

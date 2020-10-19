@@ -3,11 +3,11 @@ from typing import Union, List, Optional, Tuple, TYPE_CHECKING
 
 from dataclasses import dataclass, field
 
-from pycose import CoseMessage
-from pycose.exceptions import CoseIllegalKeyType
-from pycose.keys.ec import EC2
-from pycose.keys.okp import OKP
-from pycose.keys.symmetric import SymmetricKey
+from cose import CoseMessage
+from cose.exceptions import CoseIllegalKeyType
+from cose.keys.ec import EC2
+from cose.keys.okp import OKP
+from cose.keys.symmetric import SymmetricKey
 
 if sys.version_info.minor < 8:
     from singledispatchmethod import singledispatchmethod
@@ -15,9 +15,9 @@ else:
     from functools import singledispatchmethod
 
 if TYPE_CHECKING:
-    from pycose.attributes.context import CoseKDFContext
-    from pycose.attributes.algorithms import CoseAlgorithms
-    from pycose.keys.cosekey import CoseEllipticCurves, CK
+    from cose.attributes.context import CoseKDFContext
+    from cose.attributes.algorithms import CoseAlgorithms
+    from cose.keys.cosekey import CoseEllipticCurves, CK
 
 
 @dataclass

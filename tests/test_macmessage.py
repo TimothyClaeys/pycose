@@ -2,12 +2,12 @@ from binascii import unhexlify
 
 from pytest import fixture, mark, skip
 
-from pycose import CoseMessage
-from pycose.attributes.algorithms import CoseAlgorithms
-from pycose.keys.cosekey import KeyOps
-from pycose.keys.symmetric import SymmetricKey
-from pycose.messages.macmessage import MacMessage
-from pycose.messages.recipient import CoseRecipient, RcptParams
+from cose import CoseMessage
+from cose.attributes.algorithms import CoseAlgorithms
+from cose.keys.cosekey import KeyOps
+from cose.keys.symmetric import SymmetricKey
+from cose.messages.macmessage import MacMessage
+from cose.messages.recipient import CoseRecipient, RcptParams
 from tests.conftest import generic_test_setup, create_cose_key, extract_alg
 
 

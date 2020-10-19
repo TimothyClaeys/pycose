@@ -2,11 +2,11 @@ from binascii import unhexlify
 
 from pytest import mark as m
 
-from pycose.attributes.algorithms import CoseAlgorithms, CoseEllipticCurves
-from pycose.attributes.context import CoseKDFContext, PartyInfo, SuppPubInfo
-from pycose.keys.cosekey import CoseKey, KTY, KeyOps
-from pycose.keys.ec import EC2
-from pycose.keys.symmetric import SymmetricKey
+from cose.attributes.algorithms import CoseAlgorithms, CoseEllipticCurves
+from cose.attributes.context import CoseKDFContext, PartyInfo, SuppPubInfo
+from cose.keys.cosekey import CoseKey, KTY, KeyOps
+from cose.keys.ec import EC2
+from cose.keys.symmetric import SymmetricKey
 
 
 @m.parametrize("crv, x, y, expected",

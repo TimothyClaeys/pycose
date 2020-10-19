@@ -2,7 +2,7 @@ import abc
 from typing import Optional
 
 import cbor2
-from pycose import attributes as attr
+from cose import attributes as attr
 
 
 class CoseBase(metaclass=abc.ABCMeta):

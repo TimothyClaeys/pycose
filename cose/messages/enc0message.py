@@ -11,10 +11,10 @@ from typing import Optional
 
 import cbor2
 
-from pycose import CoseMessage
-from pycose.messages import enccommon, cosemessage
-from pycose.attributes.algorithms import CoseAlgorithms
-from pycose.keys.symmetric import SymmetricKey
+from cose import CoseMessage
+from cose.messages import enccommon, cosemessage
+from cose.attributes.algorithms import CoseAlgorithms
+from cose.keys.symmetric import SymmetricKey
 
 
 @cosemessage.CoseMessage.record_cbor_tag(16)

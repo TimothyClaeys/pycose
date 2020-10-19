@@ -1,4 +1,5 @@
-# pycose [![Build Status](https://travis-ci.org/TimothyClaeys/pycose.svg?branch=master)](https://travis-ci.org/TimothyClaeys/pycose)
+# pycose 
+[![Build Status](https://travis-ci.org/TimothyClaeys/pycose.svg?branch=master)](https://travis-ci.org/TimothyClaeys/pycose) [![pyversion](https://upload.wikimedia.org/wikipedia/commons/8/8c/Blue_Python_3.6%2B_Shield_Badge.svg)](https://upload.wikimedia.org/wikipedia/commons/8/8c/Blue_Python_3.6%2B_Shield_Badge.svg)
 
 This project is a Python (>=3.6) implementation of the IETF CBOR Encoded Message Syntax (COSE). COSE has reached RFC status and is now available at RFC 8152.
 

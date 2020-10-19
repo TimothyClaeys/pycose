@@ -10,10 +10,10 @@ from dataclasses import dataclass
 from ecdsa import SigningKey, VerifyingKey
 from ecdsa.ellipticcurve import Point
 
-from pycose.attributes.algorithms import CoseAlgorithms, config, CoseEllipticCurves
-from pycose.attributes.context import CoseKDFContext
-from pycose.exceptions import CoseInvalidAlgorithm
-from pycose.keys.cosekey import CoseKey, KTY, KeyOps
+from cose.attributes.algorithms import CoseAlgorithms, config, CoseEllipticCurves
+from cose.attributes.context import CoseKDFContext
+from cose.exceptions import CoseInvalidAlgorithm
+from cose.keys.cosekey import CoseKey, KTY, KeyOps
 
 
 @CoseKey.record_kty(KTY.EC2)

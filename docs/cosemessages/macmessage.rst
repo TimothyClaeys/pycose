@@ -1,5 +1,5 @@
 COSE Mac
 ========
 
-:mod:`pycose.macmessage`
+:mod:`cose.macmessage`
 ------------------------

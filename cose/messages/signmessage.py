@@ -10,9 +10,9 @@ from typing import Optional, List
 
 import cbor2
 
-from pycose import CoseMessage
-from pycose.messages import cosemessage
-from pycose.messages.signer import CoseSignature, SignerParams
+from cose import CoseMessage
+from cose.messages import cosemessage
+from cose.messages.signer import CoseSignature, SignerParams
 
 
 @cosemessage.CoseMessage.record_cbor_tag(98)

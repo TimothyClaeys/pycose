@@ -2,10 +2,10 @@ from binascii import unhexlify
 
 from pytest import fixture, mark, skip
 
-from pycose import CoseMessage
-from pycose.keys.cosekey import KeyOps
-from pycose.keys.ec import EC2
-from pycose.messages.sign1message import Sign1Message
+from cose import CoseMessage
+from cose.keys.cosekey import KeyOps
+from cose.keys.ec import EC2
+from cose.messages.sign1message import Sign1Message
 from tests.conftest import generic_test_setup, create_cose_key, extract_alg
 
 

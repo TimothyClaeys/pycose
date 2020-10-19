@@ -2,9 +2,9 @@ from typing import Any, Callable, List
 
 from aenum import Enum, MultiValue, skip
 
-from pycose import CoseAlgorithms
-from pycose import messages
-from pycose import keys
+from cose import CoseAlgorithms
+from cose.keys.cosekey import CoseKey
+from cose.messages.signer import CounterSignature, CounterSignature0
 
 
 class CoseHeaderKeys(Enum):
@@ -21,13 +21,13 @@ class CoseHeaderKeys(Enum):
     KID = 4, 'KID', skip(None)
     IV = 5, 'IV', skip(None)
     PARTIAL_IV = 6, 'PARTIAL_IV', skip(None)
-    COUNTER_SIGNATURE = 7, 'COUNTER_SIGNATURE', skip(messages.signer.CounterSignature.from_signature_obj)
-    COUNTER_SIGNATURE0 = 9, 'COUNTER_SIGNATURE0', skip(messages.signer.CounterSignature0.from_signature_obj)
+    COUNTER_SIGNATURE = 7, 'COUNTER_SIGNATURE', skip(CounterSignature.from_signature_obj)
+    COUNTER_SIGNATURE0 = 9, 'COUNTER_SIGNATURE0', skip(CounterSignature0.from_signature_obj)
     KID_CONTEXT = 10, 'KID_CONTEXT', skip(None)
 
     # Elliptic Curve Key identifiers
-    EPHEMERAL_KEY = -1, 'EPHEMERAL_KEY', skip(keys.cosekey.CoseKey.decode)
-    STATIC_KEY = -2, 'STATIC_KEY', skip(keys.cosekey.CoseKey.decode)
+    EPHEMERAL_KEY = -1, 'EPHEMERAL_KEY', skip(CoseKey.decode)
+    STATIC_KEY = -2, 'STATIC_KEY', skip(CoseKey.decode)
     STATIC_KEY_ID = -3, 'STATIC_KEY_ID', skip(None)
 
     # HKDF Algorithm Parameters

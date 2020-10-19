@@ -1,13 +1,13 @@
 import abc
 from typing import Optional, Union, TYPE_CHECKING
 
-from pycose import cosebase
-from pycose.exceptions import CoseIllegalKeyType
-from pycose.keys.ec import EC2
-from pycose.keys.okp import OKP
+from cose import cosebase
+from cose.exceptions import CoseIllegalKeyType
+from cose.keys.ec import EC2
+from cose.keys.okp import OKP
 
 if TYPE_CHECKING:
-    from pycose.attributes.algorithms import CoseAlgorithms, CoseEllipticCurves
+    from cose.attributes.algorithms import CoseAlgorithms, CoseEllipticCurves
 
 
 class SignCommon(cosebase.CoseBase, metaclass=abc.ABCMeta):

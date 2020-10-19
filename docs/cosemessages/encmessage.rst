@@ -1,5 +1,5 @@
 COSE Encrypt
 =============
 
-:mod:`pycose.encmessage`
+:mod:`cose.encmessage`
 ------------------------

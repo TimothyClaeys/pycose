@@ -1,5 +1,5 @@
 OKP key
 =======
 
-:mod:`pycose.keys.okp`
+:mod:`cose.keys.okp`
 ----------------------
