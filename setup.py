@@ -25,7 +25,7 @@ with open(os.path.join(this_directory, 'README.md')) as file:
 
 setup(
     name='cose',
-    version='0.1.3',
+    version='0.9',
     packages=find_packages(exclude=['tests']),
     python_requires='>=3.6',
     package_data={
