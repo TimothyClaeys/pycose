@@ -8,10 +8,10 @@ from cryptography.hazmat.primitives.ciphers import modes, Cipher
 from cryptography.hazmat.primitives.ciphers.aead import AESCCM, AESGCM
 from dataclasses import dataclass
 
-from pycose.algorithms import CoseAlgorithms, config
-from pycose.context import CoseKDFContext
-from pycose.exceptions import CoseInvalidAlgorithm, CoseInvalidTag
-from pycose.keys.cosekey import CoseKey, KTY, KeyOps
+from cose.attributes.algorithms import CoseAlgorithms, config
+from cose.attributes.context import CoseKDFContext
+from cose.exceptions import CoseInvalidAlgorithm, CoseInvalidTag
+from cose.keys.cosekey import CoseKey, KTY, KeyOps
 
 
 @CoseKey.record_kty(KTY.SYMMETRIC)
@@ -196,5 +196,5 @@ class SymmetricKey(CoseKey):
 
     def __repr__(self):
         hdr = '<COSE_Key(Symmetric): {'
-        output = [f'{k[1:]}: {v}' for k, v in dataclasses.asdict(self).items() if v is not None]
+        output = [f'{k[1:]}: {v.__repr__()}' for k, v in dataclasses.asdict(self).items() if v is not None]
         return hdr + ", ".join(output) + '}>'

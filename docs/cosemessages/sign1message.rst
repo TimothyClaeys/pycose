@@ -1,5 +1,5 @@
 COSE Sign1
 ==========
 
-:mod:`pycose.sign1message`
+:mod:`cose.sign1message`
 --------------------------

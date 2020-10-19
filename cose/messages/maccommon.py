@@ -3,10 +3,10 @@ from typing import Optional
 
 import cbor2
 
-from pycose import cosemessage
-from pycose.algorithms import CoseAlgorithms
-from pycose.exceptions import CoseIllegalKeyType, CoseInvalidAlgorithm
-from pycose.keys.symmetric import SymmetricKey
+from cose.messages import cosemessage
+from cose.attributes.algorithms import CoseAlgorithms
+from cose.exceptions import CoseIllegalKeyType
+from cose.keys.symmetric import SymmetricKey
 
 
 class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
@@ -28,14 +28,16 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
     def verify_tag(self, key: SymmetricKey, alg: Optional[CoseAlgorithms] = None) -> bool:
         """ Verifies the authentication tag of a received message. """
 
-        self._sanitize_args(key, alg)
+        if not isinstance(key, SymmetricKey):
+            raise CoseIllegalKeyType("COSE key should be of type 'SymmetricKey', got {}".format(type(key)))
 
         return key.verify_tag(self.auth_tag, self._mac_structure, alg)
 
     def compute_tag(self, key: SymmetricKey, alg: Optional[CoseAlgorithms] = None) -> bytes:
         """ Computes the authentication tag of a COSE_Mac or COSE_Mac0 message. """
 
-        self._sanitize_args(key, alg)
+        if not isinstance(key, SymmetricKey):
+            raise CoseIllegalKeyType("COSE key should be of type 'SymmetricKey', got {}".format(type(key)))
 
         self.auth_tag = key.compute_tag(self._mac_structure, alg)
         return self.auth_tag
@@ -53,13 +55,3 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
 
         mac_structure.append(self.payload)
         return cbor2.dumps(mac_structure)
-
-    @classmethod
-    def _sanitize_args(cls, key: SymmetricKey, alg: Optional[CoseAlgorithms] = None) -> None:
-        """ Sanitize parameters for encryption/decryption algorithms. """
-
-        if key is None:
-            raise CoseIllegalKeyType("COSE Key cannot be None")
-
-        if key.alg is None and alg is None:
-            raise CoseInvalidAlgorithm("COSE algorithm cannot be None")

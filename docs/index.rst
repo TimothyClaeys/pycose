@@ -41,8 +41,8 @@ A basic COSE message consists of 2 information buckets and the payload:
 
 Additionally, based on the message type, other message fields can be added:
 
-- MAC or signature
-- COSE recipients or COSE signatures
+- _MAC_ or _signature_ (for **MAC0** or **Sign1** messages)
+- _COSE_ _recipients_ or _COSE _signatures_ (for **MAC**, **Encrypt**, and **Sign** messages)
 
 
 Besides the different COSE messages, the RFC also defines COSE Key objects. COSE Keys are used to store and transport

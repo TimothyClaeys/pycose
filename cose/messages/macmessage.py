@@ -13,10 +13,11 @@ from typing import Optional, List
 
 import cbor2
 
-from pycose import cosemessage, maccommon, CoseMessage
-from pycose.algorithms import CoseAlgorithms
-from pycose.keys.symmetric import SymmetricKey
-from pycose.recipient import CoseRecipient, RcptParams
+from cose import CoseMessage
+from cose.messages import cosemessage, maccommon
+from cose.attributes.algorithms import CoseAlgorithms
+from cose.keys.symmetric import SymmetricKey
+from cose.messages.recipient import CoseRecipient, RcptParams
 
 
 @cosemessage.CoseMessage.record_cbor_tag(97)
@@ -78,9 +79,9 @@ class MacMessage(maccommon.MacCommon):
             raise ValueError("List with cryptographic parameters should have the same length as the recipient list.")
 
         if tagged:
-            message = cbor2.dumps(cbor2.CBORTag(self.cbor_tag, message))
+            message = cbor2.dumps(cbor2.CBORTag(self.cbor_tag, message), default=self._special_cbor_encoder)
         else:
-            message = cbor2.dumps(message)
+            message = cbor2.dumps(message, default=self._special_cbor_encoder)
 
         return message
 

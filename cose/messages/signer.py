@@ -3,21 +3,20 @@ from typing import Optional, Union, TYPE_CHECKING
 import cbor2
 from dataclasses import dataclass
 
-from pycose import signcommon, CoseMessage
-from pycose.algorithms import CoseAlgorithms
-from pycose.keys.cosekey import EllipticCurveType
-from pycose.keys.ec import EC2
-from pycose.keys.okp import OKP
+from cose import CoseMessage
+from cose.messages import signcommon
+from cose.keys.ec import EC2
+from cose.keys.okp import OKP
 
 if TYPE_CHECKING:
-    pass
+    from cose.attributes.algorithms import CoseAlgorithms, CoseEllipticCurves
 
 
 @dataclass
 class SignerParams:
     private_key: Union[EC2, OKP]
-    alg: Optional[CoseAlgorithms] = None
-    curve: Optional[EllipticCurveType] = None
+    alg: Optional['CoseAlgorithms'] = None
+    curve: Optional['CoseEllipticCurves'] = None
     sign: bool = True
 
 

@@ -3,10 +3,10 @@ from typing import Optional
 
 import cbor2
 
-from pycose import cosemessage
-from pycose.algorithms import CoseAlgorithms
-from pycose.exceptions import CoseIllegalKeyType
-from pycose.keys.symmetric import SymmetricKey
+from cose.messages import cosemessage
+from cose.attributes.algorithms import CoseAlgorithms
+from cose.exceptions import CoseIllegalKeyType
+from cose.keys.symmetric import SymmetricKey
 
 
 class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
@@ -43,7 +43,7 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
             raise ValueError(f"{nonce} is not a valid nonce value")
 
         if not isinstance(key, SymmetricKey):
-            raise CoseIllegalKeyType("Illegal COSE key type: {}".format(type(key)))
+            raise CoseIllegalKeyType("COSE key should be of type 'SymmetricKey', got {}".format(type(key)))
 
         return key.decrypt(ciphertext=self.payload, aad=self._enc_structure, nonce=nonce, alg=alg)
 
@@ -65,7 +65,7 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
             raise ValueError(f"{nonce} is not a valid nonce value")
 
         if not isinstance(key, SymmetricKey):
-            raise CoseIllegalKeyType("Illegal COSE key type: {}".format(type(key)))
+            raise CoseIllegalKeyType("COSE key should be of type 'SymmetricKey', got {}".format(type(key)))
 
         return key.encrypt(plaintext=self.payload, aad=self._enc_structure, nonce=nonce, alg=alg)
 

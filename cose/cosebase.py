@@ -1,40 +1,8 @@
 import abc
-from enum import IntEnum, unique
 from typing import Optional
 
 import cbor2
-
-
-@unique
-class CoseHeaderKeys(IntEnum):
-    """ COSE header parameters """
-    # Common Parameters
-    RESERVED = 0
-    ALG = 1
-    CRIT = 2
-    CONTENT_TYPE = 3
-    KID = 4
-    IV = 5
-    PARTIAL_IV = 6
-    COUNTER_SIGNATURE = 7
-    COUNTER_SIGNATURE0 = 9
-    KID_CONTEXT = 10
-
-    # Elliptic Curve Key identifiers
-    EPHEMERAL_KEY = -1
-    STATIC_KEY = - 2
-    STATIC_KEY_ID = -3
-
-    # HKDF Algorithm Parameters
-    SALT = -20
-
-    # Context Algorithm Parameters
-    PARTY_U_IDENTITY = -21
-    PARTY_U_NONCE = -22
-    PARTY_U_OTHER = -23
-    PARTY_V_IDENTITY = -24
-    PARTY_V_NONCE = -25
-    PARTY_V_OTHER = -26
+from cose import attributes as attr
 
 
 class CoseBase(metaclass=abc.ABCMeta):
@@ -43,12 +11,12 @@ class CoseBase(metaclass=abc.ABCMeta):
     @classmethod
     def from_cose_obj(cls, cose_obj: list):
         try:
-            phdr = cbor2.loads(cose_obj.pop(0))
+            phdr = cls._parse_header(cbor2.loads(cose_obj.pop(0)))
         except (ValueError, EOFError):
             phdr = {}
 
         try:
-            uhdr = cose_obj.pop(0)
+            uhdr = cls._parse_header(cose_obj.pop(0))
         except ValueError:
             uhdr = {}
 
@@ -66,7 +34,6 @@ class CoseBase(metaclass=abc.ABCMeta):
 
         if type(uhdr) is not dict:
             raise TypeError("unprotected header should be of type 'dict'")
-
         self._phdr = phdr.copy()
         self._uhdr = uhdr.copy()
 
@@ -109,11 +76,25 @@ class CoseBase(metaclass=abc.ABCMeta):
         """ Encode the protected header. """
 
         if len(self._phdr):
-            if CoseHeaderKeys.ALG in self._phdr:
-                self._phdr[CoseHeaderKeys.ALG] = int(self._phdr[CoseHeaderKeys.ALG])
-            return cbor2.dumps(self._phdr)
+            return cbor2.dumps(self._phdr, default=self._special_cbor_encoder)
         else:
             return b''
+
+    @classmethod
+    def _special_cbor_encoder(cls, encoder, special_hdr_value):
+        encoder.encode(int(special_hdr_value))
+
+    @classmethod
+    def _parse_header(cls, hdr):
+        new_hdr = {}
+        for k, v in hdr.items():
+            parse_func = attr.headers.parser(attr.headers.CoseHeaderKeys(k))
+            if parse_func is not None:
+                new_hdr[attr.headers.CoseHeaderKeys(k)] = parse_func(v)
+            else:
+                new_hdr[attr.headers.CoseHeaderKeys(k)] = v
+
+        return new_hdr
 
     def encode_uhdr(self) -> dict:
         """ Encode the unprotected header. """

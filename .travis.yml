@@ -8,7 +8,7 @@ jobs:
         - sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
         - git submodule update --init --recursive
     - name: "Python 3.7 on Linux"
-      python: 3.8
+      python: 3.7
       before_install:
         - sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
         - git submodule update --init --recursive

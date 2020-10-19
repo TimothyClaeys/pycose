@@ -11,9 +11,10 @@ from typing import Optional
 
 import cbor2
 
-from pycose import cosemessage, maccommon, CoseMessage
-from pycose.algorithms import CoseAlgorithms
-from pycose.keys.symmetric import SymmetricKey
+from cose import CoseMessage
+from cose.messages import cosemessage, maccommon
+from cose.attributes.algorithms import CoseAlgorithms
+from cose.keys.symmetric import SymmetricKey
 
 
 @cosemessage.CoseMessage.record_cbor_tag(17)
@@ -53,9 +54,9 @@ class Mac0Message(maccommon.MacCommon):
             message = [self.encode_phdr(), self.encode_uhdr(), self.payload]
 
         if tagged:
-            res = cbor2.dumps(cbor2.CBORTag(self.cbor_tag, message))
+            res = cbor2.dumps(cbor2.CBORTag(self.cbor_tag, message), default=self._special_cbor_encoder)
         else:
-            res = cbor2.dumps(message)
+            res = cbor2.dumps(message, default=self._special_cbor_encoder)
 
         return res
 

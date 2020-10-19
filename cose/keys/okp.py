@@ -6,10 +6,10 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PublicKey, X25519PrivateKey
 from dataclasses import dataclass
 
-from pycose.algorithms import CoseAlgorithms, config
-from pycose.context import CoseKDFContext
-from pycose.exceptions import CoseInvalidAlgorithm
-from pycose.keys.cosekey import CoseKey, KTY, EllipticCurveType, KeyOps
+from cose.attributes.algorithms import CoseAlgorithms, config, CoseEllipticCurves
+from cose.attributes.context import CoseKDFContext
+from cose.exceptions import CoseInvalidAlgorithm
+from cose.keys.cosekey import CoseKey, KTY, KeyOps
 
 
 @CoseKey.record_kty(KTY.OKP)
@@ -19,7 +19,7 @@ class OKP(CoseKey):
     Octet Key Pairs: Do not assume that keys using this type are elliptic curves.  This key type could be used for
     other curve types.
     """
-    _crv: Optional[EllipticCurveType] = None
+    _crv: Optional[CoseEllipticCurves] = None
     _x: Optional[bytes] = None
     _d: Optional[bytes] = None
 
@@ -58,14 +58,15 @@ class OKP(CoseKey):
         self.d = d
 
     @property
-    def crv(self) -> Optional[EllipticCurveType]:
+    def crv(self) -> Optional[CoseEllipticCurves]:
         return self._crv
 
     @crv.setter
-    def crv(self, new_crv: Optional[EllipticCurveType]) -> None:
+    def crv(self, new_crv: Optional[CoseEllipticCurves]) -> None:
         if new_crv is not None:
-            _ = EllipticCurveType(new_crv)
-        self._crv = new_crv
+            self._crv = CoseEllipticCurves(new_crv)
+        else:
+            self._crv = None
 
     @property
     def x(self) -> Optional[bytes]:
@@ -87,14 +88,6 @@ class OKP(CoseKey):
             raise ValueError("private key must be of type 'bytes'")
         self._d = new_d
 
-    @property
-    def public_bytes(self) -> Optional[bytes]:
-        return self.x
-
-    @property
-    def private_bytes(self) -> Optional[bytes]:
-        return self.d
-
     def encode(self, *argv):
         kws = []
 
@@ -108,7 +101,7 @@ class OKP(CoseKey):
                               public_key: 'OKP',
                               context: CoseKDFContext = b'',
                               alg: Optional[CoseAlgorithms] = None,
-                              curve: Optional[EllipticCurveType] = None) -> Tuple[bytes, bytes]:
+                              curve: Optional[CoseEllipticCurves] = None) -> Tuple[bytes, bytes]:
 
         self._check_key_conf(alg, KeyOps.DERIVE_KEY, public_key, curve)
 
@@ -132,5 +125,5 @@ class OKP(CoseKey):
 
     def __repr__(self):
         hdr = '<COSE_Key(OKP): {'
-        output = [f'{k[1:]}: {v}' for k, v in dataclasses.asdict(self).items() if v is not None]
+        output = [f'{k[1:]}: {v.__repr__()}' for k, v in dataclasses.asdict(self).items() if v is not None]
         return hdr + ", ".join(output)[2:] + '}>'

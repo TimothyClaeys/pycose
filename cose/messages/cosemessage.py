@@ -3,7 +3,7 @@ from typing import Optional, TypeVar
 
 import cbor2
 
-from pycose.cosebase import CoseBase
+from cose.cosebase import CoseBase
 
 
 class CoseMessage(CoseBase, metaclass=abc.ABCMeta):

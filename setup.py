@@ -20,14 +20,14 @@ INSTALL_REQUIREMENTS = _read_requirements('requirements.txt')
 
 # README as long description
 this_directory = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(this_directory, 'README.md')) as f:
-    LONG_DESCRIPTION = f.read()
+with open(os.path.join(this_directory, 'README.md')) as file:
+    LONG_DESCRIPTION = file.read()
 
 setup(
-    name='pycose',
-    version='0.1.3',
+    name='cose',
+    version='0.9',
     packages=find_packages(exclude=['tests']),
-    python_requires='>=3.5',
+    python_requires='>=3.6',
     package_data={
         '': [
             'requirements.txt',

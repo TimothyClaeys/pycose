@@ -1,58 +1,77 @@
 import base64
 from abc import ABCMeta, abstractmethod
-from enum import IntEnum, unique
+from enum import IntEnum
 from typing import List, Union, Dict, Optional, TypeVar, TYPE_CHECKING, Type, Callable
 
 import dataclasses
+from aenum import Enum, MultiValue
 from dataclasses import dataclass
 
-from pycose.algorithms import CoseAlgorithms
-from pycose.exceptions import CoseIllegalKeyOps
+from cose.attributes.algorithms import CoseAlgorithms, CoseEllipticCurves
+from cose.exceptions import CoseIllegalKeyOps
 
 if TYPE_CHECKING:
-    from pycose.keys.ec import EC2
-    from pycose.keys.okp import OKP
+    from cose.keys.ec import EC2
+    from cose.keys.okp import OKP
 
 
-@unique
-class KTY(IntEnum):
+class KTY(Enum):
     """ The different COSE key types. """
+    _init_ = 'id fullname'
+    _settings_ = MultiValue
 
-    RESERVED = 0
-    OKP = 1
-    EC2 = 2
-    SYMMETRIC = 4
+    RESERVED = 0, "RESERVED"
+    OKP = 1, "OKP"
+    EC2 = 2, "EC2"
+    SYMMETRIC = 4, "SYMMETRIC"
+
+    def __int__(self):
+        return self.id
+
+    def __str__(self):
+        return self.fullname
+
+    def __repr__(self):
+        return f'<{self.__class__.__name__}.{self.fullname}: {self.id}>'
+
+    def __eq__(self, other):
+        return self.id == other or self.fullname == other
+
+    def __hash__(self):
+        return hash(self.id)
 
 
-@unique
-class KeyOps(IntEnum):
+class KeyOps(Enum):
     """ Supported COSE key operations. """
 
-    SIGN = 1
-    VERIFY = 2
-    ENCRYPT = 3
-    DECRYPT = 4
-    WRAP = 5
-    UNWRAP = 6
-    DERIVE_KEY = 7
-    DERIVE_BITS = 8
-    MAC_CREATE = 9
-    MAC_VERIFY = 10
+    _init_ = 'id fullname'
+    _settings_ = MultiValue
 
+    SIGN = 1, 'SIGN'
+    VERIFY = 2, 'VERIFY'
+    ENCRYPT = 3, 'ENCRYPT'
+    DECRYPT = 4, 'DECRYPT'
+    WRAP = 5, 'WRAP'
+    UNWRAP = 6, 'UNWRAP'
+    DERIVE_KEY = 7, 'DERIVE_KEY'
+    DERIVE_BITS = 8, 'DERIVE_BITS'
+    MAC_CREATE = 9, 'MAC_CREATE'
+    MAC_VERIFY = 10, 'MAC_VERIFY'
 
-@unique
-class EllipticCurveType(IntEnum):
-    """ The (elliptic) curves supported by COSE. """
+    def __int__(self):
+        return self.id
 
-    RESERVED = 0
-    P_256 = 1
-    P_384 = 2
-    P_521 = 3
-    X25519 = 4
-    X448 = 5
-    ED25519 = 6
-    ED448 = 7
-    SECP256K1 = 8
+    def __str__(self):
+        return self.fullname
+
+    def __repr__(self):
+        return f'<{self.__class__.__name__}.{self.fullname}: {self.id}>'
+
+    def __eq__(self, other):
+        return self.id == other or self.fullname == other
+
+    def __hash__(self):
+        return hash(self.id)
 
 
 @dataclass(init=False)
@@ -147,17 +166,18 @@ class CoseKey(metaclass=ABCMeta):
 
     @kty.setter
     def kty(self, new_kty: KTY) -> None:
-        _ = KTY(new_kty)  # check if the new value is a known COSE KTY, should never be None!
-        self._kty = new_kty
+        if new_kty is not None:
+            self._kty = KTY(new_kty)  # check if the new value is a known COSE KTY, should never be None!
+        else:
+            raise ValueError("Key type cannot be None")
 
     @property
     def alg(self) -> Optional[CoseAlgorithms]:
         return self._alg
 
     @alg.setter
-    def alg(self, new_alg: CoseAlgorithms) -> None:
+    def alg(self, new_alg: Optional[CoseAlgorithms]) -> None:
         if new_alg is not None:
-            _ = CoseAlgorithms(new_alg)  # check if the new value is a known COSE Algorithm
             self._alg = CoseAlgorithms(new_alg)
         else:
             self._alg = None
@@ -179,8 +199,9 @@ class CoseKey(metaclass=ABCMeta):
     @key_ops.setter
     def key_ops(self, new_key_ops: Optional[KeyOps]) -> None:
         if new_key_ops is not None:
-            _ = KeyOps(new_key_ops)  # check if the new value is a known COSE key operation
-        self._key_ops = new_key_ops
+            self._key_ops = KeyOps(new_key_ops)  # check if the new value is a known COSE key operation
+        else:
+            self._key_ops = None
 
     @property
     def base_iv(self) -> Optional[bytes]:
@@ -205,7 +226,7 @@ class CoseKey(metaclass=ABCMeta):
                         algorithm: CoseAlgorithms,
                         key_operation: KeyOps,
                         peer_key: Optional[Union['EC2', 'OKP']] = None,
-                        curve: Optional[EllipticCurveType] = None):
+                        curve: Optional[CoseEllipticCurves] = None):
         """ Helper function that checks the configuration of the COSE key object. """
 
         if self.alg is not None and algorithm is not None and CoseAlgorithms(self.alg) != CoseAlgorithms(algorithm):
@@ -224,14 +245,14 @@ class CoseKey(metaclass=ABCMeta):
                 peer_key.alg = self.alg
 
         if hasattr(self, "crv"):
-            if self.crv is not None and curve is not None and self.crv != curve:
+            if self.crv is not None and curve is not None and CoseEllipticCurves(self.crv) != CoseEllipticCurves(curve):
                 raise ValueError("Curve in COSE key clashes with parameter 'curve'.")
 
             if curve is not None:
                 self.crv = curve
 
         if peer_key is not None:
-            if peer_key.crv is not None and self.crv != peer_key.crv:
+            if peer_key.crv is not None and CoseEllipticCurves(self.crv) != CoseEllipticCurves(peer_key.crv):
                 raise ValueError("Curve parameter for private and public key do not match")
             else:
                 peer_key.crv = self.crv
