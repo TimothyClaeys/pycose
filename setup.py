@@ -25,9 +25,10 @@ with open(os.path.join(this_directory, 'README.md')) as file:
 
 setup(
     name='cose',
-    version='0.9',
-    packages=find_packages(exclude=['tests']),
+    version='0.9.dev1',
+    packages=find_packages(exclude=['tests', 'docs']),
     python_requires='>=3.6',
+    include_package_data=True,
     package_data={
         '': [
             'requirements.txt',
@@ -35,9 +36,26 @@ setup(
         ],
     },
     install_requires=INSTALL_REQUIREMENTS,
+    long_description_content_type='text/markdown',
     long_description=LONG_DESCRIPTION,
-    keywords=['COSE', 'Internet of Things', 'CBOR', 'object security', 'EDHOC', 'OSCORE'],
+    description='CBOR Object Signing and Encryption (COSE) implementation',
+    keywords=['COSE', 'Internet of Things', 'CBOR', 'object security', 'EDHOC', 'OSCORE', 'cryptography'],
+    url='https://pycose.readthedocs.io/en/latest/',
     author='Timothy Claeys',
+    platforms=['platform-independent'],
     author_email='timothy.claeys@gmail.com',
     license='BSD-3',
+    classifiers=[
+        'Development Status :: 3 - Alpha',
+        'Intended Audience :: Developers',
+        'Topic :: Internet',
+        'Topic :: Communications',
+        'Topic :: Software Development',
+        'Topic :: System :: Networking',
+        'License :: OSI Approved :: BSD License',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+    ],
 )

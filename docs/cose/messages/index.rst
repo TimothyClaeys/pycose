@@ -1,3 +1,6 @@
+COSE Messages
+=============
+
 .. toctree::
    :maxdepth: 1
 

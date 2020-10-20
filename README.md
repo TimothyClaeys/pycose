@@ -1,5 +1,5 @@
-# pycose 
-[![Build Status](https://travis-ci.org/TimothyClaeys/pycose.svg?branch=master)](https://travis-ci.org/TimothyClaeys/pycose) [![pyversion](https://upload.wikimedia.org/wikipedia/commons/8/8c/Blue_Python_3.6%2B_Shield_Badge.svg)](https://upload.wikimedia.org/wikipedia/commons/8/8c/Blue_Python_3.6%2B_Shield_Badge.svg)
+# pycose:snake:  --- CBOR Object Signing and Encryption
+[![Build Status](https://travis-ci.org/TimothyClaeys/pycose.svg?branch=master)](https://travis-ci.org/TimothyClaeys/pycose) [![pyversion](https://upload.wikimedia.org/wikipedia/commons/8/8c/Blue_Python_3.6%2B_Shield_Badge.svg)](https://upload.wikimedia.org/wikipedia/commons/8/8c/Blue_Python_3.6%2B_Shield_Badge.svg) [![Documentation Status](https://readthedocs.org/projects/pycose/badge/?version=latest)](https://pycose.readthedocs.io/en/latest/?badge=latest)
 
 This project is a Python implementation of the IETF CBOR Encoded Message Syntax (COSE). COSE has reached RFC status and is now available at RFC 8152.
 
@@ -10,9 +10,9 @@ This project is a Python implementation of the IETF CBOR Encoded Message Syntax 
 $ pip install cose
 ```
 
-**WARNING**: There is package on [PyPi](https://pypi.org/) called `pycose` which contains old code from this repository. Since I am not the maintainer I cannot update that package or remove it.
+:warning:**WARNING**:warning:: There is package on [PyPI](https://pypi.org/) called `pycose` which contains old code from this repository. Since I am not the maintainer I cannot update that package or remove it.
 
-## What is COSE
+## What is COSE ?
 CBOR Encoded Message Syntax (COSE) is a data format for concise representation of small messages [RFC 8152](https://tools.ietf.org/html/rfc8152). COSE is optimized for low power devices. The messages can be encrypted, MAC'ed and signed. There are 6 different types of COSE messages:
 
 - **Encrypt0**: An encrypted COSE message with a single recipient. The payload and AAD are protected by a shared CEK (Content Encryption Keys)
@@ -35,5 +35,9 @@ Additionally, based on the message type, other message fields can be added:
 
 ## Cryptography
 
-The project depends on `pyca/cryptography` for all cryptographic operations, except the deterministic ECDSA algorithm. For deterministic ECDSA `pycose` uses [python-ecdsa](https://github.com/warner/python-ecdsa). 
+The project depends on `pyca/cryptography` for all cryptographic operations, except the deterministic ECDSA algorithm. For deterministic ECDSA `cose` uses [python-ecdsa](https://github.com/warner/python-ecdsa). 
+
+## Documentation
+
+More documentation on COSE and the `cose` API can be found at: https://pycose.readthedocs.io
 
