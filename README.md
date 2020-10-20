@@ -1,4 +1,4 @@
-# cose  --- CBOR Object Signing and Encryption
+# pycose:snake:  --- CBOR Object Signing and Encryption
 [![Build Status](https://travis-ci.org/TimothyClaeys/pycose.svg?branch=master)](https://travis-ci.org/TimothyClaeys/pycose) [![pyversion](https://upload.wikimedia.org/wikipedia/commons/8/8c/Blue_Python_3.6%2B_Shield_Badge.svg)](https://upload.wikimedia.org/wikipedia/commons/8/8c/Blue_Python_3.6%2B_Shield_Badge.svg) [![Documentation Status](https://readthedocs.org/projects/pycose/badge/?version=latest)](https://pycose.readthedocs.io/en/latest/?badge=latest)
 
 This project is a Python implementation of the IETF CBOR Encoded Message Syntax (COSE). COSE has reached RFC status and is now available at RFC 8152.
@@ -10,7 +10,7 @@ This project is a Python implementation of the IETF CBOR Encoded Message Syntax 
 $ pip install cose
 ```
 
-**WARNING**: There is package on [PyPI](https://pypi.org/) called `pycose` which contains old code from this repository. Since I am not the maintainer I cannot update that package or remove it.
+:warning:**WARNING**:warning:: There is package on [PyPI](https://pypi.org/) called `pycose` which contains old code from this repository. Since I am not the maintainer I cannot update that package or remove it.
 
 ## What is COSE ?
 CBOR Encoded Message Syntax (COSE) is a data format for concise representation of small messages [RFC 8152](https://tools.ietf.org/html/rfc8152). COSE is optimized for low power devices. The messages can be encrypted, MAC'ed and signed. There are 6 different types of COSE messages:
