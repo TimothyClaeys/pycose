@@ -8,27 +8,30 @@
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    sodipodi:docname="basic_structure.svg"
-   inkscape:version="1.0 (1.0+r73+1)"
+   inkscape:version="1.0.1 (1.0.1+r73)"
    id="svg8"
    version="1.1"
    viewBox="0 0 210 297"
    height="297mm"
-   width="210mm">
+   width="210mm"
+   inkscape:export-filename="/home/timothy/Projects/COSE-PYTHON/images/basic_structure.png"
+   inkscape:export-xdpi="45.89151"
+   inkscape:export-ydpi="45.89151">
   <defs
      id="defs2" />
   <sodipodi:namedview
-     inkscape:window-maximized="1"
-     inkscape:window-y="30"
-     inkscape:window-x="1920"
-     inkscape:window-height="1141"
-     inkscape:window-width="1920"
+     inkscape:window-maximized="0"
+     inkscape:window-y="203"
+     inkscape:window-x="489"
+     inkscape:window-height="689"
+     inkscape:window-width="1272"
      showborder="false"
      showgrid="false"
      inkscape:document-rotation="0"
      inkscape:current-layer="layer1"
      inkscape:document-units="mm"
-     inkscape:cy="560"
-     inkscape:cx="400"
+     inkscape:cy="217.14286"
+     inkscape:cx="60.183618"
      inkscape:zoom="0.35"
      inkscape:pageshadow="2"
      inkscape:pageopacity="0.0"
@@ -44,115 +47,143 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
   <g
+     inkscape:groupmode="layer"
+     id="layer3"
+     inkscape:label="Layer 3" />
+  <g
      inkscape:label="Layer 2"
      id="layer2"
-     inkscape:groupmode="layer" />
+     inkscape:groupmode="layer">
+    <rect
+       style="fill:#000000;fill-opacity:0.0524247;stroke:#000000;stroke-width:1.98979;stroke-miterlimit:4;stroke-dasharray:none"
+       id="rect1463"
+       width="418.65448"
+       height="130.28127"
+       x="-166.83705"
+       y="-86.293663"
+       ry="8.2447844" />
+    <rect
+       style="opacity:0.94;fill:#c02200;fill-opacity:0.368637;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.941176"
+       id="rect1454"
+       width="201.67165"
+       height="81.962646"
+       x="35.607918"
+       y="-64.834595"
+       ry="10.989352" />
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect1473"
+       width="233.27277"
+       height="29.28849"
+       x="-72.399666"
+       y="31.11422"
+       ry="4.8663826" />
+  </g>
   <g
      id="layer1"
      inkscape:groupmode="layer"
      inkscape:label="Layer 1">
-    <g
-       transform="translate(28.214966,-55.829445)"
-       id="g892">
-      <rect
-         style="opacity:0.94;fill:#4dbaff;fill-opacity:0.368637;stroke:#000000;stroke-width:0.952734;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.941176"
-         id="rect837"
-         width="185.89047"
-         height="82.002029"
-         x="-178.51721"
-         y="-9.0248375"
-         ry="10.994632" />
-      <rect
-         style="opacity:0.94;fill:#4dbaff;fill-opacity:0.886275;stroke:#000000;stroke-width:1;stroke-opacity:0.941176"
-         id="rect833"
-         width="83.495155"
-         height="37.156994"
-         x="-177.58583"
-         y="26.403427"
-         ry="4.9819188" />
-      <rect
-         ry="4.9688864"
-         y="26.452028"
-         x="-94.042076"
-         height="37.059792"
-         width="100.7795"
-         id="rect835"
-         style="opacity:0.94;fill:#4dbaff;fill-opacity:0.886275;stroke:#000000;stroke-width:1.0972;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.941176" />
-      <text
-         xml:space="preserve"
-         style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
-         x="-152.20326"
-         y="15.548346"
-         id="text841"><tspan
-           sodipodi:role="line"
-           id="tspan839"
-           x="-152.20326"
-           y="15.548346"
-           style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:14.1111px;font-family:serif;-inkscape-font-specification:'serif, Bold Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583">COSE Headers</tspan></text>
-      <text
-         xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;line-height:1.25;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
-         x="-86.158279"
-         y="48.93713"
-         id="text849"><tspan
-           sodipodi:role="line"
-           id="tspan847"
-           x="-86.158279"
-           y="48.93713"
-           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583">unprotected</tspan></text>
-      <text
-         xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;line-height:1.25;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
-         x="-170.14003"
-         y="48.485584"
-         id="text845"><tspan
-           sodipodi:role="line"
-           id="tspan843"
-           x="-170.14003"
-           y="48.485584"
-           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583">protected</tspan></text>
-      <rect
-         style="opacity:0.94;fill:#4dbaff;fill-opacity:0.886275;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.941176"
-         id="rect856"
-         width="200.93558"
-         height="36.617001"
-         x="6.9588218"
-         y="26.673424"
-         ry="4.9095182" />
-      <text
-         id="text860"
-         y="48.395668"
-         x="79.958519"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;line-height:1.25;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
-         xml:space="preserve"><tspan
-           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583"
-           y="48.395668"
-           x="79.958519"
-           id="tspan858"
-           sodipodi:role="line">payload</tspan></text>
-    </g>
     <rect
-       ry="2.4599261"
-       y="-79.578667"
-       x="-162.40656"
-       height="133.83414"
-       width="413.70377"
-       id="rect866"
-       style="opacity:1;fill:#000000;fill-opacity:0.0452233;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:4,1;stroke-dashoffset:0;stroke-opacity:1" />
+       style="opacity:0.94;fill:#4dbaff;fill-opacity:0.368637;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.941176"
+       id="rect837"
+       width="185.89047"
+       height="82.002029"
+       x="-150.30225"
+       y="-64.854286"
+       ry="10.994632" />
+    <rect
+       style="opacity:0.94;fill:#0082a3;fill-opacity:0.886275;stroke:#000000;stroke-width:1;stroke-opacity:0.941176"
+       id="rect833"
+       width="83.495155"
+       height="37.156994"
+       x="-149.37086"
+       y="-29.426018"
+       ry="4.9819188" />
+    <rect
+       ry="4.9688864"
+       y="-29.377417"
+       x="-65.82711"
+       height="37.059792"
+       width="100.7795"
+       id="rect835"
+       style="opacity:0.94;fill:#0082a3;fill-opacity:0.886275;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.941176" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="-114.99246"
+       y="-40.281101"
+       id="text841"><tspan
+         sodipodi:role="line"
+         id="tspan839"
+         x="-114.99246"
+         y="-40.281101"
+         style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:14.1111px;font-family:serif;-inkscape-font-specification:'serif, Bold Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583">COSE Headers</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;line-height:1.25;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="-57.943314"
+       y="-6.8923149"
+       id="text849"><tspan
+         sodipodi:role="line"
+         id="tspan847"
+         x="-57.943314"
+         y="-6.8923149"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583">unprotected</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;line-height:1.25;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="-141.92506"
+       y="-7.3438606"
+       id="text845"><tspan
+         sodipodi:role="line"
+         id="tspan843"
+         x="-141.92506"
+         y="-7.3438606"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583">protected</tspan></text>
+    <rect
+       style="opacity:0.94;fill:#c02200;fill-opacity:0.886275;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.941176"
+       id="rect856"
+       width="200.93558"
+       height="36.617001"
+       x="35.173786"
+       y="-29.156021"
+       ry="4.9095182" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="106.06147"
+       y="-41.585239"
+       id="text1459"><tspan
+         sodipodi:role="line"
+         id="tspan1457"
+         x="106.06147"
+         y="-41.585239"
+         style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:14.1111px;font-family:serif;-inkscape-font-specification:'serif, Bold Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583">Payload</tspan></text>
+    <text
+       id="text860"
+       y="-7.3438587"
+       x="103.82026"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;line-height:1.25;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583"
+         y="-7.3438587"
+         x="103.82026"
+         id="tspan858"
+         sodipodi:role="line">plaintext</tspan></text>
     <text
        id="text896"
-       y="42.83337"
-       x="-57.745708"
+       y="52.071247"
+       x="-57.954262"
        style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:16.9333px;line-height:1.25;font-family:serif;-inkscape-font-specification:'serif, Bold Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
        xml:space="preserve"><tspan
          style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:16.9333px;font-family:serif;-inkscape-font-specification:'serif, Bold Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583"
-         y="42.83337"
-         x="-57.745708"
+         y="52.071247"
+         x="-57.954262"
          id="tspan894"
          sodipodi:role="line">Basic COSE structure</tspan></text>
   </g>

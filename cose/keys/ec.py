@@ -7,7 +7,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric.ec import ECDH
 from dataclasses import dataclass
-from ecdsa import SigningKey, VerifyingKey
+from ecdsa import SigningKey, VerifyingKey, BadSignatureError
 from ecdsa.ellipticcurve import Point
 
 from cose.attributes.algorithms import CoseAlgorithms, config, CoseEllipticCurves
@@ -198,6 +198,7 @@ class EC2(CoseKey):
         :param signature: signature to verify
         :param alg: an optional algorithm parameter (specifies the exact algorithm used for the signature).
         :param curve: an optional curve
+        :returns: True or False
         """
 
         self._check_key_conf(algorithm=alg, key_operation=KeyOps.VERIFY, curve=curve)
@@ -210,7 +211,10 @@ class EC2(CoseKey):
         p = Point(curve=alg_cfg.curve.curve, x=int(hexlify(self.x), 16), y=int(hexlify(self.y), 16))
         vk = VerifyingKey.from_public_point(p, alg_cfg.curve, alg_cfg.hash, validate_point=True)
 
-        return vk.verify(signature, to_be_signed)
+        try:
+            return vk.verify(signature, to_be_signed)
+        except BadSignatureError:
+            return False
 
     def __repr__(self):
         hdr = '<COSE_Key(EC2): {'

@@ -5,6 +5,10 @@ Sign1
 COSE structure, consisting of headers and payload. Receivers must implicitly know the public key to verify the message
 since no additional key information is transported.
 
+.. image:: ../../../images/sign1.png
+    :width: 650px
+    :align: center
+
 .. module:: cose.messages.sign1message
 
 .. autoclass:: Sign1Message

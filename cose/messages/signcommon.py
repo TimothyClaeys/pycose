@@ -38,8 +38,14 @@ class SignCommon(cosebase.CoseBase, metaclass=abc.ABCMeta):
                          alg: Optional['CoseAlgorithms'] = None,
                          curve: Optional['CoseEllipticCurves'] = None) -> bool:
         """
-        Verifies the signature of a received message
-        :return: True or raises an exception
+        Verifies the signature of a received COSE message.
+
+        :param public_key: A COSE key of type EC2 or OKP
+        :param alg: An optional CoseAlgorithm
+        :param curve: An optional CoseEllipticCurve
+        :raises CoseIllegalKeyType: When the key type is not of EC2 or OKP
+        :raises CoseInvalidAlgorithm: When the algorithm configuration is invalid
+        :returns: True for a valid signature or False for an invalid signature
         """
         if not isinstance(public_key, EC2) and not isinstance(public_key, OKP):
             raise CoseIllegalKeyType("COSE key should be of type 'EC2' or 'OKP', got {}".format(type(public_key)))
@@ -51,8 +57,14 @@ class SignCommon(cosebase.CoseBase, metaclass=abc.ABCMeta):
                           alg: Optional['CoseAlgorithms'] = None,
                           curve: Optional['CoseEllipticCurves'] = None) -> bytes:
         """
-        Computes the signature of a COSE message
-        :return: True or raises an exception
+        Computes the signature over a COSE message.
+
+        :param private_key: A COSE key of type EC2 or OKP
+        :param alg: An optional CoseAlgorithm
+        :param curve: An optional CoseEllipticCurve
+        :raises CoseIllegalKeyType: When the key type is not of EC2 or OKP
+        :raises CoseInvalidAlgorithm: When the algorithm configuration is invalid
+        :returns: True or False
         """
 
         if not isinstance(private_key, EC2) and not isinstance(private_key, OKP):

@@ -4,3 +4,5 @@ ecdsa>=0.16.0
 dataclasses>=0.7 ;python_version <= '3.6'
 singledispatchmethod>=1.0 ;python_version <= '3.7'
 aenum>=2.2.4
+# this has to be here, otherwise the documentation build will fail
+sphinxemoji

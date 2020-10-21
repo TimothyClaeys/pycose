@@ -9,8 +9,8 @@
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    inkscape:export-ydpi="51.232285"
    inkscape:export-xdpi="51.232285"
-   inkscape:export-filename="/home/timothy/Projects/COSE-PYTHON/images/encrypt0.png"
-   sodipodi:docname="encrypt0.svg"
+   inkscape:export-filename="/home/timothy/Projects/COSE-PYTHON/images/sign1.png"
+   sodipodi:docname="sign1.svg"
    inkscape:version="1.0.1 (1.0.1+r73)"
    id="svg958"
    version="1.1"
@@ -28,17 +28,17 @@
   </defs>
   <sodipodi:namedview
      inkscape:window-maximized="1"
-     inkscape:window-y="32"
+     inkscape:window-y="0"
      inkscape:window-x="0"
-     inkscape:window-height="1021"
+     inkscape:window-height="1053"
      inkscape:window-width="1920"
      showborder="false"
      showgrid="false"
      inkscape:document-rotation="0"
-     inkscape:current-layer="layer1"
+     inkscape:current-layer="g1684"
      inkscape:document-units="mm"
-     inkscape:cy="137.86503"
-     inkscape:cx="870.267"
+     inkscape:cy="132.00665"
+     inkscape:cx="-233.19342"
      inkscape:zoom="0.49497474"
      inkscape:pageshadow="2"
      inkscape:pageopacity="0.0"
@@ -54,7 +54,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -63,33 +63,25 @@
      id="layer4"
      inkscape:groupmode="layer">
     <rect
-       ry="8.8456125"
-       y="-7.552413"
-       x="-16.470675"
-       height="123.79564"
-       width="430.93341"
-       id="rect1103"
-       style="fill:#000000;fill-opacity:0.0501476;stroke:#000000;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
-    <rect
        style="opacity:0.94;fill:#4dbaff;fill-opacity:0.368637;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.941176"
        id="rect837"
        width="185.89047"
        height="82.002029"
-       x="-3.4448848"
-       y="8.1683807"
+       x="-376.13696"
+       y="-24.700552"
        ry="10.994632" />
     <rect
        style="opacity:0.94;fill:#0082a3;fill-opacity:0.714472;stroke:#000000;stroke-width:1;stroke-opacity:0.941176"
        id="rect833"
        width="83.495155"
        height="37.156994"
-       x="-2.5135036"
-       y="43.596642"
+       x="-375.2056"
+       y="10.72771"
        ry="4.9819188" />
     <rect
        ry="4.9688864"
-       y="43.645245"
-       x="81.030251"
+       y="10.776313"
+       x="-291.66183"
        height="37.059792"
        width="100.7795"
        id="rect835"
@@ -97,66 +89,93 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
-       x="31.864897"
-       y="32.826237"
+       x="-340.82721"
+       y="-0.042695474"
        id="text841"><tspan
          sodipodi:role="line"
          id="tspan839"
-         x="31.864897"
-         y="32.826237"
+         x="-340.82721"
+         y="-0.042695474"
          style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:14.1111px;font-family:serif;-inkscape-font-specification:'serif, Bold Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583">COSE Headers</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;line-height:1.25;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
-       x="87.890877"
-       y="65.678802"
+       x="-284.80121"
+       y="32.809872"
        id="text849"><tspan
          sodipodi:role="line"
          id="tspan847"
-         x="87.890877"
-         y="65.678802"
+         x="-284.80121"
+         y="32.809872"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583">unprotected</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;line-height:1.25;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
-       x="4.9322972"
-       y="57.741299"
+       x="-367.7598"
+       y="24.872366"
        id="text845"><tspan
          sodipodi:role="line"
          id="tspan843"
-         x="4.9322972"
-         y="57.741299"
+         x="-367.7598"
+         y="24.872366"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583">protected</tspan></text>
     <text
        id="text1750"
-       y="74.366539"
-       x="2.4193873"
+       y="41.497608"
+       x="-351.33282"
        style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
        xml:space="preserve"><tspan
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.5833px;font-family:serif;-inkscape-font-specification:'serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583"
-         y="74.366539"
-         x="2.4193873"
+         y="41.497608"
+         x="-351.33282"
          id="tspan1748"
-         sodipodi:role="line">authenticated</tspan></text>
+         sodipodi:role="line">signed</tspan></text>
     <rect
        style="opacity:0.94;fill:#c02200;fill-opacity:0.368637;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.941176"
        id="rect1752"
        width="218.46165"
        height="81.922447"
-       x="182.44444"
-       y="8.2491083"
+       x="-190.24765"
+       y="-24.619823"
        ry="10.983962" />
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
-       x="261.293"
-       y="31.358625"
+       x="-111.39909"
+       y="-1.5103068"
        id="text1813"><tspan
          sodipodi:role="line"
          id="tspan1811"
-         x="261.293"
-         y="31.358625"
+         x="-111.39909"
+         y="-1.5103068"
          style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:14.1111px;font-family:serif;-inkscape-font-specification:'serif, Bold Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583">Payload</tspan></text>
+    <rect
+       style="opacity:0.94;fill:#a12be6;fill-opacity:0.368637;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.941176"
+       id="rect885"
+       width="218.46165"
+       height="81.922447"
+       x="28.214005"
+       y="-24.619823"
+       ry="10.983962" />
+    <rect
+       ry="8.8126259"
+       y="-44.374695"
+       x="-392.6149"
+       height="123.33398"
+       width="655.28027"
+       id="rect1103"
+       style="fill:#000000;fill-opacity:0.0501476;stroke:#000000;stroke-width:2.46165;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="98.632416"
+       y="-1.8025513"
+       id="text2310"><tspan
+         sodipodi:role="line"
+         id="tspan2308"
+         x="98.632416"
+         y="-1.8025513"
+         style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:14.1111px;font-family:serif;-inkscape-font-specification:'serif, Bold Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583">Signature</tspan></text>
   </g>
   <g
      id="layer1"
@@ -168,31 +187,35 @@
        xml:space="preserve" />
     <g
        id="g1684"
-       transform="translate(-21.142245,-24.610362)"
+       transform="translate(-308.67904,-63.814906)"
        style="stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none">
-      <rect
-         style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none"
-         id="rect1676"
-         width="172.97498"
-         height="27.957092"
-         x="134.70912"
-         y="132.7065"
-         ry="6.2425098" />
-      <text
-         xml:space="preserve"
-         style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:16.9333px;line-height:1.25;font-family:serif;-inkscape-font-specification:'serif, Bold Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none"
-         x="148.68712"
-         y="151.08786"
-         id="text896"><tspan
-           sodipodi:role="line"
-           id="tspan894"
-           x="148.68712"
-           y="151.08786"
-           style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:16.9333px;font-family:serif;-inkscape-font-specification:'serif, Bold Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none">COSE Encrypt0</tspan></text>
+      <g
+         id="g2315"
+         transform="translate(39.32985)">
+        <rect
+           style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.899431;stroke-miterlimit:4;stroke-dasharray:none"
+           id="rect1676"
+           width="139.43117"
+           height="28.057661"
+           x="134.65884"
+           y="132.65622"
+           ry="6.2649655" />
+        <text
+           xml:space="preserve"
+           style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:16.9333px;line-height:1.25;font-family:serif;-inkscape-font-specification:'serif, Bold Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none"
+           x="148.51552"
+           y="151.23669"
+           id="text896"><tspan
+             sodipodi:role="line"
+             id="tspan894"
+             x="148.51552"
+             y="151.23669"
+             style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:16.9333px;font-family:serif;-inkscape-font-specification:'serif, Bold Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none">COSE Sign1</tspan></text>
+      </g>
     </g>
     <g
        id="g1801"
-       transform="translate(-0.24297925,0.24296783)">
+       transform="translate(-372.93507,-32.625964)">
       <rect
          style="opacity:0.94;fill:#c02200;fill-opacity:0.649735;stroke:#000000;stroke-width:1.04315;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.941176"
          id="rect856"
@@ -207,25 +230,51 @@
         <text
            id="text860"
            y="58.709721"
-           x="245.83762"
+           x="259.68494"
            style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;line-height:1.25;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
            xml:space="preserve"><tspan
              style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583"
              y="58.709721"
-             x="245.83762"
+             x="259.68494"
              id="tspan858"
-             sodipodi:role="line">ciphertext</tspan></text>
+             sodipodi:role="line">plaintext</tspan></text>
         <text
            id="text1641"
            y="75.272453"
-           x="192.05267"
+           x="273.63141"
            style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
            xml:space="preserve"><tspan
              style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.5833px;font-family:serif;-inkscape-font-specification:'serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583"
              y="75.272453"
-             x="192.05267"
+             x="273.63141"
              id="tspan1639"
-             sodipodi:role="line">authenticated + encrypted with CEK </tspan></text>
+             sodipodi:role="line">signed</tspan></text>
+      </g>
+    </g>
+    <rect
+       style="opacity:0.94;fill:#a12be6;fill-opacity:0.649735;stroke:#000000;stroke-width:1.04315;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.941176"
+       id="rect2285"
+       width="218.90701"
+       height="36.573853"
+       x="28.02466"
+       y="11.262248"
+       ry="4.9037333" />
+    <g
+       id="g2297"
+       transform="translate(-174.96016,-33.793039)">
+      <g
+         id="g2295">
+        <text
+           id="text2289"
+           y="66.755959"
+           x="257.41843"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;line-height:1.25;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+           xml:space="preserve"><tspan
+             style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583"
+             y="66.755959"
+             x="257.41843"
+             id="tspan2287"
+             sodipodi:role="line">signature bytes</tspan></text>
       </g>
     </g>
   </g>
