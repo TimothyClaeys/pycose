@@ -4,5 +4,9 @@ ecdsa>=0.16.0
 dataclasses>=0.7 ;python_version <= '3.6'
 singledispatchmethod>=1.0 ;python_version <= '3.7'
 aenum>=2.2.4
+
+# to build docs
+Sphinx>=3.2.1
+sphinx_rtd_theme>=0.5.0
 # this has to be here, otherwise the documentation build will fail
 sphinxemoji
