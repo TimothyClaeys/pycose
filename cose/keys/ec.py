@@ -12,7 +12,7 @@ from ecdsa.ellipticcurve import Point
 
 from cose.attributes.algorithms import CoseAlgorithms, config, CoseEllipticCurves
 from cose.attributes.context import CoseKDFContext
-from cose.exceptions import CoseInvalidAlgorithm
+from cose.exceptions import CoseIllegalAlgorithm
 from cose.keys.cosekey import CoseKey, KTY, KeyOps
 
 
@@ -139,12 +139,12 @@ class EC2(CoseKey):
         try:
             alg_cfg = config(CoseAlgorithms(self.alg))
         except KeyError as err:
-            raise CoseInvalidAlgorithm(err)
+            raise CoseIllegalAlgorithm(err)
 
         try:
             crv_cfg = config(CoseEllipticCurves(self.crv))
         except KeyError as err:
-            raise CoseInvalidAlgorithm(err)
+            raise CoseIllegalAlgorithm(err)
 
         d = ec.derive_private_key(int(hexlify(self.d), 16), crv_cfg.curve[1](), default_backend())
         p = ec.EllipticCurvePublicNumbers(int(hexlify(public_key.x), 16), int(hexlify(public_key.y), 16),
@@ -179,7 +179,7 @@ class EC2(CoseKey):
         try:
             alg_cfg = config(CoseAlgorithms(self.alg))
         except KeyError as err:
-            raise CoseInvalidAlgorithm(err)
+            raise CoseIllegalAlgorithm(err)
 
         sk = SigningKey.from_secret_exponent(int(hexlify(self.d), 16), curve=alg_cfg.curve)
 
@@ -206,7 +206,7 @@ class EC2(CoseKey):
         try:
             alg_cfg = config(CoseAlgorithms(self.alg))
         except KeyError as err:
-            raise CoseInvalidAlgorithm(err)
+            raise CoseIllegalAlgorithm(err)
 
         p = Point(curve=alg_cfg.curve.curve, x=int(hexlify(self.x), 16), y=int(hexlify(self.y), 16))
         vk = VerifyingKey.from_public_point(p, alg_cfg.curve, alg_cfg.hash, validate_point=True)

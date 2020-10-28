@@ -1,4 +1,4 @@
-class CoseInvalidAlgorithm(Exception):
+class CoseIllegalAlgorithm(Exception):
     pass
 
 

@@ -10,7 +10,7 @@ from dataclasses import dataclass
 
 from cose.attributes.algorithms import CoseAlgorithms, config
 from cose.attributes.context import CoseKDFContext
-from cose.exceptions import CoseInvalidAlgorithm, CoseInvalidTag
+from cose.exceptions import CoseIllegalAlgorithm, CoseInvalidTag
 from cose.keys.cosekey import CoseKey, KTY, KeyOps
 
 
@@ -70,7 +70,7 @@ class SymmetricKey(CoseKey):
             cipher = self._prepare_cipher()
             ciphertext = cipher.encrypt(nonce=nonce, data=plaintext, associated_data=aad)
         except KeyError as err:
-            raise CoseInvalidAlgorithm(err)
+            raise CoseIllegalAlgorithm(err)
 
         return ciphertext
 
@@ -81,7 +81,7 @@ class SymmetricKey(CoseKey):
             cipher = self._prepare_cipher()
             plaintext = cipher.decrypt(nonce=nonce, data=ciphertext, associated_data=aad)
         except KeyError as err:
-            raise CoseInvalidAlgorithm(err)
+            raise CoseIllegalAlgorithm(err)
 
         return plaintext
 
@@ -101,14 +101,14 @@ class SymmetricKey(CoseKey):
         try:
             alg_cfg = config(CoseAlgorithms(self.alg))
         except KeyError as err:
-            raise CoseInvalidAlgorithm(err)
+            raise CoseIllegalAlgorithm(err)
 
         if self.alg in {CoseAlgorithms.A128KW, CoseAlgorithms.A192KW, CoseAlgorithms.A256KW}:
             return alg_cfg.primitive.aes_key_wrap(self.k, plaintext_key, default_backend())
         elif self.alg == CoseAlgorithms.DIRECT:
             return b''
         else:
-            raise CoseInvalidAlgorithm(f"Key wrap requires one of the following algorithms: \
+            raise CoseIllegalAlgorithm(f"Key wrap requires one of the following algorithms: \
             {(CoseAlgorithms.A256KW, CoseAlgorithms.A192KW, CoseAlgorithms.A128KW, CoseAlgorithms.DIRECT)}")
 
     def key_unwrap(self, wrapped_key: bytes, alg: Optional[CoseAlgorithms] = None) -> bytes:
@@ -117,7 +117,7 @@ class SymmetricKey(CoseKey):
         try:
             alg_cfg = config(CoseAlgorithms(self.alg))
         except KeyError as err:
-            raise CoseInvalidAlgorithm(err)
+            raise CoseIllegalAlgorithm(err)
 
         return alg_cfg.primitive.aes_key_unwrap(self.k, wrapped_key, default_backend())
 
@@ -131,7 +131,7 @@ class SymmetricKey(CoseKey):
         try:
             alg_cfg = config(CoseAlgorithms(self.alg))
         except KeyError as err:
-            raise CoseInvalidAlgorithm(err)
+            raise CoseIllegalAlgorithm(err)
 
         if self.alg in {CoseAlgorithms.AES_MAC_128_128,
                         CoseAlgorithms.AES_MAC_128_64,
@@ -184,7 +184,7 @@ class SymmetricKey(CoseKey):
         try:
             alg_cfg = config(CoseAlgorithms(self.alg))
         except KeyError as err:
-            raise CoseInvalidAlgorithm(err)
+            raise CoseIllegalAlgorithm(err)
 
         derived_key = alg_cfg.kdf(algorithm=alg_cfg.hash(),
                                   length=int(context.supp_pub_info.key_data_length / 8),

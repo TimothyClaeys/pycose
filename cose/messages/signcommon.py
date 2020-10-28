@@ -44,7 +44,7 @@ class SignCommon(cosebase.CoseBase, metaclass=abc.ABCMeta):
         :param alg: An optional CoseAlgorithm
         :param curve: An optional CoseEllipticCurve
         :raises CoseIllegalKeyType: When the key type is not of EC2 or OKP
-        :raises CoseInvalidAlgorithm: When the algorithm configuration is invalid
+        :raises CoseIllegalAlgorithm: When the algorithm configuration is invalid
         :returns: True for a valid signature or False for an invalid signature
         """
         if not isinstance(public_key, EC2) and not isinstance(public_key, OKP):
@@ -63,7 +63,7 @@ class SignCommon(cosebase.CoseBase, metaclass=abc.ABCMeta):
         :param alg: An optional CoseAlgorithm
         :param curve: An optional CoseEllipticCurve
         :raises CoseIllegalKeyType: When the key type is not of EC2 or OKP
-        :raises CoseInvalidAlgorithm: When the algorithm configuration is invalid
+        :raises CoseIllegalAlgorithm: When the algorithm configuration is invalid
         :returns: True or False
         """
 
