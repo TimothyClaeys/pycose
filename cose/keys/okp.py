@@ -166,7 +166,7 @@ class OKP(CoseKey):
         try:
             vk.verify(signature, to_be_verified)
             return True
-        except InvalidSignature as e:
+        except InvalidSignature:
             return False
 
     def __repr__(self):
