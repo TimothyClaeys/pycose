@@ -3,6 +3,7 @@ from typing import Optional, Tuple
 
 import dataclasses
 from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric.ed448 import Ed448PrivateKey, Ed448PublicKey
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PublicKey, X25519PrivateKey
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
 from cryptography.exceptions import InvalidSignature
@@ -131,16 +132,22 @@ class OKP(CoseKey):
              curve: CoseEllipticCurves = None) -> bytes:
         """
         Computes a digital signature over 'to_be_signed'. The parameter 'alg' and 'curve' parameters are optional in
-        case they are already provided by one of the COSE key objects.
+        case they are already provided by the key object self.
 
-        :param to_be_signed: data over which the signature is calculated
-        :param alg: an optional algorithm parameter (specifies the exact algorithm used for the signature).
-        :param curve: an optional curve
+        :param to_be_signed: Data over which the signature is calculated.
+        :param alg: An optional algorithm parameter.
+        :param curve: An optional curve parameter.
+        :return: the signature over the COSE object.
         """
 
         self._check_key_conf(algorithm=alg, key_operation=KeyOps.SIGN, curve=curve)
 
-        sk = Ed25519PrivateKey.from_private_bytes(self.d)
+        if self.crv == CoseEllipticCurves.X25519:
+            sk = Ed25519PrivateKey.from_private_bytes(self.d)
+        elif self._crv == CoseEllipticCurves.X448:
+            sk = Ed448PrivateKey.from_private_bytes(self.d)
+        else:
+            raise CoseIllegalCurve(f"Illegal curve for OKP singing: {self.crv}")
 
         return sk.sign(to_be_signed)
 
@@ -151,17 +158,23 @@ class OKP(CoseKey):
                curve: Optional[CoseEllipticCurves] = None) -> bool:
         """
         Verifies the digital signature over 'to_be_verified'. The parameter 'alg' and 'curve' parameters are optional in
-        case they are already provided by one of the COSE key objects.
+        case they are already provided by the key object self.
 
-        :param to_be_verified: data that was signed
-        :param signature: signature to verify
-        :param alg: an optional algorithm parameter (specifies the exact algorithm used for the signature).
-        :param curve: an optional curve
+        :param to_be_verified: Data that was signed.
+        :param signature: Signature to verify.
+        :param alg: An optional algorithm parameter.
+        :param curve: An optional curve
+        :return: True when the signature is valid and False if the signature is invalid.
         """
 
         self._check_key_conf(algorithm=alg, key_operation=KeyOps.VERIFY, curve=curve)
 
-        vk = Ed25519PublicKey.from_public_bytes(self.x)
+        if self.crv == CoseEllipticCurves.X25519:
+            vk = Ed25519PublicKey.from_public_bytes(self.x)
+        elif self._crv == CoseEllipticCurves.X448:
+            vk = Ed448PublicKey.from_public_bytes(self.x)
+        else:
+            raise CoseIllegalCurve(f"Illegal curve for OKP singing: {self.crv}")
 
         try:
             vk.verify(signature, to_be_verified)
