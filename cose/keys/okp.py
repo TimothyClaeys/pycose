@@ -10,7 +10,7 @@ from dataclasses import dataclass
 
 from cose.attributes.algorithms import CoseAlgorithms, config, CoseEllipticCurves
 from cose.attributes.context import CoseKDFContext
-from cose.exceptions import CoseInvalidAlgorithm
+from cose.exceptions import CoseIllegalAlgorithm, CoseIllegalCurve
 from cose.keys.cosekey import CoseKey, KTY, KeyOps
 
 
@@ -110,7 +110,7 @@ class OKP(CoseKey):
         try:
             alg_cfg = config(CoseAlgorithms(self.alg))
         except KeyError as err:
-            raise CoseInvalidAlgorithm(err)
+            raise CoseIllegalAlgorithm(err)
 
         p = X25519PublicKey.from_public_bytes(public_key.x)
         d = X25519PrivateKey.from_private_bytes(self.d)
