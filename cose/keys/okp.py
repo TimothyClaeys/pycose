@@ -3,10 +3,13 @@ from typing import Optional, Tuple
 
 import dataclasses
 from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed448 import Ed448PrivateKey, Ed448PublicKey
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PublicKey, X25519PrivateKey
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
 from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives.asymmetric.x448 import X448PrivateKey
+from cryptography.hazmat.primitives.serialization import PrivateFormat, PublicFormat, Encoding
 from dataclasses import dataclass
 
 from cose.attributes.algorithms import CoseAlgorithms, config, CoseEllipticCurves
@@ -92,6 +95,10 @@ class OKP(CoseKey):
         self._d = new_d
 
     def encode(self, *argv):
+        """
+        Encode the provided key words in dictionary. The dictionary can then be encoded with CBOR.
+        """
+
         kws = []
 
         for kw in argv:
@@ -181,6 +188,36 @@ class OKP(CoseKey):
             return True
         except InvalidSignature:
             return False
+
+    @staticmethod
+    def generate_key(algorithm: CoseAlgorithms, key_ops: KeyOps,
+                     curve_type: CoseEllipticCurves = CoseEllipticCurves.X25519) -> 'OKP':
+        """
+        Generate a random OKP COSE key object.
+
+        :param algorithm: Specify the CoseAlgorithm to use.
+        :param key_ops: Specify the key operation (KeyOps).
+        :param curve_type: Specify curve, must be X25519 or X448.
+        """
+
+        if curve_type == CoseEllipticCurves.X25519:
+            private_key = X25519PrivateKey.generate()
+        elif curve_type == CoseEllipticCurves.X448:
+            private_key = X448PrivateKey.generate()
+        else:
+            raise CoseIllegalCurve(f"curve must be of type {CoseEllipticCurves.X25519} or {CoseEllipticCurves.X448}")
+
+        encoding = Encoding(serialization.Encoding.Raw)
+        private_format = PrivateFormat(serialization.PrivateFormat.Raw)
+        public_format = PublicFormat(serialization.PublicFormat.Raw)
+        encryption = serialization.NoEncryption()
+
+        return OKP(
+            alg=CoseAlgorithms(algorithm),
+            key_ops=KeyOps(key_ops),
+            crv=CoseEllipticCurves(curve_type),
+            x=private_key.public_key().public_bytes(encoding, public_format),
+            d=private_key.private_bytes(encoding, private_format, encryption))
 
     def __repr__(self):
         hdr = '<COSE_Key(OKP): {'

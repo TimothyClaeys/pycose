@@ -272,9 +272,10 @@ class CoseKey(metaclass=ABCMeta):
             else:
                 peer_key.key_ops = KeyOps(self.key_ops)
 
+    @staticmethod
     @abstractmethod
-    def __repr__(self):
-        raise NotImplementedError
+    def generate_key(algorithm: CoseAlgorithms, key_ops: KeyOps):
+        raise NotImplementedError()
 
 
 CK = TypeVar('CK', bound=CoseKey)

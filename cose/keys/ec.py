@@ -4,15 +4,17 @@ from typing import Optional, Tuple
 
 import dataclasses
 from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives.asymmetric.ec import ECDH
+from cryptography.hazmat.primitives.asymmetric.ec import ECDH, EllipticCurvePrivateKeyWithSerialization
+from cryptography.hazmat.primitives.serialization import Encoding, PrivateFormat, PublicFormat
 from dataclasses import dataclass
 from ecdsa import SigningKey, VerifyingKey, BadSignatureError
 from ecdsa.ellipticcurve import Point
 
 from cose.attributes.algorithms import CoseAlgorithms, config, CoseEllipticCurves
 from cose.attributes.context import CoseKDFContext
-from cose.exceptions import CoseIllegalAlgorithm
+from cose.exceptions import CoseIllegalAlgorithm, CoseIllegalCurve
 from cose.keys.cosekey import CoseKey, KTY, KeyOps
 
 
@@ -215,6 +217,39 @@ class EC2(CoseKey):
             return vk.verify(signature, to_be_signed)
         except BadSignatureError:
             return False
+
+    @staticmethod
+    def generate_key(algorithm: CoseAlgorithms, key_ops: KeyOps,
+                     curve_type: CoseEllipticCurves = CoseEllipticCurves.P_256) -> 'EC2':
+        """
+        Generate a random EC2 COSE key object.
+
+        :param algorithm: Specify the CoseAlgorithm to use.
+        :param key_ops: Specify the key operation (KeyOps).
+        :param curve_type: Specify an elliptic curve.
+        """
+
+        if curve_type in [CoseEllipticCurves.X25519, CoseEllipticCurves.X448]:
+            raise CoseIllegalCurve(f"{curve_type} is not a valid curve for an EC2 key type.")
+
+        try:
+            CoseEllipticCurves(curve_type)
+        except ValueError:
+            raise CoseIllegalCurve(f"{curve_type} is not a valid elliptic curve.")
+
+        curve = config(curve_type).curve[1]()
+
+        private_key = ec.generate_private_key(curve, backend=default_backend())
+        d_value = private_key.private_numbers().private_value
+        x_coor = private_key.public_key().public_numbers().x
+        y_coor = private_key.public_key().public_numbers().y
+
+        return EC2(
+            alg=CoseAlgorithms(algorithm),
+            key_ops=KeyOps(key_ops),
+            d=d_value.to_bytes((d_value.bit_length() + 7) // 8, byteorder="big"),
+            x=x_coor.to_bytes((x_coor.bit_length() + 7) // 8, byteorder="big"),
+            y=y_coor.to_bytes((y_coor.bit_length() + 7) // 8, byteorder="big"))
 
     def __repr__(self):
         hdr = '<COSE_Key(EC2): {'

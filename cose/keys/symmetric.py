@@ -1,3 +1,4 @@
+import os
 from binascii import unhexlify
 from enum import IntEnum
 from typing import Optional, Union
@@ -10,7 +11,7 @@ from dataclasses import dataclass
 
 from cose.attributes.algorithms import CoseAlgorithms, config
 from cose.attributes.context import CoseKDFContext
-from cose.exceptions import CoseIllegalAlgorithm, CoseInvalidTag
+from cose.exceptions import CoseIllegalAlgorithm, CoseIllegalKeyOps
 from cose.keys.cosekey import CoseKey, KTY, KeyOps
 
 
@@ -122,7 +123,13 @@ class SymmetricKey(CoseKey):
         return alg_cfg.primitive.aes_key_unwrap(self.k, wrapped_key, default_backend())
 
     def compute_tag(self, to_be_maced: bytes, alg: Optional[CoseAlgorithms] = None) -> bytes:
-        """ Calculate the MAC over the payload """
+        """
+        Compute the MAC over the payload.
+
+        :param to_be_maced: The payload over which the authentication tag will be calculated.
+        :param alg: An optional CoseAlgorithm for computing the authentication tag.
+        :return: The authentication tag.
+        """
 
         self._check_key_conf(alg, KeyOps.MAC_CREATE)
 
@@ -162,7 +169,14 @@ class SymmetricKey(CoseKey):
         return digest
 
     def verify_tag(self, tag: bytes, to_be_maced: bytes, alg: Optional[CoseAlgorithms] = None) -> bool:
-        """ Verify the MAC over the payload """
+        """
+        Verify the MAC over the payload.
+
+        :param tag: The authentication tag to verify.
+        :param to_be_maced: The payload over which the tag was calculated.
+        :param alg: An optional algorithm to be used when verifying the tag.
+        :return: True for a valid tag or False for invalid tags.
+        """
 
         self._check_key_conf(alg, KeyOps.MAC_VERIFY)
 
@@ -171,13 +185,22 @@ class SymmetricKey(CoseKey):
         self.key_ops = KeyOps.MAC_VERIFY
 
         if tag != computed_tag:
-            raise CoseInvalidTag(f"Invalid authentication tag: {tag} != {computed_tag}")
-        return True
+            return False
+        else:
+            return True
 
     def hmac_key_derivation(self,
                             context: CoseKDFContext,
                             alg: Optional[CoseAlgorithms] = None,
                             salt: bytes = b'') -> bytes:
+        """
+        HMAC-based key derivation based on secret bytes and a CoseKDFContext object.
+
+        :param context: A CoseKDFContext object which contains necessary input for the KDF algorithm.
+        :param alg: An optional CoseAlgorithm parameter.
+        :param salt: And optional salt parameter.
+        :return: A cryptographic key with a length specified in the CoseKDFContext object.
+        """
 
         self._check_key_conf(alg, KeyOps.DERIVE_KEY)
 
@@ -193,6 +216,32 @@ class SymmetricKey(CoseKey):
                                   backend=default_backend()).derive(self.k)
 
         return derived_key
+
+    @staticmethod
+    def generate_key(algorithm: CoseAlgorithms, key_ops: KeyOps, key_len: int = 16) -> 'SymmetricKey':
+        """
+        Generate a random Symmetric COSE key object.
+
+        :param algorithm: Specify the algorithm to use with the key object.
+        :param key_ops: Choose a key operation.
+        :param key_len: Symmetric key length in bytes, must be of size 16, 24 or 32.
+        :raises ValueError: For invalid key lengths.
+        :raises CoseIllegalKeyOps: When the key operation is not allowed on this key type.
+        :returns: A COSE_key of type SymmetricKey.
+        """
+
+        if key_len not in [16, 24, 32]:
+            raise ValueError("key_len must be of size 16, 24 or 32")
+
+        if KeyOps(key_ops) not in [KeyOps.ENCRYPT, KeyOps.WRAP, KeyOps.DECRYPT, KeyOps.UNWRAP, KeyOps.MAC_CREATE,
+                                   KeyOps.VERIFY]:
+            raise CoseIllegalKeyOps(f"The key operation {key_ops} is invalid for this key object.")
+
+        return SymmetricKey(
+            alg=CoseAlgorithms(algorithm),
+            key_ops=KeyOps(key_ops),
+            k=os.urandom(key_len)
+        )
 
     def __repr__(self):
         hdr = '<COSE_Key(Symmetric): {'

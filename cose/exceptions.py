@@ -6,10 +6,6 @@ class CoseIllegalCurve(Exception):
     pass
 
 
-class CoseInvalidTag(Exception):
-    pass
-
-
 class CoseIllegalKeyOps(Exception):
     pass
 
