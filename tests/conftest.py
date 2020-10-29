@@ -109,8 +109,8 @@ key_attr_to_be_replaced = {
     "X25519": CoseEllipticCurves.X25519,
     "X448": CoseEllipticCurves.X448,
     "oct": KTY.SYMMETRIC,
-    "Ed448": CoseEllipticCurves.X448,
-    "Ed25519": CoseEllipticCurves.X25519
+    "Ed448": CoseEllipticCurves.ED448,
+    "Ed25519": CoseEllipticCurves.ED25519
 }
 
 

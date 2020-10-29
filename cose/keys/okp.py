@@ -149,9 +149,9 @@ class OKP(CoseKey):
 
         self._check_key_conf(algorithm=alg, key_operation=KeyOps.SIGN, curve=curve)
 
-        if self.crv == CoseEllipticCurves.X25519:
+        if self.crv == CoseEllipticCurves.ED25519:
             sk = Ed25519PrivateKey.from_private_bytes(self.d)
-        elif self._crv == CoseEllipticCurves.X448:
+        elif self._crv == CoseEllipticCurves.ED448:
             sk = Ed448PrivateKey.from_private_bytes(self.d)
         else:
             raise CoseIllegalCurve(f"Illegal curve for OKP singing: {self.crv}")
@@ -176,9 +176,9 @@ class OKP(CoseKey):
 
         self._check_key_conf(algorithm=alg, key_operation=KeyOps.VERIFY, curve=curve)
 
-        if self.crv == CoseEllipticCurves.X25519:
+        if self.crv == CoseEllipticCurves.ED25519:
             vk = Ed25519PublicKey.from_public_bytes(self.x)
-        elif self._crv == CoseEllipticCurves.X448:
+        elif self._crv == CoseEllipticCurves.ED448:
             vk = Ed448PublicKey.from_public_bytes(self.x)
         else:
             raise CoseIllegalCurve(f"Illegal curve for OKP singing: {self.crv}")
