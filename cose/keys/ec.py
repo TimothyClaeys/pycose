@@ -4,10 +4,8 @@ from typing import Optional, Tuple
 
 import dataclasses
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives.asymmetric.ec import ECDH, EllipticCurvePrivateKeyWithSerialization
-from cryptography.hazmat.primitives.serialization import Encoding, PrivateFormat, PublicFormat
+from cryptography.hazmat.primitives.asymmetric.ec import ECDH
 from dataclasses import dataclass
 from ecdsa import SigningKey, VerifyingKey, BadSignatureError
 from ecdsa.ellipticcurve import Point
