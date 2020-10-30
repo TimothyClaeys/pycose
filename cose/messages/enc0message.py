@@ -31,6 +31,16 @@ class Enc0Message(enccommon.EncCommon):
                  uhdr: Optional[dict] = None,
                  payload: bytes = b'',
                  external_aad: bytes = b''):
+        """
+        Create a COSE_encrypt0 message.
+
+        :param phdr: Protected header bucket.
+        :param uhdr: Unprotected header bucket.
+        :param payload: The payload (will be encrypted and authenticated).
+        :param external_aad: External data (is authenticated but not transported in the message).
+        :return: A CoseMessage object.
+        """
+
         if phdr is None:
             phdr = {}
         if uhdr is None:
