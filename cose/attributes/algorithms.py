@@ -6,7 +6,7 @@ from cryptography.hazmat.primitives import keywrap
 from cryptography.hazmat.primitives.asymmetric.ec import SECP256R1, SECP384R1, SECP521R1, SECP256K1
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM, AESCCM
 from cryptography.hazmat.primitives.ciphers.algorithms import AES
-from cryptography.hazmat.primitives.hashes import SHA384, SHA256, SHA512
+from cryptography.hazmat.primitives.hashes import SHA384, SHA256, SHA512, SHA1
 from cryptography.hazmat.primitives.hmac import HMAC
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from ecdsa import NIST521p, NIST384p, NIST256p, SECP256k1
@@ -37,10 +37,10 @@ class CoseAlgorithms(Enum):
     ECDH_ES_HKDF_512 = -26, 'ECDH_ES_HKDF_512', skip(_AlgorithmConfig(kdf=HKDF, hash=SHA512))
     ECDH_ES_HKDF_256 = -25, 'ECDH_ES_HKDF_256', skip(_AlgorithmConfig(kdf=HKDF, hash=SHA256))
     # SHAKE_128 = -18
-    # SHA_512_256 = -17
+    SHA_512_256 = -17, 'SHA_512_256', skip(_AlgorithmConfig(hash=SHA512, tag_length=32))
     SHA_256 = -16, 'SHA_256', skip(_AlgorithmConfig(hash=SHA256))
-    # SHA_256_64 = -15
-    # SHA_1 = -14
+    SHA_256_64 = -15, 'SHA_256_64', skip(_AlgorithmConfig(hash=SHA256, tag_length=8))
+    SHA_1 = -14, 'SHA_1', skip(_AlgorithmConfig(hash=SHA1))
     # DIRECT_HKDF_AES_256 = -13
     # DIRECT_HKDF_AES_128 = -12
     DIRECT_HKDF_SHA_512 = -11, 'DIRECT_HKDF_SHA_512', skip(_AlgorithmConfig(kdf=HKDF, hash=SHA512))
