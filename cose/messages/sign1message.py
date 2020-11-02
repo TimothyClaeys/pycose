@@ -4,7 +4,7 @@ import cbor2
 
 from cose import CoseMessage
 from cose.messages import cosemessage, signcommon
-from cose.keys.ec import EC2
+from cose.keys.ec2 import EC2
 from cose.keys.okp import OKP
 
 if TYPE_CHECKING:

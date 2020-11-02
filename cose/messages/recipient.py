@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 
 from cose import CoseMessage
 from cose.exceptions import CoseIllegalKeyType
-from cose.keys.ec import EC2
+from cose.keys.ec2 import EC2
 from cose.keys.okp import OKP
 from cose.keys.symmetric import SymmetricKey
 

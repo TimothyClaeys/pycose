@@ -5,7 +5,7 @@ from pytest import fixture, mark, skip
 from cose import CoseMessage, OKP
 from cose.attributes.headers import CoseHeaderKeys
 from cose.keys.cosekey import KeyOps
-from cose.keys.ec import EC2
+from cose.keys.ec2 import EC2
 from cose.messages.signer import SignerParams
 from cose.messages.signmessage import SignMessage, CoseSignature
 from tests.conftest import generic_test_setup, create_cose_key, extract_alg

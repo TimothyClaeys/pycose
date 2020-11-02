@@ -55,13 +55,26 @@ class EC2(CoseKey):
 
     def __init__(self,
                  kid: Optional[bytes] = None,
-                 alg: Optional[int] = None,
+                 alg: Optional[CoseAlgorithms] = None,
                  key_ops: Optional[int] = None,
                  base_iv: Optional[bytes] = None,
                  crv: Optional[CoseEllipticCurves] = None,
                  x: Optional[bytes] = None,
                  y: Optional[bytes] = None,
                  d: Optional[bytes] = None):
+        """
+        Create A EC2 key object.
+
+        :param kid: An optional key identifier.
+        :param alg: An optional CoseAlgorithms.
+        :param key_ops: An optional KeyOps.
+        :param base_iv: An optional base initialization vector.
+        :param crv: An optional CoseEllipticCurves.
+        :param x: Optional x-coordinate of the public key
+        :param y: Optional y-coordinate of the public key
+        :param d: Optional private value/key.
+        """
+
         super().__init__(KTY.EC2, kid, alg, key_ops, base_iv)
         self.crv = crv
         self.x = x
@@ -128,10 +141,11 @@ class EC2(CoseKey):
         Derives a CEK with ECDH + HKDF algorithm. The parameter 'alg' and 'curve' parameters are optional in case they
         are already provided by one of the COSE key objects.
 
-        :param public_key: an EC2 key containing public key bytes.
-        :param context: a CoseKDFContext for the HKDF algorithm.
-        :param alg: an optional algorithm parameter (specifies the exact algorithm used for the key derivation).
-        :param curve: an optional curve
+        :param public_key: An EC2 key containing at least the public key coordinates (x and y).
+        :param context: A CoseKDFContext for the HKDF algorithm.
+        :param alg: An optional algorithm parameter (specifies the exact algorithm used for the key derivation).
+        :param curve: An optional CoseEllipticCurves
+        :return: Tuple of shared secret and derived key.
         """
 
         self._check_key_conf(alg, KeyOps.DERIVE_KEY, public_key, curve)
@@ -169,9 +183,10 @@ class EC2(CoseKey):
         Computes a digital signature over 'to_be_signed'. The parameter 'alg' and 'curve' parameters are optional in
         case they are already provided by one of the COSE key objects.
 
-        :param to_be_signed: data over which the signature is calculated
-        :param alg: an optional algorithm parameter (specifies the exact algorithm used for the signature).
-        :param curve: an optional curve
+        :param to_be_signed: Data over which the signature is calculated.
+        :param alg: An optional CoseAlgorithm (specifies the exact algorithm used for the signature).
+        :param curve: An optional CoseEllipticCurves.
+        :return: The signature.
         """
 
         self._check_key_conf(algorithm=alg, key_operation=KeyOps.SIGN, curve=curve)
@@ -194,11 +209,11 @@ class EC2(CoseKey):
         Verifies the digital signature over 'to_be_signed'. The parameter 'alg' and 'curve' parameters are optional in
         case they are already provided by one of the COSE key objects.
 
-        :param to_be_signed: data that was signed
-        :param signature: signature to verify
-        :param alg: an optional algorithm parameter (specifies the exact algorithm used for the signature).
-        :param curve: an optional curve
-        :returns: True or False
+        :param to_be_signed: Data that was signed.
+        :param signature: Signature to verify.
+        :param alg: An optional CoseAlgorithms (specifies the exact algorithm used for the signature).
+        :param curve: An optional CoseEllipticCurves.
+        :returns: True or False.
         """
 
         self._check_key_conf(algorithm=alg, key_operation=KeyOps.VERIFY, curve=curve)
@@ -225,6 +240,7 @@ class EC2(CoseKey):
         :param algorithm: Specify the CoseAlgorithm to use.
         :param key_ops: Specify the key operation (KeyOps).
         :param curve_type: Specify an elliptic curve.
+        :return: A EC2 COSE key
         """
 
         if curve_type in [CoseEllipticCurves.X25519, CoseEllipticCurves.X448]:

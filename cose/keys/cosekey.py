@@ -11,7 +11,7 @@ from cose.attributes.algorithms import CoseAlgorithms, CoseEllipticCurves
 from cose.exceptions import CoseIllegalKeyOps, CoseIllegalAlgorithm, CoseIllegalCurve
 
 if TYPE_CHECKING:
-    from cose.keys.ec import EC2
+    from cose.keys.ec2 import EC2
     from cose.keys.okp import OKP
 
 
@@ -108,7 +108,7 @@ class CoseKey(metaclass=ABCMeta):
 
         :param kty_id: Integer identifying the COSE key type (see RFC 8152)
         :raises ValueError: Checks if the decorated class is of type 'CoseKey'
-        :return: Decorator function
+        :return: A Decorator function.
         """
 
         def decorator(the_class: Type['CoseKey']) -> Type['CoseKey']:
@@ -126,7 +126,9 @@ class CoseKey(metaclass=ABCMeta):
 
         :param received: Dictionary must contain the KTY element otherwise the key object cannot be decoded properly.
         :raises KeyError: Decoding function fails when KTY parameter is not found or has an invalid value.
+        :return: A COSE Key object.
         """
+
         try:
             return cls._KTY[received[cls.Common.KTY]].from_cose_key_obj(received)
         except KeyError as e:
@@ -136,9 +138,11 @@ class CoseKey(metaclass=ABCMeta):
     def base64decode(to_decode: str) -> bytes:
         """
         Decodes BASE64 encoded keys to bytes.
-        :param to_decode: base64 encoded key.
-        :return: key as bytes.
+
+        :param to_decode: BASE64 encoded key.
+        :return: Key as bytes.
         """
+
         to_decode = to_decode.replace('-', '+')
         to_decode = to_decode.replace('_', '/')
 
@@ -155,9 +159,11 @@ class CoseKey(metaclass=ABCMeta):
     def base64encode(to_encode: bytes) -> str:
         """
         Encodes key bytes as a string.
-        :param to_encode: bytes
-        :return: base64 encoding.
+
+        :param to_encode: Bytes to encode.
+        :return: BASE64 encoding.
         """
+
         return base64.b64encode(to_encode).decode("utf-8")
 
     @property

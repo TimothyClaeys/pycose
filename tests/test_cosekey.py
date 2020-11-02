@@ -6,7 +6,7 @@ from cose import OKP
 from cose.attributes.algorithms import CoseAlgorithms, CoseEllipticCurves
 from cose.attributes.context import CoseKDFContext, PartyInfo, SuppPubInfo
 from cose.keys.cosekey import CoseKey, KTY, KeyOps
-from cose.keys.ec import EC2
+from cose.keys.ec2 import EC2
 from cose.keys.symmetric import SymmetricKey
 
 

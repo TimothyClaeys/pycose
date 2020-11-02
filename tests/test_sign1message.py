@@ -4,7 +4,7 @@ from pytest import fixture, mark, skip
 
 from cose import CoseMessage, OKP
 from cose.keys.cosekey import KeyOps
-from cose.keys.ec import EC2
+from cose.keys.ec2 import EC2
 from cose.messages.sign1message import Sign1Message
 from tests.conftest import generic_test_setup, create_cose_key, extract_alg
 

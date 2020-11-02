@@ -9,7 +9,7 @@ from pytest import skip
 from cose.attributes.algorithms import CoseAlgorithms, CoseEllipticCurves
 from cose.attributes.headers import CoseHeaderKeys
 from cose.keys.cosekey import KTY, CoseKey, KeyOps
-from cose.keys.ec import EC2
+from cose.keys.ec2 import EC2
 from cose.keys.okp import OKP
 from cose.keys.symmetric import SymmetricKey
 

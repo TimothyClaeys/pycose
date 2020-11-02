@@ -3,7 +3,7 @@ from typing import Optional, Union, TYPE_CHECKING
 
 from cose import cosebase
 from cose.exceptions import CoseIllegalKeyType
-from cose.keys.ec import EC2
+from cose.keys.ec2 import EC2
 from cose.keys.okp import OKP
 
 if TYPE_CHECKING:
