@@ -10,6 +10,6 @@ from cose.attributes.algorithms import CoseAlgorithms, CoseEllipticCurves  # noq
 from cose.attributes.headers import CoseHeaderKeys  # noqa: F401
 
 from cose.keys.symmetric import SymmetricKey  # noqa: F401
-from cose.keys.ec import EC2  # noqa: F401
+from cose.keys.ec2 import EC2  # noqa: F401
 from cose.keys.okp import OKP  # noqa: F401
 from cose.keys.cosekey import KeyOps, KTY  # noqa: F401

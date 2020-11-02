@@ -29,7 +29,7 @@ release = '0.9'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc']
+extensions = ['sphinx.ext.autodoc', 'sphinxemoji.sphinxemoji', 'sphinx.ext.doctest']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['']
@@ -54,6 +54,8 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 autodoc_member_order = 'bysource'
 
 autodoc_typehints = 'none'
+
+autoclass_content = 'both'
 
 # -- Options for HTML output -------------------------------------------------
 

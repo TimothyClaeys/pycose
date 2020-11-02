@@ -8,10 +8,10 @@ from aenum import Enum, MultiValue
 from dataclasses import dataclass
 
 from cose.attributes.algorithms import CoseAlgorithms, CoseEllipticCurves
-from cose.exceptions import CoseIllegalKeyOps
+from cose.exceptions import CoseIllegalKeyOps, CoseIllegalAlgorithm, CoseIllegalCurve
 
 if TYPE_CHECKING:
-    from cose.keys.ec import EC2
+    from cose.keys.ec2 import EC2
     from cose.keys.okp import OKP
 
 
@@ -108,7 +108,7 @@ class CoseKey(metaclass=ABCMeta):
 
         :param kty_id: Integer identifying the COSE key type (see RFC 8152)
         :raises ValueError: Checks if the decorated class is of type 'CoseKey'
-        :return: Decorator function
+        :return: A Decorator function.
         """
 
         def decorator(the_class: Type['CoseKey']) -> Type['CoseKey']:
@@ -126,7 +126,9 @@ class CoseKey(metaclass=ABCMeta):
 
         :param received: Dictionary must contain the KTY element otherwise the key object cannot be decoded properly.
         :raises KeyError: Decoding function fails when KTY parameter is not found or has an invalid value.
+        :return: A COSE Key object.
         """
+
         try:
             return cls._KTY[received[cls.Common.KTY]].from_cose_key_obj(received)
         except KeyError as e:
@@ -136,9 +138,11 @@ class CoseKey(metaclass=ABCMeta):
     def base64decode(to_decode: str) -> bytes:
         """
         Decodes BASE64 encoded keys to bytes.
-        :param to_decode: base64 encoded key.
-        :return: key as bytes.
+
+        :param to_decode: BASE64 encoded key.
+        :return: Key as bytes.
         """
+
         to_decode = to_decode.replace('-', '+')
         to_decode = to_decode.replace('_', '/')
 
@@ -155,9 +159,11 @@ class CoseKey(metaclass=ABCMeta):
     def base64encode(to_encode: bytes) -> str:
         """
         Encodes key bytes as a string.
-        :param to_encode: bytes
-        :return: base64 encoding.
+
+        :param to_encode: Bytes to encode.
+        :return: BASE64 encoding.
         """
+
         return base64.b64encode(to_encode).decode("utf-8")
 
     @property
@@ -230,48 +236,52 @@ class CoseKey(metaclass=ABCMeta):
         """ Helper function that checks the configuration of the COSE key object. """
 
         if self.alg is not None and algorithm is not None and CoseAlgorithms(self.alg) != CoseAlgorithms(algorithm):
-            raise ValueError("COSE key algorithm does not match with parameter 'algorithm'.")
+            raise CoseIllegalAlgorithm(
+                f"COSE key algorithm does not match with parameter 'algorithm'.: {self.alg} != {algorithm}")
 
         if algorithm is not None:
-            self.alg = algorithm
+            self.alg = CoseAlgorithms(algorithm)
 
         if self.alg is None:
-            raise ValueError("Selected COSE algorithm cannot be 'None'")
+            raise CoseAlgorithms("Selected COSE algorithm cannot be 'None'")
 
         if peer_key is not None:
-            if peer_key.alg is not None and self.alg != peer_key.alg:
-                raise ValueError("Algorithms for private and public key do not match")
+            if peer_key.alg is not None and CoseAlgorithms(self.alg) != CoseAlgorithms(peer_key.alg):
+                raise CoseIllegalAlgorithm(
+                    f"Algorithms for private and public key do not match: {peer_key:alg} != {self.alg}")
             else:
-                peer_key.alg = self.alg
+                peer_key.alg = CoseAlgorithms(self.alg)
 
         if hasattr(self, "crv"):
             if self.crv is not None and curve is not None and CoseEllipticCurves(self.crv) != CoseEllipticCurves(curve):
-                raise ValueError("Curve in COSE key clashes with parameter 'curve'.")
+                raise CoseIllegalCurve(f"Curve in COSE key clashes with parameter 'curve': {self.crv} != {curve}")
 
             if curve is not None:
-                self.crv = curve
+                self.crv = CoseEllipticCurves(curve)
 
         if peer_key is not None:
             if peer_key.crv is not None and CoseEllipticCurves(self.crv) != CoseEllipticCurves(peer_key.crv):
-                raise ValueError("Curve parameter for private and public key do not match")
+                raise CoseIllegalCurve(
+                    f"Curve parameter for private and public key do not match: {self.crv} != {curve}")
             else:
-                peer_key.crv = self.crv
+                peer_key.crv = CoseEllipticCurves(self.crv)
 
-        if self.key_ops is not None and key_operation is not None and self.key_ops != key_operation:
+        if self.key_ops is not None and key_operation is not None and KeyOps(self.key_ops) != KeyOps(key_operation):
             raise CoseIllegalKeyOps(f"COSE key operation should be {key_operation.name}, instead {self.key_ops.name}")
 
         if key_operation is not None:
-            self.key_ops = key_operation
+            self.key_ops = KeyOps(key_operation)
 
         if peer_key is not None:
-            if peer_key.key_ops is not None and self.key_ops != peer_key.key_ops:
-                raise ValueError("Key operation for private and public key do not match")
+            if peer_key.key_ops is not None and KeyOps(self.key_ops) != KeyOps(peer_key.key_ops):
+                raise CoseIllegalKeyOps("Key operation for private and public key do not match")
             else:
-                peer_key.key_ops = self.key_ops
+                peer_key.key_ops = KeyOps(self.key_ops)
 
+    @staticmethod
     @abstractmethod
-    def __repr__(self):
-        raise NotImplementedError
+    def generate_key(algorithm: CoseAlgorithms, key_ops: KeyOps):
+        raise NotImplementedError()
 
 
 CK = TypeVar('CK', bound=CoseKey)

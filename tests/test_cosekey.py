@@ -2,10 +2,11 @@ from binascii import unhexlify
 
 from pytest import mark as m
 
+from cose import OKP
 from cose.attributes.algorithms import CoseAlgorithms, CoseEllipticCurves
 from cose.attributes.context import CoseKDFContext, PartyInfo, SuppPubInfo
 from cose.keys.cosekey import CoseKey, KTY, KeyOps
-from cose.keys.ec import EC2
+from cose.keys.ec2 import EC2
 from cose.keys.symmetric import SymmetricKey
 
 
@@ -397,3 +398,18 @@ def test_ec_ecdsa(kid, alg, key_ops, x, y, d, curve, to_sign, signature):
     # switch key operation
     key.key_ops = KeyOps.VERIFY
     assert key.verify(to_be_signed=to_sign, signature=signature, alg=alg, curve=curve)
+
+
+def test_ec2_key_generation():
+    key = EC2.generate_key(CoseAlgorithms.ES256, KeyOps.SIGN, CoseEllipticCurves.P_256)
+    assert isinstance(key, EC2)
+
+
+def test_okp_key_generation():
+    key = OKP.generate_key(CoseAlgorithms.EDDSA, KeyOps.SIGN, CoseEllipticCurves.X25519)
+    assert isinstance(key, OKP)
+
+
+def test_symmetric_key_generation():
+    key = SymmetricKey.generate_key(CoseAlgorithms.A128GCM, KeyOps.ENCRYPT, 16)
+    assert isinstance(key, SymmetricKey)

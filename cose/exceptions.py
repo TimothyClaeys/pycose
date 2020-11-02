@@ -1,12 +1,8 @@
-class CoseInvalidAlgorithm(Exception):
+class CoseIllegalAlgorithm(Exception):
     pass
 
 
 class CoseIllegalCurve(Exception):
-    pass
-
-
-class CoseInvalidTag(Exception):
     pass
 
 

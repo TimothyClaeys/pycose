@@ -2,23 +2,23 @@ from binascii import unhexlify
 
 from pytest import fixture, mark, skip
 
-from cose import CoseMessage
+from cose import CoseMessage, OKP
 from cose.attributes.headers import CoseHeaderKeys
 from cose.keys.cosekey import KeyOps
-from cose.keys.ec import EC2
+from cose.keys.ec2 import EC2
 from cose.messages.signer import SignerParams
 from cose.messages.signmessage import SignMessage, CoseSignature
 from tests.conftest import generic_test_setup, create_cose_key, extract_alg
 
 
 @fixture
-def setup_sign_tests(sign_test_input: dict) -> tuple:
-    return generic_test_setup(sign_test_input)
+def setup_ec2sign_tests(ec2_sign_test_input: dict) -> tuple:
+    return generic_test_setup(ec2_sign_test_input)
 
 
 @mark.encoding
-def test_sign_encoding(setup_sign_tests: tuple) -> None:
-    _, test_input, test_output, test_intermediate, fail = setup_sign_tests
+def test_ec2sign_encoding(setup_ec2sign_tests) -> None:
+    _, test_input, test_output, test_intermediate, fail = setup_ec2sign_tests
 
     sign: SignMessage = SignMessage(
         phdr=test_input['sign'].get('protected', {}),
@@ -47,8 +47,8 @@ def test_sign_encoding(setup_sign_tests: tuple) -> None:
 
 
 @mark.decoding
-def test_sign_decoding(setup_sign_tests: tuple) -> None:
-    _, test_input, test_output, test_intermediate, fail = setup_sign_tests
+def test_ec2sign_decoding(setup_ec2sign_tests) -> None:
+    _, test_input, test_output, test_intermediate, fail = setup_ec2sign_tests
 
     if fail:
         skip("invalid test input")
@@ -71,3 +71,5 @@ def test_sign_decoding(setup_sign_tests: tuple) -> None:
 
     assert cose_msg.signers[0]._sig_structure == unhexlify(test_intermediate['signers'][0]["ToBeSign_hex"])
     assert cose_msg.signers[0].verify_signature(public_key=public_key)
+
+

@@ -9,7 +9,7 @@ from pytest import skip
 from cose.attributes.algorithms import CoseAlgorithms, CoseEllipticCurves
 from cose.attributes.headers import CoseHeaderKeys
 from cose.keys.cosekey import KTY, CoseKey, KeyOps
-from cose.keys.ec import EC2
+from cose.keys.ec2 import EC2
 from cose.keys.okp import OKP
 from cose.keys.symmetric import SymmetricKey
 
@@ -33,9 +33,9 @@ ecdh_direct_test_vector_dirs = [os.path.join(path_examples, 'ecdh-direct-example
 ecdh_wrap_test_vector_dirs = [os.path.join(path_examples, 'ecdh-wrap-examples')]
 x25519_direct_test_vector_dirs = [os.path.join(path_examples, 'X25519-tests')]
 triple_layer_enc_test_vector_dirs = [os.path.join(path_examples, 'RFC8152')]
-sign1_test_vector_dirs = [os.path.join(path_examples, "sign1-tests")]
-sign_test_vector_dirs = [os.path.join(path_examples, "sign-tests")]
-countersign_test_vector_dirs = [os.path.join(path_examples, 'countersign')]
+ec2_sign1_test_vector_dirs = [os.path.join(path_examples, "sign1-tests")]
+ec2_sign_test_vector_dirs = [os.path.join(path_examples, "sign-tests")]
+okp_sign1_test_vector_dirs = [os.path.join(path_examples, "eddsa-examples")]
 
 algs_to_be_replaced = {
     'A128KW': CoseAlgorithms.A128KW.id,
@@ -77,6 +77,7 @@ algs_to_be_replaced = {
     "ES256": CoseAlgorithms.ES256.id,
     "ES384": CoseAlgorithms.ES384.id,
     "ES512": CoseAlgorithms.ES512.id,
+    "EdDSA": CoseAlgorithms.EDDSA.id,
 }
 
 params_to_be_replaced = {
@@ -108,6 +109,8 @@ key_attr_to_be_replaced = {
     "X25519": CoseEllipticCurves.X25519,
     "X448": CoseEllipticCurves.X448,
     "oct": KTY.SYMMETRIC,
+    "Ed448": CoseEllipticCurves.ED448,
+    "Ed25519": CoseEllipticCurves.ED25519
 }
 
 
@@ -148,18 +151,18 @@ def pytest_generate_tests(metafunc):
         test_suite = encrypt_hkdf_hmac_direct_tests()
         ids = [test['title'] for test in test_suite]
         metafunc.parametrize("encrypt_hkdf_hmac_direct_test_input", test_suite, ids=ids)
-    if "sign1_test_input" in metafunc.fixturenames:
-        test_suite = sign1_tests()
+    if "ec2_sign1_test_input" in metafunc.fixturenames:
+        test_suite = ec2_sign1_tests()
         ids = [test['title'] for test in test_suite]
-        metafunc.parametrize("sign1_test_input", test_suite, ids=ids)
-    if "sign_test_input" in metafunc.fixturenames:
-        test_suite = sign_tests()
+        metafunc.parametrize("ec2_sign1_test_input", test_suite, ids=ids)
+    if "ec2_sign_test_input" in metafunc.fixturenames:
+        test_suite = ec2_sign_tests()
         ids = [test['title'] for test in test_suite]
-        metafunc.parametrize("sign_test_input", test_suite, ids=ids)
-    if "countersign_test_input" in metafunc.fixturenames:
-        test_suite = countersign_tests()
+        metafunc.parametrize("ec2_sign_test_input", test_suite, ids=ids)
+    if "okp_sign1_test_input" in metafunc.fixturenames:
+        test_suite = okp_sign1_tests()
         ids = [test['title'] for test in test_suite]
-        metafunc.parametrize("countersign_test_input", test_suite, ids=ids)
+        metafunc.parametrize("okp_sign1_test_input", test_suite, ids=ids)
 
 
 def generic_test_setup(generic_test_input: dict) -> tuple:
@@ -216,16 +219,16 @@ def encrypt_hkdf_hmac_direct_tests():
     return _build_test_cases(['enveloped'], mac_hkdf_hmac_direct_test_vectors_dirs)
 
 
-def sign1_tests():
-    return _build_test_cases(['sign0'], sign1_test_vector_dirs)
+def ec2_sign1_tests():
+    return _build_test_cases(['sign0'], ec2_sign1_test_vector_dirs)
 
 
-def sign_tests():
-    return _build_test_cases(['sign'], sign_test_vector_dirs)
+def ec2_sign_tests():
+    return _build_test_cases(['sign'], ec2_sign_test_vector_dirs)
 
 
-def countersign_tests():
-    return _build_test_cases(['sign'], sign_test_vector_dirs)
+def okp_sign1_tests():
+    return _build_test_cases(['sign0'], okp_sign1_test_vector_dirs)
 
 
 def _build_test_cases(keys: List[str], test_dirs: List[str], single_file: Optional[str] = None):
@@ -364,8 +367,8 @@ def create_cose_key(key_type: Type[CoseKey],
             alg=alg,
             key_ops=usage,
             crv=input_data.get(OKP.OKPPrm.CRV),
-            x=CoseKey.base64decode(input_data.get(OKP.OKPPrm.X)),
-            d=CoseKey.base64decode(input_data.get(OKP.OKPPrm.D)),
+            x=unhexlify(input_data.get(OKP.OKPPrm.X)),
+            d=unhexlify(input_data.get(OKP.OKPPrm.D)),
         )
     else:
         raise Exception

@@ -7,7 +7,7 @@ from cose.attributes.algorithms import CoseAlgorithms, CoseEllipticCurves
 from cose.attributes.context import PartyInfo, SuppPubInfo, CoseKDFContext
 from cose.attributes.headers import CoseHeaderKeys
 from cose.keys.cosekey import KeyOps, CoseKey, KTY
-from cose.keys.ec import EC2
+from cose.keys.ec2 import EC2
 from cose.keys.symmetric import SymmetricKey
 from cose.messages.recipient import CoseRecipient, RcptParams
 from tests.conftest import generic_test_setup, extract_phdr, extract_uhdr, \
