@@ -14,7 +14,7 @@ receiver requires more information to find/derive the CEK a :class:`~cose.messag
     >>> from cose import SymmetricKey, Enc0Message, CoseAlgorithms, KeyOps, CoseHeaderKeys
 
     # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
-    >>> key = SymmetricKey.generate_key(CoseAlgorithms.A128GCM, KeyOps.ENCRYPT, key_len=16)
+    >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
 
     # create a COSE_encrypt0 message
     >>> payload = b"Secret Message."

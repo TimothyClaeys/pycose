@@ -218,7 +218,10 @@ class SymmetricKey(CoseKey):
         return derived_key
 
     @staticmethod
-    def generate_key(algorithm: CoseAlgorithms, key_ops: KeyOps, key_len: int = 16) -> 'SymmetricKey':
+    def generate_key(
+            key_len: int = 16,
+            algorithm: Optional[CoseAlgorithms] = None,
+            key_ops: Optional[KeyOps] = None) -> 'SymmetricKey':
         """
         Generate a random Symmetric COSE key object.
 
@@ -234,12 +237,12 @@ class SymmetricKey(CoseKey):
             raise ValueError("key_len must be of size 16, 24 or 32")
 
         if KeyOps(key_ops) not in [KeyOps.ENCRYPT, KeyOps.WRAP, KeyOps.DECRYPT, KeyOps.UNWRAP, KeyOps.MAC_CREATE,
-                                   KeyOps.VERIFY]:
+                                   KeyOps.VERIFY, None]:
             raise CoseIllegalKeyOps(f"The key operation {key_ops} is invalid for this key object.")
 
         return SymmetricKey(
-            alg=CoseAlgorithms(algorithm),
-            key_ops=KeyOps(key_ops),
+            alg=CoseAlgorithms(algorithm) if algorithm is not None else None,
+            key_ops=KeyOps(key_ops) if key_ops is not None else None,
             k=os.urandom(key_len)
         )
 

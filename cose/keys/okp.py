@@ -14,7 +14,7 @@ from dataclasses import dataclass
 
 from cose.attributes.algorithms import CoseAlgorithms, config, CoseEllipticCurves
 from cose.attributes.context import CoseKDFContext
-from cose.exceptions import CoseIllegalAlgorithm, CoseIllegalCurve
+from cose.exceptions import CoseIllegalAlgorithm, CoseIllegalCurve, CoseIllegalKeyOps
 from cose.keys.cosekey import CoseKey, KTY, KeyOps
 
 
@@ -190,22 +190,34 @@ class OKP(CoseKey):
             return False
 
     @staticmethod
-    def generate_key(algorithm: CoseAlgorithms, key_ops: KeyOps,
-                     curve_type: CoseEllipticCurves = CoseEllipticCurves.X25519) -> 'OKP':
+    def generate_key(
+            curve_type: CoseEllipticCurves,
+            key_ops: Optional[KeyOps] = None,
+            algorithm: Optional[CoseAlgorithms] = None) -> 'OKP':
         """
         Generate a random OKP COSE key object.
 
-        :param algorithm: Specify the CoseAlgorithm to use.
-        :param key_ops: Specify the key operation (KeyOps).
-        :param curve_type: Specify curve, must be X25519 or X448.
+        :param curve_type: Specify an elliptic curve.
+        :param algorithm: Specify an optional `CoseAlgorithm` to use.
+        :param key_ops: Specify an optional key operation (`KeyOps`).
+        :raises CoseIllegalCurve: Invalid curve for this key type.
+        :raises CoseIllegalKeyOps: Invalid key operation for this key type.
+        :returns: An COSE `OKP` key.
         """
 
         if curve_type == CoseEllipticCurves.X25519:
             private_key = X25519PrivateKey.generate()
+        elif curve_type == CoseEllipticCurves.ED25519:
+            private_key = Ed25519PrivateKey.generate()
+        elif curve_type == CoseEllipticCurves.ED448:
+            private_key = Ed448PrivateKey.generate()
         elif curve_type == CoseEllipticCurves.X448:
             private_key = X448PrivateKey.generate()
         else:
-            raise CoseIllegalCurve(f"curve must be of type {CoseEllipticCurves.X25519} or {CoseEllipticCurves.X448}")
+            raise CoseIllegalCurve(f"Curve must be of type {CoseEllipticCurves.X25519} or {CoseEllipticCurves.X448}")
+
+        if key_ops not in [KeyOps.SIGN, KeyOps.VERIFY, KeyOps.DERIVE_KEY, KeyOps.DERIVE_BITS, None]:
+            raise CoseIllegalKeyOps(f"{key_ops} is an illegal operation for this key type.")
 
         encoding = Encoding(serialization.Encoding.Raw)
         private_format = PrivateFormat(serialization.PrivateFormat.Raw)
@@ -213,8 +225,8 @@ class OKP(CoseKey):
         encryption = serialization.NoEncryption()
 
         return OKP(
-            alg=CoseAlgorithms(algorithm),
-            key_ops=KeyOps(key_ops),
+            alg=CoseAlgorithms(algorithm) if algorithm is not None else None,
+            key_ops=KeyOps(key_ops) if key_ops is not None else None,
             crv=CoseEllipticCurves(curve_type),
             x=private_key.public_key().public_bytes(encoding, public_format),
             d=private_key.private_bytes(encoding, private_format, encryption))

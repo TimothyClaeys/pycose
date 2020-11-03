@@ -9,9 +9,18 @@ x-coordinate and a y-coordinate, potentially with point compression.
 
     >>> from cose import EC2, CoseAlgorithms, KeyOps, CoseEllipticCurves
 
-    # generates a random EC2 COSE key, with a given algorithm, key operation and elliptic curve.
-    >>> key = EC2.generate_key(CoseAlgorithms.ES256, KeyOps.SIGN, CoseEllipticCurves.P_256)
-    >>> type(key) == EC2
+    # generates a random EC2 COSE key for a given curve.
+    >>> ec2key = EC2.generate_key(CoseEllipticCurves.P_256)
+    >>> type(ec2key) == EC2
+    True
+
+    # create a signature
+    >>> to_be_signed = b'signed_message'
+    >>> signature = ec2key.sign(to_be_signed, alg=CoseAlgorithms.ES256)
+
+    # verify the signature
+    >>> ec2key.key_ops = KeyOps.VERIFY
+    >>> ec2key.verify(to_be_signed, signature)
     True
 
 .. module:: cose.keys.ec2

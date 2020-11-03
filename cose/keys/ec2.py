@@ -12,7 +12,7 @@ from ecdsa.ellipticcurve import Point
 
 from cose.attributes.algorithms import CoseAlgorithms, config, CoseEllipticCurves
 from cose.attributes.context import CoseKDFContext
-from cose.exceptions import CoseIllegalAlgorithm, CoseIllegalCurve
+from cose.exceptions import CoseIllegalAlgorithm, CoseIllegalCurve, CoseIllegalKeyOps
 from cose.keys.cosekey import CoseKey, KTY, KeyOps
 
 
@@ -66,10 +66,10 @@ class EC2(CoseKey):
         Create A EC2 key object.
 
         :param kid: An optional key identifier.
-        :param alg: An optional CoseAlgorithms.
+        :param alg: An optional :class:`~cose.attributes.algorithms.CoseAlgorithms`
         :param key_ops: An optional KeyOps.
         :param base_iv: An optional base initialization vector.
-        :param crv: An optional CoseEllipticCurves.
+        :param crv: An optional :class:`~cose.attributes.algorithms.CoseEllipticCurves`.
         :param x: Optional x-coordinate of the public key
         :param y: Optional y-coordinate of the public key
         :param d: Optional private value/key.
@@ -143,8 +143,8 @@ class EC2(CoseKey):
 
         :param public_key: An EC2 key containing at least the public key coordinates (x and y).
         :param context: A CoseKDFContext for the HKDF algorithm.
-        :param alg: An optional algorithm parameter (specifies the exact algorithm used for the key derivation).
-        :param curve: An optional CoseEllipticCurves
+        :param alg: An optional :class:`~cose.attributes.algorithms.CoseAlgorithms` parameter.
+        :param curve: An optional :class:`~cose.attributes.algorithms.CoseEllipticCurves`.
         :return: Tuple of shared secret and derived key.
         """
 
@@ -184,8 +184,8 @@ class EC2(CoseKey):
         case they are already provided by one of the COSE key objects.
 
         :param to_be_signed: Data over which the signature is calculated.
-        :param alg: An optional CoseAlgorithm (specifies the exact algorithm used for the signature).
-        :param curve: An optional CoseEllipticCurves.
+        :param alg: An optional :class:`~cose.attributes.algorithms.CoseAlgorithms`
+        :param curve: An optional :class:`~cose.attributes.algorithms.CoseEllipticCurves`.
         :return: The signature.
         """
 
@@ -211,8 +211,8 @@ class EC2(CoseKey):
 
         :param to_be_signed: Data that was signed.
         :param signature: Signature to verify.
-        :param alg: An optional CoseAlgorithms (specifies the exact algorithm used for the signature).
-        :param curve: An optional CoseEllipticCurves.
+        :param alg: An optional :class:`~cose.attributes.algorithms.CoseAlgorithms`.
+        :param curve: An optional :class:`~cose.attributes.algorithms.CoseEllipticCurves`.
         :returns: True or False.
         """
 
@@ -232,24 +232,31 @@ class EC2(CoseKey):
             return False
 
     @staticmethod
-    def generate_key(algorithm: CoseAlgorithms, key_ops: KeyOps,
-                     curve_type: CoseEllipticCurves = CoseEllipticCurves.P_256) -> 'EC2':
+    def generate_key(
+            curve_type: CoseEllipticCurves,
+            algorithm: Optional[CoseAlgorithms] = None,
+            key_ops: Optional[KeyOps] = None) -> 'EC2':
         """
         Generate a random EC2 COSE key object.
 
-        :param algorithm: Specify the CoseAlgorithm to use.
-        :param key_ops: Specify the key operation (KeyOps).
-        :param curve_type: Specify an elliptic curve.
-        :return: A EC2 COSE key
+        :param curve_type: Specify an :class:`~cose.attributes.algorithms.CoseEllipticCurves`.
+        :param algorithm: Specify an optional :class:`~cose.attributes.algorithms.CoseAlgorithms`.
+        :param key_ops: Specify an optional key operation (KeyOps).
+        :raises CoseIllegalCurve: Invalid curves for this key type.
+        :raises CoseIllegalKeyOps: Invalid key operation for this key type.
+        :return: An COSE `EC2` key.
         """
 
-        if curve_type in [CoseEllipticCurves.X25519, CoseEllipticCurves.X448]:
+        if curve_type in [CoseEllipticCurves.X25519, CoseEllipticCurves.X448, None]:
             raise CoseIllegalCurve(f"{curve_type} is not a valid curve for an EC2 key type.")
+        else:
+            try:
+                CoseEllipticCurves(curve_type)
+            except ValueError:
+                raise CoseIllegalCurve(f"{curve_type} is not a valid elliptic curve.")
 
-        try:
-            CoseEllipticCurves(curve_type)
-        except ValueError:
-            raise CoseIllegalCurve(f"{curve_type} is not a valid elliptic curve.")
+        if key_ops not in [KeyOps.SIGN, KeyOps.VERIFY, KeyOps.DERIVE_KEY, KeyOps.DERIVE_BITS, None]:
+            raise CoseIllegalKeyOps(f"{key_ops} is an illegal operation for this key type.")
 
         curve = config(curve_type).curve[1]()
 
@@ -259,8 +266,8 @@ class EC2(CoseKey):
         y_coor = private_key.public_key().public_numbers().y
 
         return EC2(
-            alg=CoseAlgorithms(algorithm),
-            key_ops=KeyOps(key_ops),
+            alg=CoseAlgorithms(algorithm) if algorithm is not None else None,
+            key_ops=KeyOps(key_ops) if key_ops is not None else None,
             d=d_value.to_bytes((d_value.bit_length() + 7) // 8, byteorder="big"),
             x=x_coor.to_bytes((x_coor.bit_length() + 7) // 8, byteorder="big"),
             y=y_coor.to_bytes((y_coor.bit_length() + 7) // 8, byteorder="big"))
