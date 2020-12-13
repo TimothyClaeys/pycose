@@ -223,7 +223,7 @@ class CoseKey(metaclass=ABCMeta):
         key_words = ["_kty"]
 
         for kw in argv:
-            if kw.upper() in self.Common.__members__:
+            if kw[1:].upper() in self.Common.__members__:
                 key_words.append(kw)
 
         return {self.Common[kw[1:].upper()]: dataclasses.asdict(self)[kw] for kw in key_words}

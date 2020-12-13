@@ -61,8 +61,8 @@ class SymmetricKey(CoseKey):
         self._k = new_k
 
     def encode(self, *argv):
-        kws = [kw for kw in argv if self.SymPrm.has_member(kw.upper())]
-        return {**super().encode(*argv), **{self.SymPrm[kw.upper()]: dataclasses.asdict(self)[kw] for kw in kws}}
+        kws = ['_' + kw for kw in argv if self.SymPrm.has_member(kw.upper())]
+        return {**super().encode(*argv), **{self.SymPrm[kw[1:].upper()]: dataclasses.asdict(self)[kw] for kw in kws}}
 
     def encrypt(self, plaintext: bytes, aad: bytes, nonce: bytes, alg: Optional[CoseAlgorithms]) -> bytes:
         self._check_key_conf(alg, KeyOps.ENCRYPT)
