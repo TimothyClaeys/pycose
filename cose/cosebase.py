@@ -88,11 +88,16 @@ class CoseBase(metaclass=abc.ABCMeta):
     def _parse_header(cls, hdr):
         new_hdr = {}
         for k, v in hdr.items():
-            parse_func = attr.headers.parser(attr.headers.CoseHeaderKeys(k))
+            try:
+                header_key = attr.headers.CoseHeaderKeys(k)
+                parse_func = attr.headers.parser(header_key)
+            except ValueError:
+                header_key = k
+                parse_func = None
             if parse_func is not None:
-                new_hdr[attr.headers.CoseHeaderKeys(k)] = parse_func(v)
+                new_hdr[header_key] = parse_func(v)
             else:
-                new_hdr[attr.headers.CoseHeaderKeys(k)] = v
+                new_hdr[header_key] = v
 
         return new_hdr
 
