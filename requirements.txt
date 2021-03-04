@@ -1,12 +1,11 @@
-cryptography>=3.1
-cbor2>=5.1.2
-ecdsa>=0.16.0
-dataclasses>=0.7 ;python_version <= '3.6'
-singledispatchmethod>=1.0 ;python_version <= '3.7'
-aenum>=2.2.4
+cryptography
+cbor2
+ecdsa
+attrs
 
 # to build docs
-Sphinx>=3.2.1
+Sphinx>=3.3.1
 sphinx_rtd_theme>=0.5.0
+
 # this has to be here, otherwise the documentation build will fail
 sphinxemoji

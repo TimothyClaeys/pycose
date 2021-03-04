@@ -1,237 +1,158 @@
-from enum import IntEnum
-from typing import Optional, Tuple
+from typing import Optional, Type, List, TYPE_CHECKING
 
-import dataclasses
-from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric.ed448 import Ed448PrivateKey, Ed448PublicKey
-from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PublicKey, X25519PrivateKey
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
-from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives.asymmetric import x25519, x448, ed25519, ed448
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from cryptography.hazmat.primitives.asymmetric.ed448 import Ed448PrivateKey
+from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 from cryptography.hazmat.primitives.asymmetric.x448 import X448PrivateKey
 from cryptography.hazmat.primitives.serialization import PrivateFormat, PublicFormat, Encoding
-from dataclasses import dataclass
 
-from cose.attributes.algorithms import CoseAlgorithms, config, CoseEllipticCurves
-from cose.attributes.context import CoseKDFContext
-from cose.exceptions import CoseIllegalAlgorithm, CoseIllegalCurve, CoseIllegalKeyOps
-from cose.keys.cosekey import CoseKey, KTY, KeyOps
+from cose.curves import X448, X25519, Ed25519, Ed448, CoseCurve
+from cose.exceptions import CoseIllegalCurve, CoseException
+from cose.keys.cosekey import CoseKey, KpKty
+from cose.keys.keyparam import OKPKeyParam, OKPKpCurve, OKPKpX, OKPKpD
+from cose.keys.keytype import KtyOKP
+
+if TYPE_CHECKING:
+    from cose.algorithms import CoseAlg
+    from cose.keys.keyops import KEYOPS
 
 
-@CoseKey.record_kty(KTY.OKP)
-@dataclass(init=False)
-class OKP(CoseKey):
-    """
-    Octet Key Pairs: Do not assume that keys using this type are elliptic curves.  This key type could be used for
-    other curve types.
-    """
-    _crv: Optional[CoseEllipticCurves] = None
-    _x: Optional[bytes] = None
-    _d: Optional[bytes] = None
-
-    class OKPPrm(IntEnum):
-        CRV = -1
-        X = -2
-        D = -4
+@CoseKey.record_kty(KtyOKP)
+class OKPKey(CoseKey):
 
     @classmethod
-    def from_cose_key_obj(cls, cose_key_obj: dict) -> 'OKP':
-        """ Returns an initialized COSE_Key object of type OKP."""
+    def from_dict(cls, cose_key: dict) -> 'OKPKey':
+        """
+        Returns an initialized COSE Key object of type OKPKey.
 
-        cose_key = cls(
-            kid=cose_key_obj.get(cls.Common.KID),
-            alg=cose_key_obj.get(cls.Common.ALG),
-            key_ops=cose_key_obj.get(cls.Common.KEY_OPS),
-            base_iv=cose_key_obj.get(cls.Common.BASE_IV),
-            crv=cose_key_obj.get(cls.OKPPrm.CRV),
-            x=cose_key_obj.get(cls.OKPPrm.X),
-            d=cose_key_obj.get(cls.OKPPrm.D)
-        )
+        :param cose_key: Dict containing COSE Key parameters and there values.
+        :return: an initialized OKPKey key
+        """
 
-        return cose_key
+        return cls(cose_key)
 
-    def __init__(self,
-                 kid: Optional[bytes] = None,
-                 alg: Optional[int] = None,
-                 key_ops: Optional[int] = None,
-                 base_iv: Optional[bytes] = None,
-                 crv: Optional[int] = None,
-                 x: Optional[bytes] = None,
-                 d: Optional[bytes] = None):
-        super().__init__(KTY.OKP, kid, alg, key_ops, base_iv)
-        self.crv = crv
-        self.x = x
-        self.d = d
+    def __init__(self, key: Optional[dict] = None, **kwargs):
+        transformed_dict = {}
+        if key is None:
+            key = {}
+
+        new_dict = dict(key, **kwargs)
+        new_dict[KpKty] = KtyOKP
+
+        for k, v in new_dict.items():
+            try:
+                kp = OKPKeyParam.from_id(k)
+                v = v if kp.value_parser is None else kp.value_parser(v)
+                transformed_dict[kp] = v
+            except ValueError:
+                transformed_dict[k] = v
+
+        super(OKPKey, self).__init__(transformed_dict)
 
     @property
-    def crv(self) -> Optional[CoseEllipticCurves]:
-        return self._crv
+    def crv(self) -> Optional[Type['CoseCurve']]:
+        return self.store.get(OKPKpCurve)
 
     @crv.setter
-    def crv(self, new_crv: Optional[CoseEllipticCurves]) -> None:
-        if new_crv is not None:
-            self._crv = CoseEllipticCurves(new_crv)
-        else:
-            self._crv = None
+    def crv(self, crv: Type['CoseCurve']):
+        if crv is None:
+            return
+
+        self.store[OKPKpCurve] = CoseCurve.from_id(crv)
 
     @property
-    def x(self) -> Optional[bytes]:
-        return self._x
+    def x(self) -> bytes:
+        return self.store.get(OKPKpX, b'')
 
     @x.setter
-    def x(self, new_x: Optional[bytes]) -> None:
-        if type(new_x) is not bytes and new_x is not None:
-            raise ValueError("public x coordinate must be of type 'bytes'")
-        self._x = new_x
+    def x(self, x: bytes):
+        if type(x) is not bytes:
+            raise TypeError("public x coordinate must be of type 'bytes'")
+        self.store[OKPKpX] = x
 
     @property
-    def d(self) -> Optional[bytes]:
-        return self._d
+    def d(self) -> bytes:
+        return self.store.get(OKPKpD, b'')
 
     @d.setter
-    def d(self, new_d: Optional[bytes]) -> None:
-        if type(new_d) is not bytes and new_d is not None:
-            raise ValueError("private key must be of type 'bytes'")
-        self._d = new_d
+    def d(self, d: bytes):
+        if type(d) is not bytes:
+            raise TypeError("private key must be of type 'bytes'")
+        self.store[OKPKpD] = d
 
-    def encode(self, *argv):
-        """
-        Encode the provided key words in dictionary. The dictionary can then be encoded with CBOR.
-        """
+    def verify(self, key_type: Type['OKPKey'], algorithm: Type['CoseAlg'], key_ops: List[Type['KEYOPS']]):
+        super(OKPKey, self).verify(key_type, algorithm, key_ops)
 
-        kws = []
+        if self.crv is None:
+            raise CoseException("Curve attribute cannot be None.")
 
-        for kw in argv:
-            if kw.upper() in self.OKPPrm.__members__:
-                kws.append('_' + kw)
+    @property
+    def is_valid_key(self):
 
-        return {**super().encode(*argv), **{self.OKPPrm[kw[1:].upper()]: dataclasses.asdict(self)[kw] for kw in kws}}
-
-    def x25519_key_derivation(self,
-                              public_key: 'OKP',
-                              context: CoseKDFContext = b'',
-                              alg: Optional[CoseAlgorithms] = None,
-                              curve: Optional[CoseEllipticCurves] = None) -> Tuple[bytes, bytes]:
-
-        self._check_key_conf(alg, KeyOps.DERIVE_KEY, public_key, curve)
-
-        try:
-            alg_cfg = config(CoseAlgorithms(self.alg))
-        except KeyError as err:
-            raise CoseIllegalAlgorithm(err)
-
-        p = X25519PublicKey.from_public_bytes(public_key.x)
-        d = X25519PrivateKey.from_private_bytes(self.d)
-
-        shared_secret = d.exchange(p)
-
-        derived_key = alg_cfg.kdf(algorithm=alg_cfg.hash(),
-                                  length=int(context.supp_pub_info.key_data_length / 8),
-                                  salt=None,
-                                  info=context.encode(),
-                                  backend=default_backend()).derive(shared_secret)
-
-        return shared_secret, derived_key
-
-    def sign(self,
-             to_be_signed: bytes,
-             alg: Optional[CoseAlgorithms] = None,
-             curve: CoseEllipticCurves = None) -> bytes:
-        """
-        Computes a digital signature over 'to_be_signed'. The parameter 'alg' and 'curve' parameters are optional in
-        case they are already provided by the key object self.
-
-        :param to_be_signed: Data over which the signature is calculated.
-        :param alg: An optional algorithm parameter.
-        :param curve: An optional curve parameter.
-        :return: the signature over the COSE object.
-        """
-
-        self._check_key_conf(algorithm=alg, key_operation=KeyOps.SIGN, curve=curve)
-
-        if self.crv == CoseEllipticCurves.ED25519:
-            sk = Ed25519PrivateKey.from_private_bytes(self.d)
-        elif self._crv == CoseEllipticCurves.ED448:
-            sk = Ed448PrivateKey.from_private_bytes(self.d)
+        if self.crv == X25519:
+            if self.d != b'':
+                _ = x25519.X25519PrivateKey.from_private_bytes(self.d)
+            if self.x != b'':
+                _ = x25519.X25519PublicKey.from_public_bytes(self.x)
+        elif self.crv == X448:
+            if self.d != b'':
+                _ = x448.X448PrivateKey.from_private_bytes(self.d)
+            if self.x != b'':
+                _ = x448.X448PublicKey.from_public_bytes(self.x)
+        elif self.crv == Ed25519:
+            if self.d != b'':
+                _ = ed25519.Ed25519PrivateKey.from_private_bytes(self.d)
+            if self.x != b'':
+                _ = ed25519.Ed25519PublicKey.from_public_bytes(self.x)
+        elif self.crv == Ed448:
+            if self.d != b'':
+                _ = ed448.Ed448PrivateKey.from_private_bytes(self.d)
+            if self.x != b'':
+                _ = ed448.Ed448PublicKey.from_public_bytes(self.x)
         else:
-            raise CoseIllegalCurve(f"Illegal curve for OKP singing: {self.crv}")
-
-        return sk.sign(to_be_signed)
-
-    def verify(self,
-               to_be_verified: bytes,
-               signature: bytes,
-               alg: Optional[CoseAlgorithms] = None,
-               curve: Optional[CoseEllipticCurves] = None) -> bool:
-        """
-        Verifies the digital signature over 'to_be_verified'. The parameter 'alg' and 'curve' parameters are optional in
-        case they are already provided by the key object self.
-
-        :param to_be_verified: Data that was signed.
-        :param signature: Signature to verify.
-        :param alg: An optional algorithm parameter.
-        :param curve: An optional curve
-        :return: True when the signature is valid and False if the signature is invalid.
-        """
-
-        self._check_key_conf(algorithm=alg, key_operation=KeyOps.VERIFY, curve=curve)
-
-        if self.crv == CoseEllipticCurves.ED25519:
-            vk = Ed25519PublicKey.from_public_bytes(self.x)
-        elif self._crv == CoseEllipticCurves.ED448:
-            vk = Ed448PublicKey.from_public_bytes(self.x)
-        else:
-            raise CoseIllegalCurve(f"Illegal curve for OKP singing: {self.crv}")
-
-        try:
-            vk.verify(signature, to_be_verified)
-            return True
-        except InvalidSignature:
             return False
 
-    @staticmethod
-    def generate_key(
-            curve_type: CoseEllipticCurves,
-            key_ops: Optional[KeyOps] = None,
-            algorithm: Optional[CoseAlgorithms] = None) -> 'OKP':
-        """
-        Generate a random OKP COSE key object.
+        return True
 
-        :param curve_type: Specify an elliptic curve.
-        :param algorithm: Specify an optional `CoseAlgorithm` to use.
-        :param key_ops: Specify an optional key operation (`KeyOps`).
+    @staticmethod
+    def generate_key(curve: Type['CoseCurve']) -> 'OKPKey':
+        """
+        Generate a random OKPKey COSE key object.
+
+        :param curve: Specify an elliptic curve.
         :raises CoseIllegalCurve: Invalid curve for this key type.
         :raises CoseIllegalKeyOps: Invalid key operation for this key type.
-        :returns: An COSE `OKP` key.
+        :returns: An COSE `OKPKey` key.
         """
 
-        if curve_type == CoseEllipticCurves.X25519:
+        if curve == X25519:
             private_key = X25519PrivateKey.generate()
-        elif curve_type == CoseEllipticCurves.ED25519:
+        elif curve == Ed25519:
             private_key = Ed25519PrivateKey.generate()
-        elif curve_type == CoseEllipticCurves.ED448:
+        elif curve == Ed448:
             private_key = Ed448PrivateKey.generate()
-        elif curve_type == CoseEllipticCurves.X448:
+        elif curve == X448:
             private_key = X448PrivateKey.generate()
         else:
-            raise CoseIllegalCurve(f"Curve must be of type {CoseEllipticCurves.X25519} or {CoseEllipticCurves.X448}")
-
-        if key_ops not in [KeyOps.SIGN, KeyOps.VERIFY, KeyOps.DERIVE_KEY, KeyOps.DERIVE_BITS, None]:
-            raise CoseIllegalKeyOps(f"{key_ops} is an illegal operation for this key type.")
+            raise CoseIllegalCurve(f"Curve must be of type {X25519} or {X448}")
 
         encoding = Encoding(serialization.Encoding.Raw)
         private_format = PrivateFormat(serialization.PrivateFormat.Raw)
         public_format = PublicFormat(serialization.PublicFormat.Raw)
         encryption = serialization.NoEncryption()
 
-        return OKP(
-            alg=CoseAlgorithms(algorithm) if algorithm is not None else None,
-            key_ops=KeyOps(key_ops) if key_ops is not None else None,
-            crv=CoseEllipticCurves(curve_type),
+        return OKPKey(
+            curve=curve,
             x=private_key.public_key().public_bytes(encoding, public_format),
             d=private_key.private_bytes(encoding, private_format, encryption))
 
     def __repr__(self):
-        hdr = '<COSE_Key(OKP): {'
-        output = [f'{k[1:]}: {v.__repr__()}' for k, v in dataclasses.asdict(self).items() if v is not None]
-        return hdr + ", ".join(output)[2:] + '}>'
+        hdr = f'<COSE_Key(OKPKey): {self._key_repr()}>'
+        return hdr
+
+
+OKPKpCurve.value_parser = CoseCurve.from_id
+
+OKP = OKPKey

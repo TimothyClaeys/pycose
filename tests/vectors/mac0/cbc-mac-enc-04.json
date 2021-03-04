@@ -1,0 +1,32 @@
+{
+  "title": "CBC-MAC-ENC-04: MAC example with direct shared key and AES-CBC-MAC-256/128 - implicit",
+  "cek": {
+    "__key__": true,
+    "alg": "AES_MAC_256_128",
+    "kty": "SYMMETRIC",
+    "kid": "our-secret",
+    "k": "849B57219DAE48DE646D07DBB533566E976686457C1491BE3A76DCEA6C427188"
+  },
+  "cbor_tag" : true,
+  "input": {
+    "__input__": true,
+    "protected": {
+      "__header__": true,
+      "alg": "AES_MAC_256_128"
+    },
+    "unprotected": {
+      "__header__": true
+    },
+    "plaintext": "This is the content.",
+    "external_aad": ""
+  },
+  "output": {
+    "__output__": true,
+    "protected": "A101181A",
+    "unprotected": "{}",
+    "ciphertext": "546869732069732074686520636f6e74656e74",
+    "tag": "403152CC208C1D501E1DC2A789AE49E4",
+    "structure": "84644D41433044A101181A4054546869732069732074686520636F6E74656E742E",
+    "result": "D18444A101181AA054546869732069732074686520636F6E74656E742E50403152CC208C1D501E1DC2A789AE49E4"
+  }
+}

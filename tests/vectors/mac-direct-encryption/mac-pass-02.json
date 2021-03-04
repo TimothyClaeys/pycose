@@ -1,0 +1,50 @@
+{
+  "title": "mac-pass-02.json",
+  "cek": {
+    "__key__": true,
+    "alg": "HMAC_256",
+    "kty": "SYMMETRIC",
+    "kid": "our-secret",
+    "k": "849B57219DAE48DE646D07DBB533566E976686457C1491BE3A76DCEA6C427188"
+  },
+  "input": {
+    "__input__": true,
+    "protected": {
+      "__header__": true
+    },
+    "unprotected": {
+      "__header__": true,
+      "alg": "HMAC_256"
+    },
+    "plaintext": "This is the content.",
+    "external_aad": "11aa22bb33cc44dd55006699",
+    "recipients": [
+      {
+        "__recipient__": true,
+        "protected": {},
+        "unprotected": {
+          "__header__": true,
+          "alg": "DIRECT",
+          "kid": "our-secret"
+        }
+      }
+    ]
+  },
+  "output": {
+    "__output__": true,
+    "protected": "",
+    "unprotected": "{1: 5}",
+    "ciphertext": "546869732069732074686520636F6E74656E742E",
+    "tag": "60CFE7D9C733A758E198FF758A381E43B3CAF9867AEBAEF224CA8F11FFD3AC7A",
+    "structure": "84634D4143404C11AA22BB33CC44DD5500669954546869732069732074686520636F6E74656E742E",
+    "recipients": [
+      {
+        "__encode_rcpt__": true,
+        "protected": "",
+        "unprotected": "{1: -6, 4: b'our-secret'}",
+        "ciphertext": ""
+      }
+    ],
+    "result": "D8618540A1010554546869732069732074686520636F6E74656E742E582060CFE7D9C733A758E198FF758A381E43B3CAF9867AEBAEF224CA8F11FFD3AC7A818340A20125044A6F75722D73656372657440"
+  }
+}

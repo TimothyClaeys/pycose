@@ -3,8 +3,8 @@ from typing import List, Union
 from cryptography.hazmat.backends import openssl
 from cryptography.hazmat.primitives.hashes import Hash
 
-from cose import CoseAlgorithms
-from cose.attributes.algorithms import config
+from cose.algorithms import CoseAlgorithms
+from cose.algorithms import config
 from cose.exceptions import CoseIllegalAlgorithm
 
 

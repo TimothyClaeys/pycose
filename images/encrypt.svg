@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   inkscape:export-ydpi="51.232285"
+   inkscape:export-xdpi="51.232285"
+   inkscape:export-filename="/home/timothy/Projects/pycose/images/wrap_cek.png"
+   sodipodi:docname="wrap_cek.svg"
+   inkscape:version="1.0.1 (1.0.1+r73)"
+   id="svg958"
+   version="1.1"
+   viewBox="0 0 210 297"
+   height="297mm"
+   width="210mm">
+  <defs
+     id="defs952">
+    <rect
+       id="rect1703"
+       height="19.122679"
+       width="29.98082"
+       y="323.48658"
+       x="346.50137" />
+  </defs>
+  <sodipodi:namedview
+     inkscape:window-maximized="1"
+     inkscape:window-y="27"
+     inkscape:window-x="0"
+     inkscape:window-height="939"
+     inkscape:window-width="1680"
+     showborder="false"
+     showgrid="false"
+     inkscape:document-rotation="0"
+     inkscape:current-layer="g1800"
+     inkscape:document-units="mm"
+     inkscape:cy="-99.782147"
+     inkscape:cx="1054.6921"
+     inkscape:zoom="0.35"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     borderopacity="1.0"
+     bordercolor="#666666"
+     pagecolor="#ffffff"
+     id="base" />
+  <metadata
+     id="metadata955">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 2"
+     id="layer4"
+     inkscape:groupmode="layer">
+    <rect
+       ry="8.8133221"
+       y="-7.3264575"
+       x="-16.244719"
+       height="123.34373"
+       width="650.05145"
+       id="rect1103"
+       style="fill:#000000;fill-opacity:0.0501476;stroke:#000000;stroke-width:2.45191;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <rect
+       style="opacity:0.94;fill:#4dbaff;fill-opacity:0.368637;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.941176"
+       id="rect837"
+       width="185.89047"
+       height="82.002029"
+       x="-3.4448848"
+       y="8.1683807"
+       ry="10.994632" />
+    <rect
+       style="opacity:0.94;fill:#0082a3;fill-opacity:0.714472;stroke:#000000;stroke-width:1;stroke-opacity:0.941176"
+       id="rect833"
+       width="83.495155"
+       height="37.156994"
+       x="-2.5135036"
+       y="43.596642"
+       ry="4.9819188" />
+    <rect
+       ry="4.9688864"
+       y="43.645245"
+       x="81.030251"
+       height="37.059792"
+       width="100.7795"
+       id="rect835"
+       style="opacity:0.94;fill:#0082a3;fill-opacity:0.714472;stroke:#000000;stroke-width:1.0972;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.941176" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="31.864897"
+       y="32.826237"
+       id="text841"><tspan
+         sodipodi:role="line"
+         id="tspan839"
+         x="31.864897"
+         y="32.826237"
+         style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:14.1111px;font-family:serif;-inkscape-font-specification:'serif, Bold Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583">COSE Headers</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;line-height:1.25;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="87.890877"
+       y="65.678802"
+       id="text849"><tspan
+         sodipodi:role="line"
+         id="tspan847"
+         x="87.890877"
+         y="65.678802"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583">unprotected</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;line-height:1.25;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="4.9322972"
+       y="57.741299"
+       id="text845"><tspan
+         sodipodi:role="line"
+         id="tspan843"
+         x="4.9322972"
+         y="57.741299"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583">protected</tspan></text>
+    <text
+       id="text1750"
+       y="74.366539"
+       x="2.4193873"
+       style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.5833px;font-family:serif;-inkscape-font-specification:'serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583"
+         y="74.366539"
+         x="2.4193873"
+         id="tspan1748"
+         sodipodi:role="line">authenticated</tspan></text>
+    <rect
+       style="opacity:0.94;fill:#c02200;fill-opacity:0.368637;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.941176"
+       id="rect1752"
+       width="218.46165"
+       height="81.922447"
+       x="182.44444"
+       y="8.2491083"
+       ry="10.983962" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="261.293"
+       y="31.358625"
+       id="text1813"><tspan
+         sodipodi:role="line"
+         id="tspan1811"
+         x="261.293"
+         y="31.358625"
+         style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:14.1111px;font-family:serif;-inkscape-font-specification:'serif, Bold Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583">Payload</tspan></text>
+    <rect
+       style="opacity:0.94;fill:#c08320;fill-opacity:0.368637;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.941176"
+       id="rect1164"
+       width="220.57468"
+       height="81.917648"
+       x="400.90851"
+       y="8.2515059"
+       ry="10.983319" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="417.45142"
+       y="31.458532"
+       id="text1827"><tspan
+         sodipodi:role="line"
+         id="tspan1825"
+         x="417.45142"
+         y="31.458532"
+         style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:14.1111px;font-family:serif;-inkscape-font-specification:'serif, Bold Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583">List of COSE Recipients</tspan></text>
+  </g>
+  <g
+     id="layer1"
+     inkscape:groupmode="layer"
+     inkscape:label="Layer 1">
+    <text
+       style="font-family:sans-serif;font-size:10.58333333px;line-height:1.25;letter-spacing:0px;word-spacing:0px;text-align:center;white-space:pre;shape-inside:url(#rect1703);"
+       id="text1701"
+       xml:space="preserve" />
+    <g
+       id="g1684"
+       transform="translate(87.584398,-22.58949)"
+       style="stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none">
+      <rect
+         style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none"
+         id="rect1676"
+         width="172.97498"
+         height="27.957092"
+         x="134.70912"
+         y="132.7065"
+         ry="6.2425098" />
+      <text
+         xml:space="preserve"
+         style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:16.9333px;line-height:1.25;font-family:serif;-inkscape-font-specification:'serif, Bold Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none"
+         x="154.38646"
+         y="151.08786"
+         id="text896"><tspan
+           sodipodi:role="line"
+           id="tspan894"
+           x="154.38646"
+           y="151.08786"
+           style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:16.9333px;font-family:serif;-inkscape-font-specification:'serif, Bold Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none">COSE Encrypt</tspan></text>
+    </g>
+    <g
+       id="g1801"
+       transform="translate(-0.24297925,0.24296783)">
+      <rect
+         style="opacity:0.94;fill:#c02200;fill-opacity:0.649735;stroke:#000000;stroke-width:1.04315;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.941176"
+         id="rect856"
+         width="218.90701"
+         height="36.573853"
+         x="181.92406"
+         y="53.515984"
+         ry="4.9037333"
+         transform="translate(0.12867566,-9.6277716)" />
+      <g
+         id="g1793">
+        <text
+           id="text860"
+           y="58.709721"
+           x="245.83762"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;line-height:1.25;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+           xml:space="preserve"><tspan
+             style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583"
+             y="58.709721"
+             x="245.83762"
+             id="tspan858"
+             sodipodi:role="line">ciphertext</tspan></text>
+        <text
+           id="text1641"
+           y="75.272453"
+           x="192.05267"
+           style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+           xml:space="preserve"><tspan
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.5833px;font-family:serif;-inkscape-font-specification:'serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583"
+             y="75.272453"
+             x="192.05267"
+             id="tspan1639"
+             sodipodi:role="line">authenticated + encrypted with CEK </tspan></text>
+      </g>
+    </g>
+    <g
+       id="g1800"
+       transform="translate(216.41005,110.45191)"
+       style="stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none">
+      <rect
+         style="opacity:0.94;fill:#c08320;fill-opacity:0.649735;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.941176"
+         id="rect1819"
+         width="73.300636"
+         height="37.009789"
+         x="184.3067"
+         y="-66.320732"
+         ry="4.962182" />
+      <rect
+         style="opacity:0.94;fill:#c08320;fill-opacity:0.649735;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.941176"
+         id="rect1821"
+         width="73.300636"
+         height="37.009789"
+         x="257.60733"
+         y="-66.320732"
+         ry="4.962182" />
+      <rect
+         style="opacity:0.94;fill:#c08320;fill-opacity:0.649735;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.941176"
+         id="rect1823"
+         width="73.300636"
+         height="37.009789"
+         x="330.90796"
+         y="-66.320732"
+         ry="4.962182" />
+    </g>
+    <text
+       id="text1831"
+       y="59.697659"
+       x="437.96143"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;line-height:1.25;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;stroke-width:0.264583"
+         y="59.697659"
+         x="437.96143"
+         id="tspan1829"
+         sodipodi:role="line">COSE</tspan><tspan
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;stroke-width:0.264583"
+         y="75.572655"
+         x="437.96143"
+         sodipodi:role="line"
+         id="tspan1833">recipient</tspan></text>
+    <text
+       id="text1842"
+       y="58.090614"
+       x="510.52197"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;line-height:1.25;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;stroke-width:0.264583"
+         y="58.090614"
+         x="510.52197"
+         id="tspan1838"
+         sodipodi:role="line">COSE</tspan><tspan
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;stroke-width:0.264583"
+         y="73.965614"
+         x="510.52197"
+         sodipodi:role="line"
+         id="tspan1840">recipient</tspan></text>
+    <text
+       id="text1848"
+       y="58.090614"
+       x="583.82257"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;line-height:1.25;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;stroke-width:0.264583"
+         y="58.090614"
+         x="583.82257"
+         id="tspan1844"
+         sodipodi:role="line">COSE</tspan><tspan
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.7px;font-family:serif;-inkscape-font-specification:'serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;stroke-width:0.264583"
+         y="73.965614"
+         x="583.82257"
+         sodipodi:role="line"
+         id="tspan1846">recipient</tspan></text>
+  </g>
+</svg>

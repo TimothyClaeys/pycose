@@ -1,88 +1,99 @@
-# CDDL fragment MACed Message with Recipients
-#
 # COSE_Sign = [
 #    Headers,
 #    payload: bstr / nil,
 #    signatures: [+ COSE_Signature]
 # ]
-#
-from typing import Optional, List
+
+import abc
+from typing import Optional, List, TYPE_CHECKING
 
 import cbor2
 
-from cose import CoseMessage
-from cose.messages import cosemessage
-from cose.messages.signer import CoseSignature, SignerParams
+from cose import utils
+from cose.exceptions import CoseException
+from cose.messages.cosemessage import CoseMessage
+from cose.messages.signer import CoseSignature
+
+if TYPE_CHECKING:
+    from cose.messages.signer import Signer
 
 
-@cosemessage.CoseMessage.record_cbor_tag(98)
-class SignMessage(cosemessage.CoseMessage):
-    cbor_tag = 98
+class _SignMessage(CoseMessage, metaclass=abc.ABCMeta):
+    @property
+    @abc.abstractmethod
+    def context(self) -> str:
+        """ Getter for the context of the message. """
+        raise NotImplementedError
 
     @classmethod
-    def from_cose_obj(cls, cose_obj) -> 'SignMessage':
+    def from_cose_obj(cls, cose_obj, *args, **kwargs) -> '_SignMessage':
         """ Parses COSE_Sign messages. """
 
-        msg: 'SignMessage' = super().from_cose_obj(cose_obj)
+        msg: '_SignMessage' = super().from_cose_obj(cose_obj)
 
+        signers = []
         for r in cose_obj.pop(0):
-            msg.append_signer(CoseSignature.from_signature_obj(r))
+            signers.append(CoseSignature.from_cose_obj(r))
 
+        msg.signers = signers
         return msg
 
     def __init__(self,
                  phdr: Optional[dict] = None,
                  uhdr: Optional[dict] = None,
                  payload: bytes = b'',
-                 signers: Optional[List[CoseSignature]] = None):
+                 signers: Optional[List['Signer']] = None):
+
         if phdr is None:
             phdr = {}
         if uhdr is None:
             uhdr = {}
 
-        super().__init__(phdr, uhdr, payload, payload)
+        super(_SignMessage, self).__init__(phdr, uhdr, payload, external_aad=b'', key=None)
 
         if signers is None:
             self._signers = list()
         else:
-            self._signers = signers
+            self.signers = signers
 
     @property
     def signers(self):
         return self._signers
 
-    def encode(self, sign_params: Optional[List[SignerParams]] = None, tagged: bool = True) -> bytes:
-        """ Encodes and protects the COSE_Sign message."""
-
-        signers = []
-        message = [self.encode_phdr(), self.encode_uhdr(), self.payload]
-
-        if sign_params is None:
-            sign_params = []
-
-        if len(sign_params) == len(self.signers):
-            for signer, p in zip(self.signers, sign_params):
-                signers.append(signer.encode(p))
+    @signers.setter
+    def signers(self, signers: List['Signer']):
+        if isinstance(signers, list):
+            for s in signers:
+                s._parent = self
+            self._signers = signers
         else:
-            raise ValueError("List with cryptographic parameters should have the same length as the recipient list.")
+            raise CoseException("Signers must be of type list")
 
-        message.append(signers)
+    def encode(self, tag: bool = True, *args, **kwargs) -> bytes:
+        """ Encodes and protects the COSE_Sign message. """
 
-        if tagged:
-            message = cbor2.dumps(cbor2.CBORTag(self.cbor_tag, message), default=self._special_cbor_encoder)
+        message = [self.phdr_encoded, self.uhdr_encoded, self.payload]
+
+        if len(self.signers):
+            message.append([s.encode() for s in self.signers])
+
+        if tag:
+            message = cbor2.dumps(cbor2.CBORTag(self.cbor_tag, message), default=self._custom_cbor_encoder)
         else:
-            message = cbor2.dumps(message, default=self._special_cbor_encoder)
+            message = cbor2.dumps(message, default=self._custom_cbor_encoder)
 
         return message
 
-    def append_signer(self, signer: CoseSignature) -> None:
-        """ Appends a new signer (COSE_Signature) to the COSE_Sign message. """
-
-        if not isinstance(signer, CoseSignature):
-            raise TypeError(f"Signer must be of type {CoseSignature}")
-
-        signer._parent_msg = self
-        self._signers.append(signer)
-
     def __repr__(self) -> str:
-        return f'<COSE_Sign: [{self._phdr}, {self._uhdr}, {CoseMessage._truncate(self._payload)}, {self._signers}]>'
+        phdr, uhdr = self._hdr_repr()
+
+        return f'<COSE_Sign: [{phdr}, {uhdr}, {utils.truncate(self._payload)}, {self._signers}]>'
+
+
+@CoseMessage.record_cbor_tag(98)
+class SignMessage(_SignMessage):
+    cbor_tag = 98
+    context = "Signature"
+
+
+

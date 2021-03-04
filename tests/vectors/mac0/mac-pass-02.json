@@ -1,0 +1,32 @@
+{
+  "title": "mac-pass-02: External Data",
+  "cek": {
+    "__key__": true,
+    "alg": "HMAC_256",
+    "kty": "SYMMETRIC",
+    "kid": "our-secret",
+    "k": "849B57219DAE48DE646D07DBB533566E976686457C1491BE3A76DCEA6C427188"
+  },
+  "cbor_tag" : true,
+  "input": {
+    "__input__": true,
+    "protected": {
+      "__header__": true
+    },
+    "unprotected": {
+      "__header__": true,
+      "alg": "HMAC_256"
+    },
+    "plaintext": "This is the content.",
+    "external_aad": "ff00ee11dd22cc33bb44aa559966"
+  },
+  "output": {
+    "__output__": true,
+    "protected": "",
+    "unprotected": "{1: 5}",
+    "ciphertext": "546869732069732074686520636f6e74656e74",
+    "tag": "0FECAEC59BB46CC8A488AACA4B205E322DD52696B75A45768D3C302DD4BAE2F7",
+    "structure": "84644D414330404EFF00EE11DD22CC33BB44AA55996654546869732069732074686520636F6E74656E742E",
+    "result": "D18440A1010554546869732069732074686520636F6E74656E742E58200FECAEC59BB46CC8A488AACA4B205E322DD52696B75A45768D3C302DD4BAE2F7"
+  }
+}

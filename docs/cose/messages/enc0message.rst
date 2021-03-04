@@ -13,6 +13,766 @@ receiver requires more information to find/derive the CEK a :class:`~cose.messag
 
     >>> from cose import SymmetricKey, Enc0Message, CoseAlgorithms, KeyOps, CoseHeaderKeys
 
+            # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+            >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+            # create a COSE_encrypt0 message
+            >>> payload = b"Secret Message."
+            >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+            >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+            # encode and wrap_cek the COSE message
+            >>> msg = msg.encode(nonce, key)
+
+            # change the key operation and decode/decrypt the message
+            >>> key.key_ops = KeyOps.DECRYPT
+            >>> msg = Enc0Message.from_dict(msg)
+            >>> msg.phdr[CoseHeaderKeys.ALG]
+            <CoseAlgorithms.A128GCM: 1>
+
+            >>> msg.decrypt(nonce,,
+            b'Secret Message.'
+
+            # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+            >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+            # create a COSE_encrypt0 message
+            >>> payload = b"Secret Message."
+            >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+            >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+            # encode and wrap_cek the COSE message
+            >>> msg = msg.encode(nonce, key)
+
+            # change the key operation and decode/decrypt the message
+            >>> key.key_ops = KeyOps.DECRYPT
+            >>> msg = Enc0Message.from_dict(msg)
+            >>> msg.phdr[CoseHeaderKeys.ALG]
+            <CoseAlgorithms.A128GCM: 1>
+
+            >>> msg.decrypt(nonce, key)
+            b'Secret Message.'
+
+        # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+        >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+        # create a COSE_encrypt0 message
+        >>> payload = b"Secret Message."
+        >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+        >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+        # encode and wrap_cek the COSE message
+        >>> msg = msg.encode(nonce, key)
+
+        # change the key operation and from_dict/decrypt the message
+        >>> key.key_ops = KeyOps.DECRYPT
+        >>> msg = Enc0Message.decode(msg)
+        >>> msg.phdr[CoseHeaderKeys.ALG]
+        <CoseAlgorithms.A128GCM: 1>
+
+        >>> msg.decrypt(nonce, key)
+        b'Secret Message.'
+
+            # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+            >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+            # create a COSE_encrypt0 message
+            >>> payload = b"Secret Message."
+            >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+            >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+            # encode and wrap_cek the COSE message
+            >>> msg = msg.encode(nonce, key)
+
+            # change the key operation and decode/decrypt the message
+            >>> key.key_ops = KeyOps.DECRYPT
+            >>> msg = Enc0Message.from_dict(msg)
+            >>> msg.phdr[CoseHeaderKeys.ALG]
+            <CoseAlgorithms.A128GCM: 1>
+
+            >>> msg.decrypt(nonce,,
+            b'Secret Message.'
+
+            # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+            >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+            # create a COSE_encrypt0 message
+            >>> payload = b"Secret Message."
+            >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+            >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+            # encode and wrap_cek the COSE message
+            >>> msg = msg.encode(nonce, key)
+
+            # change the key operation and decode/decrypt the message
+            >>> key.key_ops = KeyOps.DECRYPT
+            >>> msg = Enc0Message.from_dict(msg)
+            >>> msg.phdr[CoseHeaderKeys.ALG]
+            <CoseAlgorithms.A128GCM: 1>
+
+            >>> msg.decrypt(nonce, key)
+            b'Secret Message.'
+
+        # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+        >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+        # create a COSE_encrypt0 message
+        >>> payload = b"Secret Message."
+        >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+        >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+        # encode and wrap_cek the COSE message
+        >>> msg = msg.encode(nonce, key)
+
+        # change the key operation and from_dict/decrypt the message
+        >>> key.key_ops = KeyOps.DECRYPT
+        >>> msg = Enc0Message.decode(msg)
+        >>> msg.phdr[CoseHeaderKeys.ALG]
+        <CoseAlgorithms.A128GCM: 1>
+
+        >>> msg.decrypt(nonce, key)
+        b'Secret Message.'
+
+            # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+            >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+            # create a COSE_encrypt0 message
+            >>> payload = b"Secret Message."
+            >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+            >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+            # encode and wrap_cek the COSE message
+            >>> msg = msg.encode(nonce, key)
+
+            # change the key operation and decode/decrypt the message
+            >>> key.key_ops = KeyOps.DECRYPT
+            >>> msg = Enc0Message.from_dict(msg)
+            >>> msg.phdr[CoseHeaderKeys.ALG]
+            <CoseAlgorithms.A128GCM: 1>
+
+            >>> msg.decrypt(nonce,,
+            b'Secret Message.'
+
+            # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+            >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+            # create a COSE_encrypt0 message
+            >>> payload = b"Secret Message."
+            >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+            >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+            # encode and wrap_cek the COSE message
+            >>> msg = msg.encode(nonce, key)
+
+            # change the key operation and decode/decrypt the message
+            >>> key.key_ops = KeyOps.DECRYPT
+            >>> msg = Enc0Message.from_dict(msg)
+            >>> msg.phdr[CoseHeaderKeys.ALG]
+            <CoseAlgorithms.A128GCM: 1>
+
+            >>> msg.decrypt(nonce, key)
+            b'Secret Message.'
+
+        # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+        >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+        # create a COSE_encrypt0 message
+        >>> payload = b"Secret Message."
+        >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+        >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+        # encode and wrap_cek the COSE message
+        >>> msg = msg.encode(nonce, key)
+
+        # change the key operation and from_dict/decrypt the message
+        >>> key.key_ops = KeyOps.DECRYPT
+        >>> msg = Enc0Message.decode(msg)
+        >>> msg.phdr[CoseHeaderKeys.ALG]
+        <CoseAlgorithms.A128GCM: 1>
+
+        >>> msg.decrypt(nonce, key)
+        b'Secret Message.'
+
+            # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+            >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+            # create a COSE_encrypt0 message
+            >>> payload = b"Secret Message."
+            >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+            >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+            # encode and wrap_cek the COSE message
+            >>> msg = msg.encode(nonce, key)
+
+            # change the key operation and decode/decrypt the message
+            >>> key.key_ops = KeyOps.DECRYPT
+            >>> msg = Enc0Message.from_dict(msg)
+            >>> msg.phdr[CoseHeaderKeys.ALG]
+            <CoseAlgorithms.A128GCM: 1>
+
+            >>> msg.decrypt(nonce,,
+            b'Secret Message.'
+
+            # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+            >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+            # create a COSE_encrypt0 message
+            >>> payload = b"Secret Message."
+            >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+            >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+            # encode and wrap_cek the COSE message
+            >>> msg = msg.encode(nonce, key)
+
+            # change the key operation and decode/decrypt the message
+            >>> key.key_ops = KeyOps.DECRYPT
+            >>> msg = Enc0Message.from_dict(msg)
+            >>> msg.phdr[CoseHeaderKeys.ALG]
+            <CoseAlgorithms.A128GCM: 1>
+
+            >>> msg.decrypt(nonce, key)
+            b'Secret Message.'
+
+        # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+        >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+        # create a COSE_encrypt0 message
+        >>> payload = b"Secret Message."
+        >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+        >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+        # encode and wrap_cek the COSE message
+        >>> msg = msg.encode(nonce, key)
+
+        # change the key operation and from_dict/decrypt the message
+        >>> key.key_ops = KeyOps.DECRYPT
+        >>> msg = Enc0Message.decode(msg)
+        >>> msg.phdr[CoseHeaderKeys.ALG]
+        <CoseAlgorithms.A128GCM: 1>
+
+        >>> msg.decrypt(nonce, key)
+        b'Secret Message.'
+
+            # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+            >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+            # create a COSE_encrypt0 message
+            >>> payload = b"Secret Message."
+            >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+            >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+            # encode and wrap_cek the COSE message
+            >>> msg = msg.encode(nonce, key)
+
+            # change the key operation and decode/decrypt the message
+            >>> key.key_ops = KeyOps.DECRYPT
+            >>> msg = Enc0Message.from_dict(msg)
+            >>> msg.phdr[CoseHeaderKeys.ALG]
+            <CoseAlgorithms.A128GCM: 1>
+
+            >>> msg.decrypt(nonce, key)
+            b'Secret Message.'
+
+            # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+            >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+            # create a COSE_encrypt0 message
+            >>> payload = b"Secret Message."
+            >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+            >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+            # encode and wrap_cek the COSE message
+            >>> msg = msg.encode(nonce, key)
+
+            # change the key operation and decode/decrypt the message
+            >>> key.key_ops = KeyOps.DECRYPT
+            >>> msg = Enc0Message.from_dict(msg)
+            >>> msg.phdr[CoseHeaderKeys.ALG]
+            <CoseAlgorithms.A128GCM: 1>
+
+            >>> msg.decrypt(nonce,,
+            b'Secret Message.'
+
+        # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+        >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+        # create a COSE_encrypt0 message
+        >>> payload = b"Secret Message."
+        >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+        >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+        # encode and wrap_cek the COSE message
+        >>> msg = msg.encode(nonce, key)
+
+        # change the key operation and from_dict/decrypt the message
+        >>> key.key_ops = KeyOps.DECRYPT
+        >>> msg = Enc0Message.decode(msg)
+        >>> msg.phdr[CoseHeaderKeys.ALG]
+        <CoseAlgorithms.A128GCM: 1>
+
+        >>> msg.decrypt(nonce, key)
+        b'Secret Message.'
+
+            # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+            >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+            # create a COSE_encrypt0 message
+            >>> payload = b"Secret Message."
+            >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+            >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+            # encode and wrap_cek the COSE message
+            >>> msg = msg.encode(nonce, key)
+
+            # change the key operation and decode/decrypt the message
+            >>> key.key_ops = KeyOps.DECRYPT
+            >>> msg = Enc0Message.from_dict(msg)
+            >>> msg.phdr[CoseHeaderKeys.ALG]
+            <CoseAlgorithms.A128GCM: 1>
+
+            >>> msg.decrypt(nonce, key)
+            b'Secret Message.'
+
+            # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+            >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+            # create a COSE_encrypt0 message
+            >>> payload = b"Secret Message."
+            >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+            >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+            # encode and wrap_cek the COSE message
+            >>> msg = msg.encode(nonce, key)
+
+            # change the key operation and decode/decrypt the message
+            >>> key.key_ops = KeyOps.DECRYPT
+            >>> msg = Enc0Message.from_dict(msg)
+            >>> msg.phdr[CoseHeaderKeys.ALG]
+            <CoseAlgorithms.A128GCM: 1>
+
+            >>> msg.decrypt(nonce,,
+            b'Secret Message.'
+
+        # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+        >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+        # create a COSE_encrypt0 message
+        >>> payload = b"Secret Message."
+        >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+        >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+        # encode and wrap_cek the COSE message
+        >>> msg = msg.encode(nonce, key)
+
+        # change the key operation and from_dict/decrypt the message
+        >>> key.key_ops = KeyOps.DECRYPT
+        >>> msg = Enc0Message.decode(msg)
+        >>> msg.phdr[CoseHeaderKeys.ALG]
+        <CoseAlgorithms.A128GCM: 1>
+
+        >>> msg.decrypt(nonce, key)
+        b'Secret Message.'
+
+            # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+            >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+            # create a COSE_encrypt0 message
+            >>> payload = b"Secret Message."
+            >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+            >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+            # encode and wrap_cek the COSE message
+            >>> msg = msg.encode(nonce, key)
+
+            # change the key operation and decode/decrypt the message
+            >>> key.key_ops = KeyOps.DECRYPT
+            >>> msg = Enc0Message.from_dict(msg)
+            >>> msg.phdr[CoseHeaderKeys.ALG]
+            <CoseAlgorithms.A128GCM: 1>
+
+            >>> msg.decrypt(nonce, key)
+            b'Secret Message.'
+
+            # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+            >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+            # create a COSE_encrypt0 message
+            >>> payload = b"Secret Message."
+            >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+            >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+            # encode and wrap_cek the COSE message
+            >>> msg = msg.encode(nonce, key)
+
+            # change the key operation and decode/decrypt the message
+            >>> key.key_ops = KeyOps.DECRYPT
+            >>> msg = Enc0Message.from_dict(msg)
+            >>> msg.phdr[CoseHeaderKeys.ALG]
+            <CoseAlgorithms.A128GCM: 1>
+
+            >>> msg.decrypt(nonce,,
+            b'Secret Message.'
+
+        # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+        >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+        # create a COSE_encrypt0 message
+        >>> payload = b"Secret Message."
+        >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+        >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+        # encode and wrap_cek the COSE message
+        >>> msg = msg.encode(nonce, key)
+
+        # change the key operation and from_dict/decrypt the message
+        >>> key.key_ops = KeyOps.DECRYPT
+        >>> msg = Enc0Message.decode(msg)
+        >>> msg.phdr[CoseHeaderKeys.ALG]
+        <CoseAlgorithms.A128GCM: 1>
+
+        >>> msg.decrypt(nonce, key)
+        b'Secret Message.'
+
+            # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+            >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+            # create a COSE_encrypt0 message
+            >>> payload = b"Secret Message."
+            >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+            >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+            # encode and wrap_cek the COSE message
+            >>> msg = msg.encode(nonce, key)
+
+            # change the key operation and decode/decrypt the message
+            >>> key.key_ops = KeyOps.DECRYPT
+            >>> msg = Enc0Message.from_dict(msg)
+            >>> msg.phdr[CoseHeaderKeys.ALG]
+            <CoseAlgorithms.A128GCM: 1>
+
+            >>> msg.decrypt(nonce, key)
+            b'Secret Message.'
+
+            # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+            >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+            # create a COSE_encrypt0 message
+            >>> payload = b"Secret Message."
+            >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+            >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+            # encode and wrap_cek the COSE message
+            >>> msg = msg.encode(nonce, key)
+
+            # change the key operation and decode/decrypt the message
+            >>> key.key_ops = KeyOps.DECRYPT
+            >>> msg = Enc0Message.from_dict(msg)
+            >>> msg.phdr[CoseHeaderKeys.ALG]
+            <CoseAlgorithms.A128GCM: 1>
+
+            >>> msg.decrypt(nonce,,
+            b'Secret Message.'
+
+        # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+        >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+        # create a COSE_encrypt0 message
+        >>> payload = b"Secret Message."
+        >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+        >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+        # encode and wrap_cek the COSE message
+        >>> msg = msg.encode(nonce, key)
+
+        # change the key operation and from_dict/decrypt the message
+        >>> key.key_ops = KeyOps.DECRYPT
+        >>> msg = Enc0Message.decode(msg)
+        >>> msg.phdr[CoseHeaderKeys.ALG]
+        <CoseAlgorithms.A128GCM: 1>
+
+        >>> msg.decrypt(nonce, key)
+        b'Secret Message.'
+
+            # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+            >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+            # create a COSE_encrypt0 message
+            >>> payload = b"Secret Message."
+            >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+            >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+            # encode and wrap_cek the COSE message
+            >>> msg = msg.encode(nonce, key)
+
+            # change the key operation and decode/decrypt the message
+            >>> key.key_ops = KeyOps.DECRYPT
+            >>> msg = Enc0Message.from_dict(msg)
+            >>> msg.phdr[CoseHeaderKeys.ALG]
+            <CoseAlgorithms.A128GCM: 1>
+
+            >>> msg.decrypt(nonce, key)
+            b'Secret Message.'
+
+            # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+            >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+            # create a COSE_encrypt0 message
+            >>> payload = b"Secret Message."
+            >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+            >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+            # encode and wrap_cek the COSE message
+            >>> msg = msg.encode(nonce, key)
+
+            # change the key operation and decode/decrypt the message
+            >>> key.key_ops = KeyOps.DECRYPT
+            >>> msg = Enc0Message.from_dict(msg)
+            >>> msg.phdr[CoseHeaderKeys.ALG]
+            <CoseAlgorithms.A128GCM: 1>
+
+            >>> msg.decrypt(nonce, key)
+            b'Secret Message.'
+
+        # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+        >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+        # create a COSE_encrypt0 message
+        >>> payload = b"Secret Message."
+        >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+        >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+        # encode and wrap_cek the COSE message
+        >>> msg = msg.encode(nonce, key)
+
+        # change the key operation and from_dict/decrypt the message
+        >>> key.key_ops = KeyOps.DECRYPT
+        >>> msg = Enc0Message.decode(msg)
+        >>> msg.phdr[CoseHeaderKeys.ALG]
+        <CoseAlgorithms.A128GCM: 1>
+
+        >>> msg.decrypt(nonce,,
+        b'Secret Message.'
+
+            # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+            >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+            # create a COSE_encrypt0 message
+            >>> payload = b"Secret Message."
+            >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+            >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+            # encode and wrap_cek the COSE message
+            >>> msg = msg.encode(nonce, key)
+
+            # change the key operation and decode/decrypt the message
+            >>> key.key_ops = KeyOps.DECRYPT
+            >>> msg = Enc0Message.from_dict(msg)
+            >>> msg.phdr[CoseHeaderKeys.ALG]
+            <CoseAlgorithms.A128GCM: 1>
+
+            >>> msg.decrypt(nonce, key)
+            b'Secret Message.'
+
+            # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+            >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+            # create a COSE_encrypt0 message
+            >>> payload = b"Secret Message."
+            >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+            >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+            # encode and wrap_cek the COSE message
+            >>> msg = msg.encode(nonce, key)
+
+            # change the key operation and decode/decrypt the message
+            >>> key.key_ops = KeyOps.DECRYPT
+            >>> msg = Enc0Message.from_dict(msg)
+            >>> msg.phdr[CoseHeaderKeys.ALG]
+            <CoseAlgorithms.A128GCM: 1>
+
+            >>> msg.decrypt(nonce, key)
+            b'Secret Message.'
+
+        # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+        >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+        # create a COSE_encrypt0 message
+        >>> payload = b"Secret Message."
+        >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+        >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+        # encode and wrap_cek the COSE message
+        >>> msg = msg.encode(nonce, key)
+
+        # change the key operation and from_dict/decrypt the message
+        >>> key.key_ops = KeyOps.DECRYPT
+        >>> msg = Enc0Message.decode(msg)
+        >>> msg.phdr[CoseHeaderKeys.ALG]
+        <CoseAlgorithms.A128GCM: 1>
+
+        >>> msg.decrypt(nonce,,
+        b'Secret Message.'
+
+            # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+            >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+            # create a COSE_encrypt0 message
+            >>> payload = b"Secret Message."
+            >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+            >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+            # encode and wrap_cek the COSE message
+            >>> msg = msg.encode(nonce, key)
+
+            # change the key operation and decode/decrypt the message
+            >>> key.key_ops = KeyOps.DECRYPT
+            >>> msg = Enc0Message.from_dict(msg)
+            >>> msg.phdr[CoseHeaderKeys.ALG]
+            <CoseAlgorithms.A128GCM: 1>
+
+            >>> msg.decrypt(nonce, key)
+            b'Secret Message.'
+
+            # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+            >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+            # create a COSE_encrypt0 message
+            >>> payload = b"Secret Message."
+            >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+            >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+            # encode and wrap_cek the COSE message
+            >>> msg = msg.encode(nonce, key)
+
+            # change the key operation and decode/decrypt the message
+            >>> key.key_ops = KeyOps.DECRYPT
+            >>> msg = Enc0Message.from_dict(msg)
+            >>> msg.phdr[CoseHeaderKeys.ALG]
+            <CoseAlgorithms.A128GCM: 1>
+
+            >>> msg.decrypt(nonce, key)
+            b'Secret Message.'
+
+        # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+        >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+        # create a COSE_encrypt0 message
+        >>> payload = b"Secret Message."
+        >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+        >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+        # encode and wrap_cek the COSE message
+        >>> msg = msg.encode(nonce, key)
+
+        # change the key operation and from_dict/decrypt the message
+        >>> key.key_ops = KeyOps.DECRYPT
+        >>> msg = Enc0Message.decode(msg)
+        >>> msg.phdr[CoseHeaderKeys.ALG]
+        <CoseAlgorithms.A128GCM: 1>
+
+        >>> msg.decrypt(nonce,,
+        b'Secret Message.'
+
+            # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+            >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+            # create a COSE_encrypt0 message
+            >>> payload = b"Secret Message."
+            >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+            >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+            # encode and wrap_cek the COSE message
+            >>> msg = msg.encode(nonce, key)
+
+            # change the key operation and decode/decrypt the message
+            >>> key.key_ops = KeyOps.DECRYPT
+            >>> msg = Enc0Message.from_dict(msg)
+            >>> msg.phdr[CoseHeaderKeys.ALG]
+            <CoseAlgorithms.A128GCM: 1>
+
+            >>> msg.decrypt(nonce, key)
+            b'Secret Message.'
+
+            # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+            >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+            # create a COSE_encrypt0 message
+            >>> payload = b"Secret Message."
+            >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+            >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+            # encode and wrap_cek the COSE message
+            >>> msg = msg.encode(nonce, key)
+
+            # change the key operation and decode/decrypt the message
+            >>> key.key_ops = KeyOps.DECRYPT
+            >>> msg = Enc0Message.from_dict(msg)
+            >>> msg.phdr[CoseHeaderKeys.ALG]
+            <CoseAlgorithms.A128GCM: 1>
+
+            >>> msg.decrypt(nonce, key)
+            b'Secret Message.'
+
+        # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+        >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+        # create a COSE_encrypt0 message
+        >>> payload = b"Secret Message."
+        >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+        >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+        # encode and wrap_cek the COSE message
+        >>> msg = msg.encode(nonce, key)
+
+        # change the key operation and from_dict/decrypt the message
+        >>> key.key_ops = KeyOps.DECRYPT
+        >>> msg = Enc0Message.decode(msg)
+        >>> msg.phdr[CoseHeaderKeys.ALG]
+        <CoseAlgorithms.A128GCM: 1>
+
+        >>> msg.decrypt(nonce,,
+        b'Secret Message.'
+
+        # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+        >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+        # create a COSE_encrypt0 message
+        >>> payload = b"Secret Message."
+        >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+        >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+        # encode and wrap_cek the COSE message
+        >>> msg = msg.encode(nonce, key)
+
+        # change the key operation and decode/decrypt the message
+        >>> key.key_ops = KeyOps.DECRYPT
+        >>> msg = Enc0Message.from_dict(msg)
+        >>> msg.phdr[CoseHeaderKeys.ALG]
+        <CoseAlgorithms.A128GCM: 1>
+
+        >>> msg.decrypt(nonce, key)
+        b'Secret Message.'
+
+        # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
+        >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
+
+        # create a COSE_encrypt0 message
+        >>> payload = b"Secret Message."
+        >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
+        >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
+
+        # encode and wrap_cek the COSE message
+        >>> msg = msg.encode(nonce, key)
+
+        # change the key operation and decode/decrypt the message
+        >>> key.key_ops = KeyOps.DECRYPT
+        >>> msg = Enc0Message.from_dict(msg)
+        >>> msg.phdr[CoseHeaderKeys.ALG]
+        <CoseAlgorithms.A128GCM: 1>
+
+        >>> msg.decrypt(nonce, key)
+        b'Secret Message.'
+
     # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
     >>> key = SymmetricKey.generate_key(key_len=16, algorithm=CoseAlgorithms.A128GCM, key_ops=KeyOps.ENCRYPT)
 
@@ -21,10 +781,10 @@ receiver requires more information to find/derive the CEK a :class:`~cose.messag
     >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
     >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
 
-    # encode and encrypt the COSE message
+    # encode and wrap_cek the COSE message
     >>> msg = msg.encode(nonce, key)
 
-    # change the key operation and decode/decrypt the message
+    # change the key operation and from_dict/decrypt the message
     >>> key.key_ops = KeyOps.DECRYPT
     >>> msg = Enc0Message.decode(msg)
     >>> msg.phdr[CoseHeaderKeys.ALG]

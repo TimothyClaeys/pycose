@@ -1,0 +1,32 @@
+{
+  "title": "AES-CCM-ENC-01: Encrypt w/ AES-CCM 16-128/64 - implicit",
+  "cek": {
+    "__key__": true,
+    "alg": "AES_CCM_16_64_128",
+    "kty": "SYMMETRIC",
+    "kid": "our-secret",
+    "k": "849B57219DAE48DE646D07DBB533566E"
+  },
+  "input": {
+    "__input__": true,
+    "protected": {
+      "__header__": true,
+      "alg": "AES_CCM_16_64_128"
+    },
+    "unprotected": {
+      "__header__": true,
+      "iv": "89F52F65A1C580933B5261A72F"
+    },
+    "plaintext": "This is the content.",
+    "iv": "89F52F65A1C580933B5261A72F",
+    "external_aad": ""
+  },
+  "output": {
+    "__output__": true,
+    "protected": "A1010A",
+    "unprotected": "{5: b'89F52F65A1C580933B5261A72F'}",
+    "ciphertext": "6899DA0A132BD2D2B9B10915743EE1F7B92A4680E7C51BDBC1B320EA",
+    "structure": "8368456E63727970743043A1010A40",
+    "result": "D08343A1010AA1054D89F52F65A1C580933B5261A72F581C6899DA0A132BD2D2B9B10915743EE1F7B92A4680E7C51BDBC1B320EA"
+  }
+}

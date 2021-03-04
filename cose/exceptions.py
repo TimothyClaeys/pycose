@@ -12,3 +12,11 @@ class CoseIllegalKeyOps(Exception):
 
 class CoseIllegalKeyType(Exception):
     pass
+
+
+class CoseMalformedMessage(Exception):
+    pass
+
+
+class CoseException(Exception):
+    pass

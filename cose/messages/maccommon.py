@@ -1,12 +1,16 @@
 import abc
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 import cbor2
 
-from cose.messages import cosemessage
-from cose.attributes.algorithms import CoseAlgorithms
-from cose.exceptions import CoseIllegalKeyType
+from cose import headers
+from cose.exceptions import CoseException
+from cose.keys.keyops import MacVerifyOp, MacCreateOp
 from cose.keys.symmetric import SymmetricKey
+from cose.messages import cosemessage
+
+if TYPE_CHECKING:
+    from cose.keys.symmetric import SK
 
 
 class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
@@ -20,26 +24,35 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
                  phdr: Optional[dict] = None,
                  uhdr: Optional[dict] = None,
                  payload: bytes = b'',
-                 external_aad: bytes = b''):
-        super().__init__(phdr, uhdr, payload, external_aad)
+                 external_aad: bytes = b'',
+                 key: Optional['SK'] = None):
+        super().__init__(phdr, uhdr, payload, external_aad, key)
 
         self.auth_tag = b''
 
-    def verify_tag(self, key: SymmetricKey, alg: Optional[CoseAlgorithms] = None) -> bool:
+    def verify_tag(self, *args, **kwargs) -> bool:
         """ Verifies the authentication tag of a received message. """
 
-        if not isinstance(key, SymmetricKey):
-            raise CoseIllegalKeyType("COSE key should be of type 'SymmetricKey', got {}".format(type(key)))
+        alg = self.get_attr(headers.Algorithm)
 
-        return key.verify_tag(self.auth_tag, self._mac_structure, alg)
+        if self.key is None:
+            raise CoseException("Key cannot be None")
 
-    def compute_tag(self, key: SymmetricKey, alg: Optional[CoseAlgorithms] = None) -> bytes:
+        self.key.verify(SymmetricKey, alg, [MacVerifyOp])
+
+        return alg.verify_tag(key=self.key, tag=self.auth_tag, data=self._mac_structure)
+
+    def compute_tag(self, *args, **kwargs) -> bytes:
         """ Computes the authentication tag of a COSE_Mac or COSE_Mac0 message. """
 
-        if not isinstance(key, SymmetricKey):
-            raise CoseIllegalKeyType("COSE key should be of type 'SymmetricKey', got {}".format(type(key)))
+        alg = self.get_attr(headers.Algorithm)
 
-        self.auth_tag = key.compute_tag(self._mac_structure, alg)
+        if self.key is None:
+            raise CoseException("Key cannot be None")
+
+        self.key.verify(SymmetricKey, alg, [MacCreateOp])
+
+        self.auth_tag = alg.compute_tag(key=self.key, data=self._mac_structure)
         return self.auth_tag
 
     @property

@@ -1,106 +1,48 @@
-from binascii import unhexlify
+import cbor2
+import pytest
 
-from pytest import fixture, mark, skip
-
-from cose import CoseMessage, OKP
-from cose.keys.cosekey import KeyOps
-from cose.keys.ec2 import EC2
+from cose.keys.cosekey import CoseKey
+from cose.keys.keyops import SignOp, VerifyOp
+from cose.messages.cosemessage import CoseMessage
 from cose.messages.sign1message import Sign1Message
-from tests.conftest import generic_test_setup, create_cose_key, extract_alg
 
 
-@fixture
-def setup_ec2sign1_tests(ec2_sign1_test_input: dict) -> tuple:
-    return generic_test_setup(ec2_sign1_test_input)
+def test_sign1_encoding(test_sign1):
+    test_input = test_sign1['input']
+    test_output = test_sign1['output']
+
+    msg = Sign1Message(
+        phdr=test_input['protected'],
+        uhdr=test_input['unprotected'],
+        payload=test_input['plaintext'],
+        external_aad=test_input['external_aad'])
+
+    assert msg.phdr_encoded == test_output['protected']
+    assert msg.uhdr_encoded == test_output['unprotected']
+
+    assert msg._sig_structure == test_output['structure']
+
+    key = CoseKey.from_dict(test_sign1["cek"])
+    key.key_ops = [SignOp, VerifyOp]
+    msg.key = key
+
+    assert msg.compute_signature() == test_output['signature']
+    assert cbor2.loads(msg.encode(tag=test_sign1['cbor_tag'])) == test_output['result']
 
 
-@fixture
-def setup_okpsign1_tests(okp_sign1_test_input: dict) -> tuple:
-    return generic_test_setup(okp_sign1_test_input)
+@pytest.mark.xfail(reason="Message not tagged", raises=AttributeError)
+def test_sign1_decoding(test_sign1):
+    test_input = test_sign1['input']
+    test_output = test_sign1['output']
 
+    msg = CoseMessage.decode(cbor2.dumps(test_output['result']))
+    msg.external_aad = test_input['external_aad']
 
-@mark.encoding
-def test_ec2sign1_encoding(setup_ec2sign1_tests) -> None:
-    _, test_input, test_output, test_intermediate, fail = setup_ec2sign1_tests
+    key = CoseKey.from_dict(test_sign1["cek"])
+    key.key_ops = [VerifyOp]
+    msg.key = key
 
-    sign1 = Sign1Message(
-        phdr=test_input['sign0'].get('protected', {}),
-        uhdr=test_input['sign0'].get('unprotected', {}),
-        payload=test_input.get('plaintext', '').encode('utf-8'),
-        external_aad=unhexlify(test_input['sign0'].get("external", b'')))
+    assert msg.phdr == test_input['protected']
+    assert msg.uhdr == test_input['unprotected']
 
-    assert sign1._sig_structure == unhexlify(test_intermediate["ToBeSign_hex"])
-    private_key = create_cose_key(EC2,
-                                  test_input['sign0']['key'],
-                                  usage=KeyOps.SIGN,
-                                  alg=extract_alg(test_input["sign0"]))
-
-    if fail:
-        assert sign1.encode(private_key) != unhexlify(test_output)
-    else:
-        assert sign1.encode(private_key) == unhexlify(test_output)
-
-
-@mark.decoding
-def test_ec2sign1_decoding(setup_ec2sign1_tests) -> None:
-    _, test_input, test_output, test_intermediate, fail = setup_ec2sign1_tests
-
-    if fail:
-        skip("invalid test input")
-
-    cose_msg: Sign1Message = CoseMessage.decode(unhexlify(test_output))
-
-    assert cose_msg.phdr == test_input['sign0'].get('protected', {})
-    assert cose_msg.uhdr == test_input['sign0'].get('unprotected', {})
-    assert cose_msg.payload == test_input.get('plaintext', "").encode('utf-8')
-
-    # set up potential external data
-    cose_msg.external_aad = unhexlify(test_input['sign0'].get("external", b''))
-
-    public_key = create_cose_key(EC2,
-                                 test_input['sign0']['key'],
-                                 usage=KeyOps.VERIFY,
-                                 alg=extract_alg(test_input["sign0"]))
-
-    assert cose_msg.verify_signature(public_key)
-
-
-def test_okpsign1_encoding(setup_okpsign1_tests) -> None:
-    _, test_input, test_output, test_intermediate, fail = setup_okpsign1_tests
-
-    sign1 = Sign1Message(
-        phdr=test_input['sign0'].get('protected', {}),
-        uhdr=test_input['sign0'].get('unprotected', {}),
-        payload=test_input.get('plaintext', '').encode('utf-8'),
-        external_aad=unhexlify(test_input['sign0'].get("external", b'')))
-
-    assert sign1._sig_structure == unhexlify(test_intermediate["ToBeSign_hex"])
-
-    private_key = create_cose_key(OKP,
-                                  test_input['sign0']['key'],
-                                  usage=KeyOps.SIGN,
-                                  alg=extract_alg(test_input["sign0"]))
-
-    if fail:
-        assert sign1.encode(private_key) != unhexlify(test_output)
-    else:
-        assert sign1.encode(private_key) == unhexlify(test_output)
-
-
-def test_okpsign1_decoding(setup_okpsign1_tests) -> None:
-    _, test_input, test_output, test_intermediate, fail = setup_okpsign1_tests
-
-    if fail:
-        skip("invalid test input")
-
-    cose_msg: Sign1Message = CoseMessage.decode(unhexlify(test_output))
-
-    # set up potential external data
-    cose_msg.external_aad = unhexlify(test_input['sign0'].get("external", b''))
-
-    public_key = create_cose_key(OKP,
-                                 test_input['sign0']['key'],
-                                 usage=KeyOps.VERIFY,
-                                 alg=extract_alg(test_input["sign0"]))
-
-    assert cose_msg.verify_signature(public_key)
+    assert msg.verify_signature()

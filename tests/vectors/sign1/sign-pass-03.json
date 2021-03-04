@@ -1,0 +1,36 @@
+{
+  "title": "sign-pass-02: External",
+  "cek": {
+    "__key__": true,
+    "alg": "ES256",
+    "kty": "EC2",
+    "crv": "P_256",
+    "kid": "11",
+    "x": "bac5b11cad8f99f9c72b05cf4b9e26d244dc189f745228255a219a86d6a09eff",
+    "y": "20138bf82dc1b6d562be0fa54ab7804a3a64b6d72ccfed6b6fb6ed28bbfc117e",
+    "d": "57c92077664146e876760c9520d054aa93c3afb04e306705db6090308507b4d3"
+  },
+  "cbor_tag": false,
+  "input": {
+    "__input__": true,
+    "protected": {
+      "__header__": true,
+      "alg": "ES256"
+    },
+    "unprotected": {
+      "__header__": true,
+      "kid": "11"
+    },
+    "plaintext": "This is the content.",
+    "external_aad": ""
+  },
+  "output": {
+    "__output__": true,
+    "protected": "A10126",
+    "unprotected": "{4: b'11'}",
+    "ciphertext": "546869732069732074686520636F6E74656E742E",
+    "signature": "8EB33E4CA31D1C465AB05AAC34CC6B23D58FEF5C083106C4D25A91AEF0B0117E2AF9A291AA32E14AB834DC56ED2A223444547E01F11D3B0916E5A4C345CACB36",
+    "structure": "846A5369676E61747572653143A101264054546869732069732074686520636F6E74656E742E",
+    "result": "8443A10126A10442313154546869732069732074686520636F6E74656E742E58408EB33E4CA31D1C465AB05AAC34CC6B23D58FEF5C083106C4D25A91AEF0B0117E2AF9A291AA32E14AB834DC56ED2A223444547E01F11D3B0916E5A4C345CACB36"
+  }
+}

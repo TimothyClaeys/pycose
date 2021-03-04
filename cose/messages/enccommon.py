@@ -1,73 +1,70 @@
 import abc
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 import cbor2
 
-from cose.messages import cosemessage
-from cose.attributes.algorithms import CoseAlgorithms
-from cose.exceptions import CoseIllegalKeyType
+from cose import headers
+from cose.exceptions import CoseException
+from cose.keys.keyops import DecryptOp, EncryptOp
 from cose.keys.symmetric import SymmetricKey
+from cose.messages.cosemessage import CoseMessage
+
+if TYPE_CHECKING:
+    from cose.keys.symmetric import SK
 
 
-class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
+class EncCommon(CoseMessage, metaclass=abc.ABCMeta):
     @property
     @abc.abstractmethod
     def context(self) -> str:
         """ Getter for the context of the message. """
 
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def __init__(self,
                  phdr: Optional[dict] = None,
                  uhdr: Optional[dict] = None,
                  payload: bytes = b'',
-                 external_aad: bytes = b''):
+                 external_aad: bytes = b'',
+                 key: Optional['SK'] = None):
+        super().__init__(phdr, uhdr, payload, external_aad, key)
 
-        super().__init__(phdr, uhdr, payload, external_aad)
-
-    def decrypt(self, nonce: bytes, key: SymmetricKey, alg: Optional[CoseAlgorithms] = None) -> bytes:
+    def decrypt(self, *args, **kwargs) -> bytes:
         """
         Decrypts the payload.
 
-        :param nonce: Nonce for decryption. Length tof the nonce depends on the AEAD. Nonce cannot be empty or None.
-        :param key: A Symmetric COSE key object containing the symmetric key bytes and a optionally an AEAD algorithm.
-        :param alg: If the 'alg' parameter is unset in the COSE key object, this parameter cannot be None.
-
-        :raises ValueError: When the nonce is empty or None
-        :raises CoseIllegalKeyType: When the key is not of type 'SymmetricKey'.
-
+        :raises CoseException: When the key is not of type 'SymmetricKey'.
         :returns: plaintext as bytes
         """
 
-        if nonce == b"" or nonce is None:
-            raise ValueError(f"{nonce} is not a valid nonce value")
+        alg = self.get_attr(headers.Algorithm)
+        nonce = self._get_nonce()
 
-        if not isinstance(key, SymmetricKey):
-            raise CoseIllegalKeyType("COSE key should be of type 'SymmetricKey', got {}".format(type(key)))
+        if self.key is None:
+            raise CoseException("Key cannot be None")
 
-        return key.decrypt(ciphertext=self.payload, aad=self._enc_structure, nonce=nonce, alg=alg)
+        self.key.verify(SymmetricKey, alg, [DecryptOp])
 
-    def encrypt(self, nonce: bytes, key: SymmetricKey, alg: Optional[CoseAlgorithms] = None) -> bytes:
+        return alg.decrypt(key=self.key, ciphertext=self.payload, external_aad=self._enc_structure, nonce=nonce)
+
+    def encrypt(self, *args, **kwargs) -> bytes:
         """
         Encrypts the payload.
 
-        :param nonce: Nonce for decryption. Length tof the nonce depends on the AEAD. Nonce cannot be empty or None.
-        :param key: A Symmetric COSE key object containing the symmetric key bytes and a optionally an AEAD algorithm.
-        :param alg: If the 'alg' parameter is unset in the COSE key object, this parameter cannot be None.
-
-        :raises ValueError: When the nonce is empty or None
-        :raises CoseIllegalKeyType: When the key is not of type 'SymmetricKey'.
-
+        :raises CoseException: When the key is not of type 'SymmetricKey'.
         :returns: ciphertext as bytes
         """
 
-        if nonce == b"" or nonce is None:
-            raise ValueError(f"{nonce} is not a valid nonce value")
+        # first check if key is set (since a part of the nonce can be stored in the key)
+        if self.key is None:
+            raise CoseException("Key cannot be None")
 
-        if not isinstance(key, SymmetricKey):
-            raise CoseIllegalKeyType("COSE key should be of type 'SymmetricKey', got {}".format(type(key)))
+        alg = self.get_attr(headers.Algorithm)
+        nonce = self._get_nonce()
 
-        return key.encrypt(plaintext=self.payload, aad=self._enc_structure, nonce=nonce, alg=alg)
+        self.key.verify(SymmetricKey, alg, [EncryptOp])
+
+        return alg.encrypt(key=self.key, data=self.payload, external_aad=self._enc_structure, nonce=nonce)
 
     @property
     def _enc_structure(self) -> bytes:
@@ -78,3 +75,16 @@ class EncCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
         enc_structure = self._base_structure(enc_structure)
         aad = cbor2.dumps(enc_structure)
         return aad
+
+    def _get_nonce(self):
+        nonce = self.get_attr(headers.IV)
+
+        if nonce is None and self.key.base_iv != b'':
+            partial_iv = self.get_attr(headers.PartialIV)
+            nonce = int.from_bytes(partial_iv, "big") ^ int.from_bytes(self.key.base_iv, "big")
+            nonce = nonce.to_bytes((nonce.bit_length() + 7) // 8, byteorder="big")
+
+        if nonce is None and self.key.base_iv == b'':
+            raise CoseException('No IV found')
+
+        return nonce

@@ -1,0 +1,73 @@
+{
+  "title": "p256-ss-hkdf-256-01: ECDH-SS direct w/ hkdf-sha-256 for 128-bit key",
+  "input": {
+    "__input__": true,
+    "protected": {
+      "__header__": true,
+      "alg": "A128GCM"
+    },
+    "unprotected": {
+      "__header__": true,
+      "iv": "D7923E677B71A3F40A179643"
+    },
+    "plaintext": "This is the content.",
+    "external_aad": "",
+    "recipients": [
+      {
+        "__recipient__": true,
+        "protected": {
+          "__header__": true,
+          "alg": "ECDH_SS_HKDF_256"
+        },
+        "unprotected": {
+          "__header__": true,
+          "kid": "meriadoc.brandybuck@buckland.example",
+          "static_key": {
+            "__key__": true,
+            "kty": "EC2",
+            "crv": "P_256",
+            "x": "edcbd809c754db6582c16d6d65747c8aecc92d619c778eb17f13b55c9b3e48f5",
+            "y": "0f38495e0cfd448e93b1e366c047cba0d567b3c526bce36c3f3403a29d9d2a8a"
+          },
+          "party_u_nonce": "02D1F7E6F26C43D4868D87CEB2353161740AACF1F7163647984B522A848DF1C3C9CF4DF2FE6C632BF7886413F76E88523A8260B857D70B350027FD842B5E5947"
+        },
+        "static_receiver_key": {
+          "__key__": true,
+          "kty": "EC2",
+          "crv": "P_256",
+          "kid": "meriadoc.brandybuck@buckland.example",
+          "x": "65eda5a12577c2bae829437fe338701a10aaa375e1bb5b5de108de439c08551d",
+          "y": "1e52ed75701163f7f9e40ddf9f341b3dc9ba860af7e0ca7ca7e9eecd0084d19c",
+          "d": "aff907c99f9ad3aae6c4cdf21122bce2bd68b5283e6907154ad911840fa208cf"
+        },
+        "static_sender_key": {
+          "__key__": true,
+          "kty": "EC2",
+          "crv": "P_256",
+          "x": "edcbd809c754db6582c16d6d65747c8aecc92d619c778eb17f13b55c9b3e48f5",
+          "y": "0f38495e0cfd448e93b1e366c047cba0d567b3c526bce36c3f3403a29d9d2a8a",
+          "d": "52aaf87dacbfa9843293070d081d9e7e3fcd15a411450fba7c7666efade3b79c"
+        }
+      }
+    ]
+  },
+  "output": {
+    "__output__": true,
+    "protected": "A10101",
+    "unprotected": "{5: b'D7923E677B71A3F40A179643'}",
+    "cek": "A6C2365CBC7672FBB5DB614B9A223AE3",
+    "ciphertext": "55DE918D6CA1E33BEDE48DB6E48678A8159214E76B2099E74AA52F250B940D13C4E7AB78",
+    "recipients": [
+      {
+        "__encode_rcpt__": true,
+        "protected": "A101381A",
+        "unprotected": "{-2: {1: 2, -1: 1, -2: b'EDCBD809C754DB6582C16D6D65747C8AECC92D619C778EB17F13B55C9B3E48F5', -3: b'0F38495E0CFD448E93B1E366C047CBA0D567B3C526BCE36C3F3403A29D9D2A8A'}, 4: b'meriadoc.brandybuck@buckland.example', -22: b'02D1F7E6F26C43D4868D87CEB2353161740AACF1F7163647984B522A848DF1C3C9CF4DF2FE6C632BF7886413F76E88523A8260B857D70B350027FD842B5E5947'}",
+        "ciphertext": "",
+        "secret": "8CA18423C89DB8842D5FD119F90E98650243AD77848BBBBE146FCFE2E802751D",
+        "context": "840183F6584002D1F7E6F26C43D4868D87CEB2353161740AACF1F7163647984B522A848DF1C3C9CF4DF2FE6C632BF7886413F76E88523A8260B857D70B350027FD842B5E5947F683F6F6F682188044A101381A"
+      }
+    ],
+    "structure": "8367456E637279707443A1010140",
+    "result": "D8608443A10101A1054CD7923E677B71A3F40A179643582455DE918D6CA1E33BEDE48DB6E48678A8159214E76B2099E74AA52F250B940D13C4E7AB78818344A101381AA321A42001215820EDCBD809C754DB6582C16D6D65747C8AECC92D619C778EB17F13B55C9B3E48F52258200F38495E0CFD448E93B1E366C047CBA0D567B3C526BCE36C3F3403A29D9D2A8A01020458246D65726961646F632E6272616E64796275636B406275636B6C616E642E6578616D706C6535584002D1F7E6F26C43D4868D87CEB2353161740AACF1F7163647984B522A848DF1C3C9CF4DF2FE6C632BF7886413F76E88523A8260B857D70B350027FD842B5E594740"
+  }
+}

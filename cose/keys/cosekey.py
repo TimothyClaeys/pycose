@@ -1,138 +1,74 @@
 import base64
-from abc import ABCMeta, abstractmethod
-from enum import IntEnum
-from typing import List, Union, Dict, Optional, TypeVar, TYPE_CHECKING, Type, Callable
+from abc import ABC, abstractmethod
+from collections.abc import MutableMapping
+from typing import Optional, TypeVar, Type, List, Any, TYPE_CHECKING
 
-import dataclasses
-from aenum import Enum, MultiValue
-from dataclasses import dataclass
+import cbor2
 
-from cose.attributes.algorithms import CoseAlgorithms, CoseEllipticCurves
-from cose.exceptions import CoseIllegalKeyOps, CoseIllegalAlgorithm, CoseIllegalCurve
+from cose.algorithms import CoseAlgorithm
+from cose.exceptions import CoseException
+from cose.headers import EphemeralKey, StaticKey
+from cose.keys.keyops import KeyOps
+from cose.keys.keyparam import KpKty, KpKeyOps, KpAlg, KpKid, KpBaseIV, KeyParam
+
+# noinspection PyUnresolvedReferences
+from cose.keys.keytype import KTY
 
 if TYPE_CHECKING:
-    from cose.keys.ec2 import EC2
-    from cose.keys.okp import OKP
+    from cose.headers import CoseHeaderAttribute
+    from cose.algorithms import CoseAlg
+    from cose.keys.keytype import KTYPE
+    from cose.keys.keyops import KEYOPS
 
 
-class KTY(Enum):
-    """ The different COSE key types. """
-    _init_ = 'id fullname'
-    _settings_ = MultiValue
-
-    RESERVED = 0, "RESERVED"
-    OKP = 1, "OKP"
-    EC2 = 2, "EC2"
-    SYMMETRIC = 4, "SYMMETRIC"
-
-    def __int__(self):
-        return self.id
-
-    def __str__(self):
-        return self.fullname
-
-    def __repr__(self):
-        return f'<{self.__class__.__name__}.{self.fullname}: {self.id}>'
-
-    def __eq__(self, other):
-        return self.id == other or self.fullname == other
-
-    def __hash__(self):
-        return hash(self.id)
-
-
-class KeyOps(Enum):
-    """ Supported COSE key operations. """
-
-    _init_ = 'id fullname'
-    _settings_ = MultiValue
-
-    SIGN = 1, 'SIGN'
-    VERIFY = 2, 'VERIFY'
-    ENCRYPT = 3, 'ENCRYPT'
-    DECRYPT = 4, 'DECRYPT'
-    WRAP = 5, 'WRAP'
-    UNWRAP = 6, 'UNWRAP'
-    DERIVE_KEY = 7, 'DERIVE_KEY'
-    DERIVE_BITS = 8, 'DERIVE_BITS'
-    MAC_CREATE = 9, 'MAC_CREATE'
-    MAC_VERIFY = 10, 'MAC_VERIFY'
-
-    def __int__(self):
-        return self.id
-
-    def __str__(self):
-        return self.fullname
-
-    def __repr__(self):
-        return f'<{self.__class__.__name__}.{self.fullname}: {self.id}>'
-
-    def __eq__(self, other):
-        return self.id == other or self.fullname == other
-
-    def __hash__(self):
-        return hash(self.id)
-
-
-@dataclass(init=False)
-class CoseKey(metaclass=ABCMeta):
+class CoseKey(MutableMapping, ABC):
     """ Abstract base class for all key type in COSE. """
 
-    _kty: Optional[KTY]
-    _kid: Optional[Union[int, bytes]]
-    _alg: Optional[CoseAlgorithms]
-    _key_ops: Optional[KeyOps]
-    _base_iv: Optional[bytes]
-
-    _KTY = {}
-
-    class Common(IntEnum):
-        """ Common COSE key parameters. """
-        KTY = 1
-        KID = 2
-        ALG = 3
-        KEY_OPS = 4
-        BASE_IV = 5
-
-    def __init__(self, kty, kid, alg, key_ops, base_iv):
-        self.kty = kty
-        self.kid = kid
-        self.alg = alg
-        self.key_ops = key_ops
-        self.base_iv = base_iv
+    _key_types = {}
 
     @classmethod
-    def record_kty(cls, kty_id: int) -> Callable[[Type['CoseKey']], Type['CoseKey']]:
+    def decode(cls, received: bytes):
+        return CoseKey.from_dict(cbor2.loads(received))
+
+    @classmethod
+    def record_kty(cls, kty: Type['KTYPE']):
         """
         Decorator to record all the COSE key types dynamically.
 
-        :param kty_id: Integer identifying the COSE key type (see RFC 8152)
-        :raises ValueError: Checks if the decorated class is of type 'CoseKey'
+        :param kty: Integer identifying the COSE key type (see RFC 8152)
         :return: A Decorator function.
         """
 
-        def decorator(the_class: Type['CoseKey']) -> Type['CoseKey']:
+        def decorator(the_class: Type['CK']) -> Type['CK']:
             if not issubclass(the_class, CoseKey):
                 raise ValueError("Can only decorate subclass of CoseKey")
-            cls._KTY[kty_id] = the_class
+            cls._key_types[kty.identifier] = the_class
+            cls._key_types[kty.fullname] = the_class
+            cls._key_types[kty] = the_class
             return the_class
 
         return decorator
 
     @classmethod
-    def decode(cls, received: dict):
+    def from_dict(cls, received: dict) -> 'CK':
         """
         Decoding function for COSE key objects.
 
-        :param received: Dictionary must contain the KTY element otherwise the key object cannot be decoded properly.
-        :raises KeyError: Decoding function fails when KTY parameter is not found or has an invalid value.
+        :param received: Dictionary must contain the element otherwise the key object cannot be decoded properly.
         :return: A COSE Key object.
         """
 
-        try:
-            return cls._KTY[received[cls.Common.KTY]].from_cose_key_obj(received)
-        except KeyError as e:
-            raise KeyError("Key type identifier is not recognized", e)
+        if KpKty in received:
+            r = received[KpKty]
+            key_obj = cls._key_types[r].from_dict(received)
+        elif KpKty.identifier in received:
+            key_obj = cls._key_types[received[KpKty.identifier]].from_dict(received)
+        elif KpKty.fullname in received:
+            key_obj = cls._key_types[received[KpKty.fullname]].from_dict(received)
+        else:
+            raise CoseException("Could not decode CoseKey type")
+
+        return key_obj
 
     @staticmethod
     def base64decode(to_decode: str) -> bytes:
@@ -166,125 +102,126 @@ class CoseKey(metaclass=ABCMeta):
 
         return base64.b64encode(to_encode).decode("utf-8")
 
+    def __init__(self, key_dict: dict):
+        self.store = dict()
+        self.store.update(key_dict)
+
+        self.store.setdefault(KpKeyOps, [])
+
+    def verify(self, key_type: Type['CK'], algorithm: Type['CoseAlg'], key_ops: List[Type['KEYOPS']]):
+        """ Verify attributes of the COSE_key object."""
+
+        if not isinstance(self, key_type):
+            raise CoseException("Wrong key type")
+
+        if self.alg is not None and self.alg.identifier != algorithm.identifier:
+            raise CoseException("Conflicting algorithms in key and COSE headers")
+
+        if len(self.key_ops):
+            match_key_ops = False
+
+            for k in key_ops:
+                if k in self.key_ops:
+                    match_key_ops = True
+
+            if not match_key_ops:
+                raise CoseException("Wrong key operations specified")
+
+    def __getitem__(self, key):
+        return self.store[self._key_transform(key)]
+
+    def __setitem__(self, key, value):
+        self.store[self._key_transform(key)] = value
+
+    def __delitem__(self, key):
+        del self.store[self._key_transform(key)]
+
+    def __iter__(self):
+        return iter(self.store)
+
+    def __len__(self):
+        return len(self.store)
+
     @property
-    def kty(self) -> KTY:
-        return self._kty
+    def kty(self) -> Optional[Type['KTYPE']]:
+        return self.store.get(KpKty)
 
     @kty.setter
-    def kty(self, new_kty: KTY) -> None:
-        if new_kty is not None:
-            self._kty = KTY(new_kty)  # check if the new value is a known COSE KTY, should never be None!
-        else:
-            raise ValueError("Key type cannot be None")
+    def kty(self, kty: Any):
+        self.store[KpKty] = KpKty.from_id(kty)
 
     @property
-    def alg(self) -> Optional[CoseAlgorithms]:
-        return self._alg
+    def alg(self) -> Optional[Type['CoseAlg']]:
+        return self.store.get(KpAlg)
 
     @alg.setter
-    def alg(self, new_alg: Optional[CoseAlgorithms]) -> None:
-        if new_alg is not None:
-            self._alg = CoseAlgorithms(new_alg)
-        else:
-            self._alg = None
+    def alg(self, alg: Type['CoseAlg']):
+        self.store[KpAlg] = CoseAlgorithm.from_id(alg)
 
     @property
-    def kid(self) -> Optional[bytes]:
-        return self._kid
+    def kid(self) -> bytes:
+        return self.store.get(KpKid, b'')
 
     @kid.setter
-    def kid(self, new_kid: bytes) -> None:
-        if type(new_kid) is not bytes and new_kid is not None:
-            raise ValueError("kid attribute must be of type 'bytes'")
-        self._kid = new_kid
+    def kid(self, kid: bytes):
+        if type(kid) is not bytes:
+            raise TypeError(f"kid must be of type 'bytes'")
+        self.store[KpKid] = kid
 
     @property
-    def key_ops(self) -> Optional[KeyOps]:
-        return self._key_ops
+    def key_ops(self) -> List[Type['KEYOPS']]:
+        return self.store.get(KpKeyOps)
 
     @key_ops.setter
-    def key_ops(self, new_key_ops: Optional[KeyOps]) -> None:
-        if new_key_ops is not None:
-            self._key_ops = KeyOps(new_key_ops)  # check if the new value is a known COSE key operation
+    def key_ops(self, new_key_ops: List[Type['KEYOPS']]):
+        if new_key_ops is None:
+            self.store[KpKeyOps] = []
+        elif isinstance(new_key_ops, list):
+            self.store[KpKeyOps] = [KeyOps.from_id(k) for k in new_key_ops]
         else:
-            self._key_ops = None
+            raise ValueError("Key operations should be a list with KeyOps values.")
 
     @property
-    def base_iv(self) -> Optional[bytes]:
-        return self._base_iv
+    def base_iv(self) -> bytes:
+        return self.store.get(KpBaseIV, b'')
 
     @base_iv.setter
-    def base_iv(self, new_base_iv: bytes) -> None:
-        if new_base_iv is not None and not isinstance(new_base_iv, bytes):
-            raise ValueError("base_iv attribute must be of type 'bytes'")
-        self._base_iv = new_base_iv
+    def base_iv(self, base_iv: bytes):
+        if type(base_iv) is not bytes:
+            raise TypeError(f"base_iv must be of type 'bytes'")
+        self.store[KpBaseIV] = base_iv
 
-    def encode(self, *argv) -> Dict[int, Union[int, bytes]]:
-        key_words = ["_kty"]
+    def encode(self):
+        return cbor2.dumps(self.store, default=self._custom_cbor_encoder)
 
-        for kw in argv:
-            if kw.upper() in self.Common.__members__:
-                key_words.append(kw)
+    @property
+    @abstractmethod
+    def is_valid_key(self):
+        raise NotImplementedError()
 
-        return {self.Common[kw[1:].upper()]: dataclasses.asdict(self)[kw] for kw in key_words}
+    @classmethod
+    def _custom_cbor_encoder(cls, encoder, cose_attribute: 'CoseHeaderAttribute'):
+        encoder.encode(cose_attribute.identifier)
 
-    def _check_key_conf(self,
-                        algorithm: CoseAlgorithms,
-                        key_operation: KeyOps,
-                        peer_key: Optional[Union['EC2', 'OKP']] = None,
-                        curve: Optional[CoseEllipticCurves] = None):
-        """ Helper function that checks the configuration of the COSE key object. """
+    @staticmethod
+    def _key_transform(key):
+        try:
+            return KeyParam.from_id(key.identifier)
+        except KeyError:
+            return key
 
-        if self.alg is not None and algorithm is not None and CoseAlgorithms(self.alg) != CoseAlgorithms(algorithm):
-            raise CoseIllegalAlgorithm(
-                f"COSE key algorithm does not match with parameter 'algorithm'.: {self.alg} != {algorithm}")
+    def _key_repr(self) -> dict:
+        names = {kp.__name__: self.store[kp].__name__ if hasattr(self.store[kp], '__name__') else self.store[kp] for kp
+                 in sorted(self.store, key=lambda item: item.identifier)}
 
-        if algorithm is not None:
-            self.alg = CoseAlgorithms(algorithm)
+        if KpKeyOps.__name__ in names:
+            names[KpKeyOps.__name__] = [ops.__name__ if hasattr(ops, '__name__') else ops for ops in
+                                        names[KpKeyOps.__name__]]
 
-        if self.alg is None:
-            raise CoseAlgorithms("Selected COSE algorithm cannot be 'None'")
+        return names
 
-        if peer_key is not None:
-            if peer_key.alg is not None and CoseAlgorithms(self.alg) != CoseAlgorithms(peer_key.alg):
-                raise CoseIllegalAlgorithm(
-                    f"Algorithms for private and public key do not match: {peer_key:alg} != {self.alg}")
-            else:
-                peer_key.alg = CoseAlgorithms(self.alg)
 
-        if hasattr(self, "crv"):
-            if self.crv is not None and curve is not None and CoseEllipticCurves(self.crv) != CoseEllipticCurves(curve):
-                raise CoseIllegalCurve(f"Curve in COSE key clashes with parameter 'curve': {self.crv} != {curve}")
-
-            if curve is not None:
-                self.crv = CoseEllipticCurves(curve)
-
-        if peer_key is not None:
-            if peer_key.crv is not None and CoseEllipticCurves(self.crv) != CoseEllipticCurves(peer_key.crv):
-                raise CoseIllegalCurve(
-                    f"Curve parameter for private and public key do not match: {self.crv} != {curve}")
-            else:
-                peer_key.crv = CoseEllipticCurves(self.crv)
-
-        if self.key_ops is not None and key_operation is not None and KeyOps(self.key_ops) != KeyOps(key_operation):
-            raise CoseIllegalKeyOps(f"COSE key operation should be {key_operation.name}, instead {self.key_ops.name}")
-
-        if key_operation is not None:
-            self.key_ops = KeyOps(key_operation)
-
-        if peer_key is not None:
-            if peer_key.key_ops is not None and KeyOps(self.key_ops) != KeyOps(peer_key.key_ops):
-                raise CoseIllegalKeyOps("Key operation for private and public key do not match")
-            else:
-                peer_key.key_ops = KeyOps(self.key_ops)
-
+EphemeralKey.value_parser = CoseKey.from_dict
+StaticKey.value_parser = CoseKey.from_dict
 
 CK = TypeVar('CK', bound=CoseKey)
-
-
-class CoseKeySet:
-    def __init__(self, cose_keys: List[CK] = None):
-        if cose_keys is None:
-            self.cose_keys = []
-        else:
-            self.cose_keys = cose_keys

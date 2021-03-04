@@ -1,0 +1,54 @@
+{
+  "title": "wrap-128-05: 128-bit key wrap for 192-bit encrypt",
+  "random_key": {
+    "__key__": true,
+    "kty": "SYMMETRIC",
+    "k": "7A1B4CF77102CE028A0308C11D50A36F"
+  },
+  "input": {
+    "__input__": true,
+    "protected": {
+      "__header__": true,
+      "alg": "A128GCM"
+    },
+    "unprotected": {
+      "__header__": true,
+      "iv": "DDDC08972DF9BE62855291A1"
+    },
+    "plaintext": "This is the content.",
+    "external_aad": "",
+    "recipients": [
+      {
+        "protected": {},
+        "unprotected": {
+          "__header__": true,
+          "kid": "sec-192",
+          "alg": "A192KW"
+        },
+        "secret_key": {
+          "__key__": true,
+          "kty": "SYMMETRIC",
+          "kid": "sec-192",
+          "k": "0f1e2d3c4b5a69788796a5b4c3d2e1f01f2e3d4c5b6a7988"
+        }
+      }
+    ]
+  },
+  "output": {
+    "__output__": true,
+    "protected": "A10101",
+    "unprotected": "{5: b'DDDC08972DF9BE62855291A1'}",
+    "cek": "7A1B4CF78F4B8C6E9AB68198C43D22F3",
+    "ciphertext": "5E26B474F941D1223ADF75D9F970D608278AADF1EC0558EF4C5A9DF55732BA901BD631FF",
+    "recipients": [
+      {
+        "__encode_rcpt__": true,
+        "protected": "",
+        "unprotected": "{1: -4, 4: b'sec-192'}",
+        "ciphertext": "4677A7C41F33EC27E8489AFBA06249A649F01F06496DC414"
+      }
+    ],
+    "structure": "8367456E637279707443A1010140",
+    "result": "D8608443A10101A1054CDDDC08972DF9BE62855291A158245E26B474F941D1223ADF75D9F970D608278AADF1EC0558EF4C5A9DF55732BA901BD631FF818340A2012304477365632D31393258184677A7C41F33EC27E8489AFBA06249A649F01F06496DC414"
+  }
+}

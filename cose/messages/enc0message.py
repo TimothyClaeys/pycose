@@ -7,14 +7,15 @@ COSE_Encrypt0 = [
 ]
 """
 
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
-import cbor2
-
-from cose import CoseMessage
+from cose import utils
 from cose.messages import enccommon, cosemessage
-from cose.attributes.algorithms import CoseAlgorithms
-from cose.keys.symmetric import SymmetricKey
+
+if TYPE_CHECKING:
+    from cose.keys.symmetric import SK
+
+CBOR = bytes
 
 
 @cosemessage.CoseMessage.record_cbor_tag(16)
@@ -23,14 +24,16 @@ class Enc0Message(enccommon.EncCommon):
     cbor_tag = 16
 
     @classmethod
-    def from_cose_obj(cls, cose_obj: list) -> 'Enc0Message':
+    def from_cose_obj(cls, cose_obj: list, *args, **kwargs) -> 'Enc0Message':
         return super().from_cose_obj(cose_obj)
 
     def __init__(self,
                  phdr: Optional[dict] = None,
                  uhdr: Optional[dict] = None,
                  payload: bytes = b'',
-                 external_aad: bytes = b''):
+                 external_aad: bytes = b'',
+                 key: Optional['SK'] = None):
+
         """
         Create a COSE_encrypt0 message.
 
@@ -38,7 +41,9 @@ class Enc0Message(enccommon.EncCommon):
         :param uhdr: Unprotected header bucket.
         :param payload: The payload (will be encrypted and authenticated).
         :param external_aad: External data (is authenticated but not transported in the message).
-        :return: A CoseMessage object.
+        :param key: The Symmetric COSE key for encryption/decryption of the message
+
+        :returns: Returns a COSE Encrypt0 message object.
         """
 
         if phdr is None:
@@ -46,27 +51,27 @@ class Enc0Message(enccommon.EncCommon):
         if uhdr is None:
             uhdr = {}
 
-        super().__init__(phdr, uhdr, payload, external_aad)
+        super().__init__(phdr, uhdr, payload, external_aad, key)
 
-    def encode(self,
-               nonce: bytes,
-               key: SymmetricKey,
-               alg: Optional[CoseAlgorithms] = None,
-               tagged: bool = True,
-               encrypt: bool = True) -> bytes:
-        """ Encode and protect the COSE_Encrypt0 message. """
+    def encode(self, tag: bool = True, encrypt: bool = True, *args, **kwargs) -> CBOR:
+        """
+        Encode and protect the COSE_Encrypt0 message.
+
+        :param tag: Boolean value which indicates if the COSE message will have a CBOR tag.
+        :param encrypt: Boolean which activates or deactivates the payload protection.
+
+        :return: Returns a CBOR-encoded COSE Encrypt0 message.
+        """
 
         if encrypt:
-            message = [self.encode_phdr(), self.encode_uhdr(), self.encrypt(nonce=nonce, alg=alg, key=key)]
+            message = [self.phdr_encoded, self.uhdr_encoded, self.encrypt()]
         else:
-            message = [self.encode_phdr(), self.encode_uhdr(), self.payload]
+            message = [self.phdr_encoded, self.uhdr_encoded, self.payload]
 
-        if tagged:
-            res = cbor2.dumps(cbor2.CBORTag(self.cbor_tag, message), default=self._special_cbor_encoder)
-        else:
-            res = cbor2.dumps(message, default=self._special_cbor_encoder)
-
+        res = super(Enc0Message, self).encode(message, tag)
         return res
 
     def __repr__(self) -> str:
-        return f'<COSE_Encrypt0: [{self._phdr}, {self._uhdr}, {CoseMessage._truncate(self._payload)}]>'
+        phdr, uhdr = self._hdr_repr()
+
+        return f'<COSE_Encrypt0: [{phdr}, {uhdr}, {utils.truncate(self._payload)}]>'
