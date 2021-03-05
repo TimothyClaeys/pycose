@@ -33,6 +33,9 @@ Additionally, based on the message type, other message fields can be added:
 - _MAC_ or _signature_ (for **MAC0** or **Sign1** messages)
 - _COSE recipients_ or _COSE signatures_ (for **MAC**, **Encrypt**, and **Sign** messages)
 
+## Examples
+A set of examples can be found [here](https://pycose.readthedocs.io/en/latest/examples.html)
+
 ## Cryptography
 
 The project depends on [pyca/cryptography](https://github.com/pyca/cryptography) for all cryptographic operations, except the deterministic ECDSA algorithm. For deterministic ECDSA `cose` uses [python-ecdsa](https://github.com/warner/python-ecdsa). 
