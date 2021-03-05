@@ -2,6 +2,7 @@ from binascii import unhexlify, hexlify
 
 from cose.keys.cosekey import CoseKey
 from cose.keys.okp import OKPKey
+from cose.keys.rsa import RSAKey
 from cose.keys.symmetric import SymmetricKey
 from cose.curves import P256, X25519, X448, Ed25519, Ed448, P521, P384
 from cose.keys.ec2 import EC2KpCurve, EC2KpY, EC2KpX, EC2Key
@@ -149,6 +150,17 @@ def test_okpkey_x448_generation():
         okp_encoded = okp_test.encode()
         okp_decoded = CoseKey.decode(okp_encoded)
         assert okp_decoded.is_valid_key
+
+
+def test_rsakey_generation():
+    trails = 10
+
+    for length in [1024, 2048, 4096]:
+        for _i in range(trails):
+            sym_test = RSAKey.generate_key(length)
+            sym_encoded = sym_test.encode()
+            sym_decoded = CoseKey.decode(sym_encoded)
+            assert sym_decoded.is_valid_key
 
 
 def test_symmetrickey_generation():

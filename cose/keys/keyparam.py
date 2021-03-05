@@ -104,6 +104,69 @@ class OKPKpX(OKPKeyParam):
     fullname = "X"
 
 
+class RSAKeyParam(_CoseAttribute, ABC):
+    _registered_algorithms = {}
+    _registered_algorithms.update(KeyParam.get_registered_classes())
+
+    @classmethod
+    def get_registered_classes(cls):
+        return cls._registered_algorithms
+
+
+@RSAKeyParam.register_attribute()
+class RSAKpN(RSAKeyParam):
+    identifier = -1
+    fullname = "N"
+
+
+@RSAKeyParam.register_attribute()
+class RSAKpE(RSAKeyParam):
+    identifier = -2
+    fullname = "E"
+
+
+@RSAKeyParam.register_attribute()
+class RSAKpD(RSAKeyParam):
+    identifier = -3
+    fullname = "D"
+
+
+@RSAKeyParam.register_attribute()
+class RSAKpP(RSAKeyParam):
+    identifier = -4
+    fullname = "P"
+
+
+@RSAKeyParam.register_attribute()
+class RSAKpQ(RSAKeyParam):
+    identifier = -5
+    fullname = "Q"
+
+
+@RSAKeyParam.register_attribute()
+class RSAKpDP(RSAKeyParam):
+    identifier = -6
+    fullname = "DP"
+
+
+@RSAKeyParam.register_attribute()
+class RSAKpDQ(RSAKeyParam):
+    identifier = -7
+    fullname = "DQ"
+
+
+@RSAKeyParam.register_attribute()
+class RSAKpQInv(RSAKeyParam):
+    identifier = -8
+    fullname = "QINV"
+
+
+@RSAKeyParam.register_attribute()
+class RSAKpOther(RSAKeyParam):
+    identifier = -9
+    fullname = "OTHER"
+
+
 class SymmetricKeyParam(_CoseAttribute, ABC):
     _registered_algorithms = {}
     _registered_algorithms.update(KeyParam.get_registered_classes())

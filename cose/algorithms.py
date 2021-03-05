@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, TypeVar
 
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.asymmetric import ec, rsa, padding
 from cryptography.hazmat.primitives.asymmetric.ec import SECP256R1, SECP384R1, SECP521R1, ECDH
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
 from cryptography.hazmat.primitives.asymmetric.ed448 import Ed448PrivateKey, Ed448PublicKey
@@ -24,6 +24,7 @@ from cose import curves
 from cose.exceptions import CoseIllegalCurve, CoseException
 from cose.headers import Algorithm
 from cose.utils import _CoseAttribute
+#from cose.attributes.algorithms import CoseAlgorithms
 
 if TYPE_CHECKING:
     from cose.keys.symmetric import SK
@@ -46,6 +47,84 @@ class _EncAlg(CoseAlgorithm, ABC):
     @abstractmethod
     def get_key_length(cls) -> int:
         raise NotImplementedError()
+
+
+class _Rsa(CoseAlgorithm, ABC):
+    ''' RSA signing and (key-wrap) encryption.
+    '''
+
+    @classmethod
+    @abstractmethod
+    def get_hash_func(cls):
+        raise NotImplementedError()
+
+    @classmethod
+    @abstractmethod
+    def get_pad_func(cls, hash_cls):
+        raise NotImplementedError()
+
+    @classmethod
+    def sign(cls, key: 'RSA', data: bytes) -> bytes:
+        hash_cls = cls.get_hash_func()
+        pad = cls.get_pad_func(hash_cls)
+        pk = key.to_cryptograpy_key_obj()
+
+        return pk.sign(
+            data,
+            pad,
+            hash_cls()
+        )
+
+    @classmethod
+    def verify(cls, key: 'RSA', data: bytes, signature: bytes) -> bool:
+        hash_cls = cls.get_hash_func()
+        pad = cls.get_pad_func(hash_cls)
+        vk = key.to_cryptograpy_key_obj()
+        
+        try:
+            vk.verify(
+                signature,
+                data,
+                pad,
+                hash_cls()
+            )
+            return True
+        except InvalidSignature:
+            return False
+
+
+class _RsaPss(_Rsa):
+    ''' RSA with PSS padding.
+    '''
+
+    @classmethod
+    def get_pad_func(cls, hash_cls):
+        return padding.PSS(
+            mgf=padding.MGF1(hash_cls()),
+            salt_length=hash_cls.digest_size
+        )
+
+
+class _RsaOaep(_Rsa):
+    ''' RSA with OAEP padding.
+    '''
+    
+    @classmethod
+    def get_pad_func(cls, hash_cls):
+        return padding.OAEP(
+            mgf=padding.MGF1(hash_cls()),
+            algorithm=hash_cls(),
+            label=None,
+        )
+
+
+class _RsaPkcs1(_Rsa):
+    ''' RSA with PKCS#1 padding.
+    '''
+    
+    @classmethod
+    def get_pad_func(cls, hash_cls):
+        return padding.PKCS1v15()
 
 
 class _Ecdsa(CoseAlgorithm, ABC):
@@ -230,6 +309,36 @@ class _AesCcm(_EncAlg, ABC):
 ##################################################
 #            SUPPORTED COSE ALGORITHMS           #
 ##################################################
+
+@CoseAlgorithm.register_attribute()
+class Ps512(_RsaPss):
+    identifier = -39
+    fullname = "PS512"
+
+    @classmethod
+    def get_hash_func(cls):
+        return SHA512
+
+
+@CoseAlgorithm.register_attribute()
+class Ps384(_RsaPss):
+    identifier = -38
+    fullname = "PS384"
+
+    @classmethod
+    def get_hash_func(cls):
+        return SHA384
+
+
+@CoseAlgorithm.register_attribute()
+class Ps256(_RsaPss):
+    identifier = -37
+    fullname = "PS256"
+
+    @classmethod
+    def get_hash_func(cls):
+        return SHA256
+
 
 @CoseAlgorithm.register_attribute()
 class Es512(_Ecdsa):

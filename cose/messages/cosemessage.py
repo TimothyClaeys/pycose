@@ -6,6 +6,7 @@ import cbor2
 from cose.keys.symmetric import SymmetricKey
 from cose.keys.okp import OKPKey
 from cose.keys.ec2 import EC2Key
+from cose.keys.rsa import RSAKey
 from cose.messages.cosebase import CoseBase
 from cose.exceptions import CoseException
 
@@ -116,6 +117,10 @@ class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
             if key.d == b'' and key.x == b'':
                 raise CoseException("Key does not contain private bytes or public bytes")
             self._key = key
+        elif isinstance(key, RSAKey):
+            if not key.is_valid_key:
+                raise CoseException("Key does not contain private bytes or public bytes")
+            self._key = key
         elif key is None:
             self._key = key
         else:
@@ -128,7 +133,7 @@ class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
     @payload.setter
     def payload(self, new_payload: bytes) -> None:
         if type(new_payload) is not bytes:
-            raise TypeError("payload should be of type 'bytes'")
+            raise TypeError("payload should be of type 'bytes' not {}".format(type(new_payload)))
         self._payload = new_payload  # can be plaintext or ciphertext
 
     @abc.abstractmethod
