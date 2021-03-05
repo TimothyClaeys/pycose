@@ -171,13 +171,18 @@ class RSAKey(CoseKey):
     def verify(self, key_type: Type['RSAKey'], algorithm: Type['CoseAlg'], key_ops: List[Type['KEYOPS']]):
         super(RSAKey, self).verify(key_type, algorithm, key_ops)
 
-        #FIXME: check parameters
-
     @property
     def is_valid_key(self):
-        #FIXME: check parameters
-        if self.e == b'' or self.n == b'':
+        pub_attrs = {'e', 'n'}
+        priv_attrs = {'d', 'p', 'q', 'dP', 'dQ', 'qInv'}
+
+        pub_set = [bool(getattr(self, name)) for name in pub_attrs]
+        priv_set = [bool(getattr(self, name)) for name in priv_attrs]
+        if not all(pub_set):
             return False
+        if any(priv_set) and not all(priv_set):
+            return False
+
         return True
 
     @staticmethod
@@ -199,6 +204,9 @@ class RSAKey(CoseKey):
         return hdr
 
     def to_cryptograpy_key_obj(self):
+        ''' Get the `crypographic` library representation of this key.
+        :return: An :py:cls:`RSAPublicKey` or :py:cls:`RSAPrivateKey` object.
+        '''
         pub_nums = rsa.RSAPublicNumbers(
             e=from_bstr(self.e),
             n=from_bstr(self.n)

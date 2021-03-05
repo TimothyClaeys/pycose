@@ -12,7 +12,7 @@ from cryptography.hazmat.primitives.asymmetric.ed448 import Ed448PrivateKey, Ed4
 from cryptography.hazmat.primitives.ciphers import modes, Cipher
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM, AESCCM
 from cryptography.hazmat.primitives.ciphers.algorithms import AES
-from cryptography.hazmat.primitives.hashes import HashAlgorithm, SHA256, SHA512, SHA384
+from cryptography.hazmat.primitives.hashes import HashAlgorithm, SHA1, SHA256, SHA512, SHA384
 from cryptography.hazmat.primitives.hmac import HMAC
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.primitives.keywrap import aes_key_wrap, aes_key_unwrap
@@ -79,10 +79,10 @@ class _Rsa(CoseAlgorithm, ABC):
     def verify(cls, key: 'RSA', data: bytes, signature: bytes) -> bool:
         hash_cls = cls.get_hash_func()
         pad = cls.get_pad_func(hash_cls)
-        vk = key.to_cryptograpy_key_obj()
+        pk = key.to_cryptograpy_key_obj()
         
         try:
-            vk.verify(
+            pk.verify(
                 signature,
                 data,
                 pad,
@@ -91,6 +91,32 @@ class _Rsa(CoseAlgorithm, ABC):
             return True
         except InvalidSignature:
             return False
+
+    @classmethod
+    def key_wrap(cls, key: 'RSA', data: bytes) -> bytes:
+        hash_cls = cls.get_hash_func()
+        pad = cls.get_pad_func(hash_cls)
+
+        pk = key.to_cryptograpy_key_obj()
+        if isinstance(pk, rsa.RSAPrivateKey):
+            pk = pk.public_key()
+
+        return pk.encrypt(
+            data,
+            pad
+        )
+
+    @classmethod
+    def key_unwrap(cls, key: 'RSA', data: bytes) -> bytes:
+        hash_cls = cls.get_hash_func()
+        pad = cls.get_pad_func(hash_cls)
+        pk = key.to_cryptograpy_key_obj()
+
+        print('key size', pk.key_size, 'data size', len(data))
+        return pk.decrypt(
+            data,
+            pad
+        )
 
 
 class _RsaPss(_Rsa):
@@ -309,6 +335,76 @@ class _AesCcm(_EncAlg, ABC):
 ##################################################
 #            SUPPORTED COSE ALGORITHMS           #
 ##################################################
+
+@CoseAlgorithm.register_attribute()
+class RsaPkcs1Sha1(_RsaPkcs1):
+    identifier = -65535
+    fullname = "RS1"
+
+    @classmethod
+    def get_hash_func(cls):
+        return SHA1
+
+
+@CoseAlgorithm.register_attribute()
+class RsaPkcs1Sha512(_RsaPkcs1):
+    identifier = -259
+    fullname = "RS512"
+
+    @classmethod
+    def get_hash_func(cls):
+        return SHA512
+
+
+@CoseAlgorithm.register_attribute()
+class RsaPkcs1Sha384(_RsaPkcs1):
+    identifier = -258
+    fullname = "RS384"
+
+    @classmethod
+    def get_hash_func(cls):
+        return SHA384
+
+
+@CoseAlgorithm.register_attribute()
+class RsaPkcs1Sha256(_RsaPkcs1):
+    identifier = -257
+    fullname = "RS256"
+
+    @classmethod
+    def get_hash_func(cls):
+        return SHA256
+
+
+@CoseAlgorithm.register_attribute()
+class RsaesOaepSha512(_RsaOaep):
+    identifier = -42
+    fullname = "RSAES_OAEP_SHA_512"
+
+    @classmethod
+    def get_hash_func(cls):
+        return SHA512
+
+
+@CoseAlgorithm.register_attribute()
+class RsaesOaepSha256(_RsaOaep):
+    identifier = -41
+    fullname = "RSAES_OAEP_SHA_256"
+
+    @classmethod
+    def get_hash_func(cls):
+        return SHA256
+
+
+@CoseAlgorithm.register_attribute()
+class RsaesOaepSha1(_RsaOaep):
+    identifier = -40
+    fullname = "RSAES_OAEP_SHA_1"
+
+    @classmethod
+    def get_hash_func(cls):
+        return SHA1
+
 
 @CoseAlgorithm.register_attribute()
 class Ps512(_RsaPss):

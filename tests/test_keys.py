@@ -153,7 +153,7 @@ def test_okpkey_x448_generation():
 
 
 def test_rsakey_generation():
-    trails = 10
+    trails = 4
 
     for length in [1024, 2048, 4096]:
         for _i in range(trails):
