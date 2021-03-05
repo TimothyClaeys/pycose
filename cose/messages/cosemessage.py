@@ -108,9 +108,13 @@ class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
             if key.k == b'':
                 raise CoseException("Key does not contain secret bytes")
             self._key = key
-        elif isinstance(key, OKPKey) or isinstance(key, EC2Key):
-            if key.d == b'':
-                raise CoseException("Key does not contain private bytes")
+        elif isinstance(key, EC2Key):
+            if key.d == b'' and key.x == b'' and key.y == b'':
+                raise CoseException("Key does not contain private bytes or public bytes")
+            self._key = key
+        elif isinstance(key, OKPKey):
+            if key.d == b'' and key.x == b'':
+                raise CoseException("Key does not contain private bytes or public bytes")
             self._key = key
         elif key is None:
             self._key = key
