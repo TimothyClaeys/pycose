@@ -1,30 +1,19 @@
 import abc
-from typing import Optional, Union, TYPE_CHECKING
+from typing import Type, TYPE_CHECKING
 
-from cose import cosebase
-from cose.exceptions import CoseIllegalKeyType
-from cose.keys.ec2 import EC2
-from cose.keys.okp import OKP
+from cose import headers
+from cose.keys.okp import OKPKey
+from cose.exceptions import CoseException
+from cose.keys.ec2 import EC2Key
+from cose.keys.keyops import VerifyOp, SignOp
+from cose.messages.cosemessage import CoseMessage
 
 if TYPE_CHECKING:
-    from cose.attributes.algorithms import CoseAlgorithms, CoseEllipticCurves
+    from cose.keys.keyops import KEYOPS
+    from cose.algorithms import CoseAlg
 
 
-class SignCommon(cosebase.CoseBase, metaclass=abc.ABCMeta):
-    @property
-    @abc.abstractmethod
-    def context(self) -> str:
-        """Getter for the context of the message."""
-        raise NotImplementedError
-
-    def __init__(self, phdr: Optional[dict] = None, uhdr: Optional[dict] = None):
-        if phdr is None:
-            phdr = {}
-        if uhdr is None:
-            uhdr = {}
-
-        super().__init__(phdr, uhdr)
-
+class SignCommon(CoseMessage, metaclass=abc.ABCMeta):
     @property
     def signature(self):
         raise NotImplementedError
@@ -33,41 +22,39 @@ class SignCommon(cosebase.CoseBase, metaclass=abc.ABCMeta):
     def _sig_structure(self):
         raise NotImplementedError
 
-    def verify_signature(self,
-                         public_key: Union[EC2, OKP],
-                         alg: Optional['CoseAlgorithms'] = None,
-                         curve: Optional['CoseEllipticCurves'] = None) -> bool:
+    def _key_verification(self, alg: Type['CoseAlg'], ops: Type['KEYOPS']):
+
+        if self.key is None:
+            raise CoseException("Key cannot be None")
+
+        if isinstance(self.key, EC2Key):
+            self.key.verify(EC2Key, alg, [ops])
+        elif isinstance(self.key, OKPKey):
+            self.key.verify(OKPKey, alg, [ops])
+        else:
+            raise CoseException('Wrong key type')
+
+    def verify_signature(self, *args, **kwargs) -> bool:
         """
         Verifies the signature of a received COSE message.
 
-        :param public_key: A COSE key of type EC2 or OKP
-        :param alg: An optional CoseAlgorithm
-        :param curve: An optional CoseEllipticCurve
-        :raises CoseIllegalKeyType: When the key type is not of EC2 or OKP
-        :raises CoseIllegalAlgorithm: When the algorithm configuration is invalid
         :returns: True for a valid signature or False for an invalid signature
         """
-        if not isinstance(public_key, EC2) and not isinstance(public_key, OKP):
-            raise CoseIllegalKeyType("COSE key should be of type 'EC2' or 'OKP', got {}".format(type(public_key)))
+        alg = self.get_attr(headers.Algorithm)
 
-        return public_key.verify(self._sig_structure, self.signature, alg, curve)
+        self._key_verification(alg, VerifyOp)
 
-    def compute_signature(self,
-                          private_key: Union[EC2, OKP] = None,
-                          alg: Optional['CoseAlgorithms'] = None,
-                          curve: Optional['CoseEllipticCurves'] = None) -> bytes:
+        return alg.verify(key=self.key, data=self._sig_structure, signature=self.signature)
+
+    def compute_signature(self, *args, **kwargs) -> bytes:
         """
         Computes the signature over a COSE message.
 
-        :param private_key: A COSE key of type EC2 or OKP
-        :param alg: An optional CoseAlgorithm
-        :param curve: An optional CoseEllipticCurve
-        :raises CoseIllegalKeyType: When the key type is not of EC2 or OKP
-        :raises CoseIllegalAlgorithm: When the algorithm configuration is invalid
-        :returns: True or False
+        :returns: the signature
         """
 
-        if not isinstance(private_key, EC2) and not isinstance(private_key, OKP):
-            raise CoseIllegalKeyType("COSE key should be of type 'EC2' or 'OKP', got {}".format(type(private_key)))
+        alg = self.get_attr(headers.Algorithm)
 
-        return private_key.sign(self._sig_structure, alg, curve)
+        self._key_verification(alg, SignOp)
+
+        return alg.sign(key=self.key, data=self._sig_structure)

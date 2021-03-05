@@ -184,7 +184,7 @@ Table of Contents
 
    cose/messages/index.rst
    cose/keys/index.rst
-   cose/attributes/index.rst
+   cose/algorithms.rst
 
 .. toctree::
    :maxdepth: 2
@@ -193,6 +193,7 @@ Table of Contents
    installation.rst
    LICENSE.rst
    CONTRIBUTING.rst
+   examples.rst
    glossary.rst
 
 

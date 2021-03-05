@@ -23,7 +23,7 @@ Glossary
         exposed to an attacker, any data encrypted with it will be exposed.
 
     CEK
-        Content Encryption Key - the key used to encrypt the COSE payload field.
+        Content Encryption Key - the key used to wrap_cek the COSE payload field.
 
     COSE
         CBOR Object Signing and Encryption

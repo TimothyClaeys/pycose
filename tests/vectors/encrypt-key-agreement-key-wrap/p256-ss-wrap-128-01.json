@@ -1,0 +1,78 @@
+{
+  "title": "p256-ss-wrap-128-01: ECDH-SS direct w/ key wrap 128 for 128-bit key",
+  "random_key": {
+    "__key__": true,
+    "kty": "SYMMETRIC",
+    "k": "B2353161740AACF1F7163647984B522A"
+  },
+  "input": {
+    "__input__": true,
+    "protected": {
+      "__header__": true,
+      "alg": "A128GCM"
+    },
+    "unprotected": {
+      "__header__": true,
+      "iv": "02D1F7E6F26C43D4868D87CE"
+    },
+    "plaintext": "This is the content.",
+    "external_aad": "",
+    "recipients": [
+      {
+        "__recipient__": true,
+        "protected": {
+          "__header__": true,
+          "alg": "ECDH_SS_A128KW"
+        },
+        "unprotected": {
+          "__header__": true,
+          "kid": "meriadoc.brandybuck@buckland.example",
+          "static_key": {
+            "__key__": true,
+            "kty": "EC2",
+            "crv": "P_256",
+            "x": "edcbd809c754db6582c16d6d65747c8aecc92d619c778eb17f13b55c9b3e48f5",
+            "y": "0f38495e0cfd448e93b1e366c047cba0d567b3c526bce36c3f3403a29d9d2a8a"
+          }
+        },
+        "static_sender_key": {
+          "__key__": true,
+          "kty": "EC2",
+          "crv": "P_256",
+          "x": "edcbd809c754db6582c16d6d65747c8aecc92d619c778eb17f13b55c9b3e48f5",
+          "y": "0f38495e0cfd448e93b1e366c047cba0d567b3c526bce36c3f3403a29d9d2a8a",
+          "d": "52aaf87dacbfa9843293070d081d9e7e3fcd15a411450fba7c7666efade3b79c"
+        },
+        "static_receiver_key": {
+          "__key__": true,
+          "kty": "EC2",
+          "crv": "P_256",
+          "kid": "meriadoc.brandybuck@buckland.example",
+          "x": "65eda5a12577c2bae829437fe338701a10aaa375e1bb5b5de108de439c08551d",
+          "y": "1e52ed75701163f7f9e40ddf9f341b3dc9ba860af7e0ca7ca7e9eecd0084d19c",
+          "d": "aff907c99f9ad3aae6c4cdf21122bce2bd68b5283e6907154ad911840fa208cf"
+        }
+      }
+    ]
+  },
+  "output": {
+    "__output__": true,
+    "protected": "A10101",
+    "unprotected": "{5: b'02D1F7E6F26C43D4868D87CE'}",
+    "cek": "B2353161740AACF1F7163647984B522A",
+    "ciphertext": "64F84D913BA60A76070A9A48F26E97E863E2852948658F0811139868826E89218A75715B",
+    "recipients": [
+      {
+        "__encode_rcpt__": true,
+        "protected": "A101381F",
+        "unprotected": "{-2: {-1: 1, -2: b'EDCBD809C754DB6582C16D6D65747C8AECC92D619C778EB17F13B55C9B3E48F5', -3: b'0F38495E0CFD448E93B1E366C047CBA0D567B3C526BCE36C3F3403A29D9D2A8A', 1: 2}, 4: b'meriadoc.brandybuck@buckland.example'}",
+        "ciphertext": "33CB2D33A9C2A9178284E03D6DCCFFEA4E32D7363BDA50D3",
+        "secret": "8CA18423C89DB8842D5FD119F90E98650243AD77848BBBBE146FCFE2E802751D",
+        "context": "842283F6F6F683F6F6F682188044A101381F",
+        "kek": "3B78DA2BD96DECEB9D4572B101D6461B"
+      }
+    ],
+    "structure": "8367456E637279707443A1010140",
+    "result": "D8608443A10101A1054C02D1F7E6F26C43D4868D87CE582464F84D913BA60A76070A9A48F26E97E863E2852948658F0811139868826E89218A75715B818344A101381FA221A42001215820EDCBD809C754DB6582C16D6D65747C8AECC92D619C778EB17F13B55C9B3E48F52258200F38495E0CFD448E93B1E366C047CBA0D567B3C526BCE36C3F3403A29D9D2A8A01020458246D65726961646F632E6272616E64796275636B406275636B6C616E642E6578616D706C65581833CB2D33A9C2A9178284E03D6DCCFFEA4E32D7363BDA50D3"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "title": "EdDSA-01: EdDSA - 25519 - sign0",
+  "cek": {
+    "__key__": true,
+    "alg": "EDDSA",
+    "kty": "OKP",
+    "crv": "ED25519",
+    "kid": "11",
+    "x": "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a",
+    "d": "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60"
+  },
+  "cbor_tag": true,
+  "input": {
+    "__input__": true,
+    "protected": {
+      "__header__": true,
+      "alg": "EDDSA",
+      "ctype": 0
+    },
+    "unprotected": {
+      "__header__": true,
+      "kid": "11"
+    },
+    "plaintext": "This is the content.",
+    "external_aad": ""
+  },
+  "output": {
+    "__output__": true,
+    "protected": "A201270300",
+    "unprotected": "{4: b'11'}",
+    "ciphertext": "546869732069732074686520636F6E74656E742E",
+    "signature": "7142FD2FF96D56DB85BEE905A76BA1D0B7321A95C8C4D3607C5781932B7AFB8711497DFA751BF40B58B3BCC32300B1487F3DB34085EEF013BF08F4A44D6FEF0D",
+    "structure": "846A5369676E61747572653145A2012703004054546869732069732074686520636F6E74656E742E",
+    "result": "D28445A201270300A10442313154546869732069732074686520636F6E74656E742E58407142FD2FF96D56DB85BEE905A76BA1D0B7321A95C8C4D3607C5781932B7AFB8711497DFA751BF40B58B3BCC32300B1487F3DB34085EEF013BF08F4A44D6FEF0D"
+  }
+}

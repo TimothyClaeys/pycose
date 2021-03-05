@@ -1,0 +1,56 @@
+{
+  "title": "ECDSA-01: ECDSA - P-256",
+  "cbor_tag": true,
+  "input": {
+    "__input__": true,
+    "protected": {
+      "__header__": true,
+      "ctype": 0
+    },
+    "unprotected": {
+      "__header__": true
+    },
+    "plaintext": "This is the content.",
+    "external_aad": "",
+    "signers": [
+      {
+        "__signer__": true,
+        "external_aad": "",
+        "protected": {
+          "__header__": true,
+          "alg": "ES256"
+        },
+        "unprotected": {
+          "__header__": true,
+          "kid": "11"
+        },
+        "signing_key": {
+          "__key__": true,
+          "alg": "ES256",
+          "kty": "EC2",
+          "crv": "P_256",
+          "kid": "11",
+          "x": "bac5b11cad8f99f9c72b05cf4b9e26d244dc189f745228255a219a86d6a09eff",
+          "y": "20138bf82dc1b6d562be0fa54ab7804a3a64b6d72ccfed6b6fb6ed28bbfc117e",
+          "d": "57c92077664146e876760c9520d054aa93c3afb04e306705db6090308507b4d3"
+        }
+      }
+    ]
+  },
+  "output": {
+    "__output__": true,
+    "protected": "A10300",
+    "unprotected": "{}",
+    "ciphertext": "546869732069732074686520636F6E74656E742E",
+    "signers": [
+      {
+        "__encode_signer__": true,
+        "protected": "A10126",
+        "unprotected": "{4: b'11'}",
+        "signature": "D71C05DB52C9CE7F1BF5AAC01334BBEACAC1D86A2303E6EEAA89266F45C01ED602CA649EAF790D8BC99D2458457CA6A872061940E7AFBE48E289DFAC146AE258",
+        "structure": "85695369676E617475726543A1030043A101264054546869732069732074686520636F6E74656E742E"
+      }
+    ],
+    "result": "D8628443A10300A054546869732069732074686520636F6E74656E742E818343A10126A1044231315840D71C05DB52C9CE7F1BF5AAC01334BBEACAC1D86A2303E6EEAA89266F45C01ED602CA649EAF790D8BC99D2458457CA6A872061940E7AFBE48E289DFAC146AE258"
+  }
+}

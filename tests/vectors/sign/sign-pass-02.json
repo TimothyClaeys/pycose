@@ -1,0 +1,55 @@
+{
+  "title": "sign-pass-02: External",
+  "cbor_tag": true,
+  "input": {
+    "__input__": true,
+    "protected": {
+      "__header__": true
+    },
+    "unprotected": {
+      "__header__": true
+    },
+    "plaintext": "This is the content.",
+    "external_aad": "",
+    "signers": [
+      {
+        "__signer__": true,
+        "external_aad": "11aa22bb33cc44dd55006699",
+        "protected": {
+          "__header__": true,
+          "alg": "ES256"
+        },
+        "unprotected": {
+          "__header__": true,
+          "kid": "11"
+        },
+        "signing_key": {
+          "__key__": true,
+          "alg": "ES256",
+          "kty": "EC2",
+          "crv": "P_256",
+          "kid": "11",
+          "x": "bac5b11cad8f99f9c72b05cf4b9e26d244dc189f745228255a219a86d6a09eff",
+          "y": "20138bf82dc1b6d562be0fa54ab7804a3a64b6d72ccfed6b6fb6ed28bbfc117e",
+          "d": "57c92077664146e876760c9520d054aa93c3afb04e306705db6090308507b4d3"
+        }
+      }
+    ]
+  },
+  "output": {
+    "__output__": true,
+    "protected": "",
+    "unprotected": "{}",
+    "ciphertext": "546869732069732074686520636F6E74656E742E",
+    "signers": [
+      {
+        "__encode_signer__": true,
+        "protected": "A10126",
+        "unprotected": "{4: b'11'}",
+        "signature": "CBB8DAD9BEAFB890E1A414124D8BFBC26BEDF2A94FCB5A882432BFF6D63E15F574EEB2AB51D83FA2CBF62672EBF4C7D993B0F4C2447647D831BA57CCA86B930A",
+        "structure": "85695369676E61747572654043A101264C11AA22BB33CC44DD5500669954546869732069732074686520636F6E74656E742E"
+      }
+    ],
+    "result": "D8628440A054546869732069732074686520636F6E74656E742E818343A10126A1044231315840CBB8DAD9BEAFB890E1A414124D8BFBC26BEDF2A94FCB5A882432BFF6D63E15F574EEB2AB51D83FA2CBF62672EBF4C7D993B0F4C2447647D831BA57CCA86B930A"
+  }
+}

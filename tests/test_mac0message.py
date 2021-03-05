@@ -1,67 +1,48 @@
-from binascii import unhexlify
+import cbor2
+import pytest
 
-from pytest import skip, fixture, mark
-
-from cose import CoseMessage
-from cose.keys.cosekey import KeyOps
-from cose.keys.symmetric import SymmetricKey
+from cose.keys.cosekey import CoseKey
+from cose.keys.keyops import MacVerifyOp, MacCreateOp
+from cose.messages.cosemessage import CoseMessage
 from cose.messages.mac0message import Mac0Message
-from tests.conftest import generic_test_setup, create_cose_key, extract_alg
 
 
-@fixture
-def setup_mac0_tests(mac0_test_input: dict) -> tuple:
-    return generic_test_setup(mac0_test_input)
+def test_mac0_encoding(test_mac0):
+    test_input = test_mac0['input']
+    test_output = test_mac0['output']
+
+    msg = Mac0Message(
+        phdr=test_input['protected'],
+        uhdr=test_input['unprotected'],
+        payload=test_input['plaintext'],
+        external_aad=test_input['external_aad'])
+
+    assert msg.phdr_encoded == test_output['protected']
+    assert msg.uhdr_encoded == test_output['unprotected']
+
+    assert msg._mac_structure == test_output['structure']
+
+    key = CoseKey.from_dict(test_mac0["cek"])
+    key.key_ops = [MacCreateOp, MacVerifyOp]
+    msg.key = key
+
+    assert msg.compute_tag() == test_output['tag']
+    assert cbor2.loads(msg.encode(tag=test_mac0['cbor_tag'])) == test_output['result']
 
 
-@mark.decoding
-def test_mac0_encoding(setup_mac0_tests: tuple) -> None:
-    title, test_input, test_output, test_intermediate, fail = setup_mac0_tests
+@pytest.mark.xfail(reason="Message not tagged", raises=AttributeError)
+def test_encrypt0_decoding(test_mac0):
+    test_input = test_mac0['input']
+    test_output = test_mac0['output']
 
-    mac0: Mac0Message = Mac0Message(
-        phdr=test_input['mac0'].get('protected', {}),
-        uhdr=test_input['mac0'].get('unprotected', {}),
-        payload=test_input.get('plaintext', '').encode('utf-8'),
-        external_aad=unhexlify(test_input['mac0'].get("external", b'')))
+    msg = CoseMessage.decode(cbor2.dumps(test_output['result']))
+    msg.external_aad = test_input['external_aad']
 
-    assert mac0._mac_structure == unhexlify(test_intermediate["ToMac_hex"])
+    key = CoseKey.from_dict(test_mac0["cek"])
+    key.key_ops = [MacVerifyOp]
+    msg.key = key
 
-    cek = create_cose_key(
-        SymmetricKey,
-        test_input['mac0']["recipients"][0]["key"],
-        alg=extract_alg(test_input["mac0"]),
-        usage=KeyOps.MAC_CREATE)
+    assert msg.phdr == test_input['protected']
+    assert msg.uhdr == test_input['unprotected']
 
-    assert cek.k == unhexlify(test_intermediate["CEK_hex"])
-
-    # verify encoding (with automatic tag computation)
-    if fail:
-        assert mac0.encode(key=cek) != unhexlify(test_output)
-    else:
-        assert mac0.encode(key=cek) == unhexlify(test_output)
-
-
-def test_mac0_decoding(setup_mac0_tests: tuple) -> None:
-    _, test_input, test_output, test_intermediate, fail = setup_mac0_tests
-
-    if fail:
-        skip("invalid test input")
-
-    cose_msg: Mac0Message = CoseMessage.decode(unhexlify(test_output))
-
-    assert cose_msg.phdr == test_input['mac0'].get('protected', {})
-    assert cose_msg.uhdr == test_input['mac0'].get('unprotected', {})
-    assert cose_msg.payload == test_input.get('plaintext', "").encode('utf-8')
-
-    # set up potential external data
-    cose_msg.external_aad = unhexlify(test_input['mac0'].get("external", b''))
-
-    cek = create_cose_key(
-        SymmetricKey,
-        test_input['mac0']["recipients"][0]["key"],
-        alg=extract_alg(test_input["mac0"]),
-        usage=KeyOps.MAC_VERIFY)
-
-    assert cek.k == unhexlify(test_intermediate["CEK_hex"])
-
-    assert cose_msg.verify_tag(cek)
+    assert msg.verify_tag()

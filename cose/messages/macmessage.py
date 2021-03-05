@@ -9,15 +9,20 @@ COSE_Mac = [
 ]
 """
 
-from typing import Optional, List
+import os
+from typing import Optional, List, TYPE_CHECKING
 
-import cbor2
-
-from cose import CoseMessage
+from cose import utils, headers
+from cose.exceptions import CoseException
+from cose.keys.keyops import MacCreateOp
 from cose.messages import cosemessage, maccommon
-from cose.attributes.algorithms import CoseAlgorithms
-from cose.keys.symmetric import SymmetricKey
-from cose.messages.recipient import CoseRecipient, RcptParams
+from cose.messages.recipient import CoseRecipient, DirectEncryption, DirectKeyAgreement, KeyWrap, \
+    KeyAgreementWithKeyWrap
+
+if TYPE_CHECKING:
+    from cose.keys.symmetric import SK, SymmetricKey
+
+CBOR = bytes
 
 
 @cosemessage.CoseMessage.record_cbor_tag(97)
@@ -26,12 +31,12 @@ class MacMessage(maccommon.MacCommon):
     cbor_tag = 97
 
     @classmethod
-    def from_cose_obj(cls, cose_obj) -> 'MacMessage':
+    def from_cose_obj(cls, cose_obj: list, *args, **kwargs) -> 'MacMessage':
         msg = super().from_cose_obj(cose_obj)
         msg.auth_tag = cose_obj.pop(0)
 
         try:
-            msg.recipients = [CoseRecipient.from_recipient_obj(r) for r in cose_obj.pop(0)]
+            msg.recipients = [CoseRecipient.create_recipient(r, context='Mac_Recipient') for r in cose_obj.pop(0)]
         except (IndexError, ValueError):
             msg.recipients = None
 
@@ -42,50 +47,65 @@ class MacMessage(maccommon.MacCommon):
                  uhdr: dict = None,
                  payload: bytes = b'',
                  external_aad: bytes = b'',
+                 key: Optional['SK'] = None,
                  recipients: Optional[List[CoseRecipient]] = None):
         if phdr is None:
             phdr = {}
         if uhdr is None:
             uhdr = {}
 
-        super().__init__(phdr, uhdr, payload, external_aad)
+        super().__init__(phdr, uhdr, payload, external_aad, key)
 
-        if recipients is None:
-            self.recipients = []
-        else:
-            self.recipients = recipients
+        self._recipients = []
+        self.recipients = recipients
 
-    def encode(self,
-               key: SymmetricKey,
-               alg: Optional[CoseAlgorithms] = None,
-               mac_params: Optional[List[RcptParams]] = None,
-               tagged: bool = True,
-               mac: bool = True) -> bytes:
+    def encode(self, tag: bool = True, mac: bool = True, *args, **kwargs) -> CBOR:
         """ Encodes and protects the COSE_Mac message. """
 
-        # encode/encrypt the base fields
         if mac:
-            message = [self.encode_phdr(), self.encode_uhdr(), self.payload, self.compute_tag(alg=alg, key=key)]
+            message = [self.phdr_encoded, self.uhdr_encoded, self.payload, self.compute_tag()]
         else:
-            message = [self.encode_phdr(), self.encode_uhdr(), self.payload]
+            message = [self.phdr_encoded, self.uhdr_encoded, self.payload]
 
-        if mac_params is None:
-            mac_params = []
+        if len(self.recipients):
+            message.append([r.encode(target_alg=self.get_attr(headers.Algorithm)) for r in self.recipients])
 
-        if len(self.recipients) == len(mac_params):
-            if len(mac_params) > 0:
-                message.append(CoseRecipient.recursive_encode(self.recipients, mac_params))
+        res = super(MacMessage, self).encode(message, tag)
+        return res
+
+    def compute_tag(self, *args, **kwargs) -> bytes:
+        target_algorithm = self.get_attr(headers.Algorithm)
+
+        r_types = CoseRecipient.verify_recipients(self.recipients)
+
+        if DirectEncryption in r_types:
+            # key should already be known
+            payload = super(MacMessage, self).compute_tag()
+
+        elif DirectKeyAgreement in r_types:
+            self.key = self.recipients[0].compute_cek(target_algorithm, "encrypt")
+            payload = super(MacMessage, self).compute_tag()
+
+        elif KeyWrap in r_types or KeyAgreementWithKeyWrap in r_types:
+            key_bytes = os.urandom(self.get_attr(headers.Algorithm).get_key_length())
+
+            for r in self.recipients:
+                if r.payload == b'':
+                    r.payload = key_bytes
+                else:
+                    key_bytes = r.payload
+                r.encrypt(target_algorithm)
+            self.key = SymmetricKey(k=key_bytes, alg=target_algorithm, key_ops=[MacCreateOp])
+            payload = super(MacMessage, self).compute_tag()
+
         else:
-            raise ValueError("List with cryptographic parameters should have the same length as the recipient list.")
+            raise CoseException('Unsupported COSE recipient class')
 
-        if tagged:
-            message = cbor2.dumps(cbor2.CBORTag(self.cbor_tag, message), default=self._special_cbor_encoder)
-        else:
-            message = cbor2.dumps(message, default=self._special_cbor_encoder)
-
-        return message
+        return payload
 
     def __repr__(self) -> str:
+        phdr, uhdr = self._hdr_repr()
+
         return \
-            f'<COSE_Mac0: [{self._phdr}, {self._uhdr}, {CoseMessage._truncate(self._payload)}, ' \
-            f'{CoseMessage._truncate(self.auth_tag)}, {self.recipients}]>'
+            f'<COSE_Mac: [{phdr}, {uhdr}, {utils.truncate(self._payload)}, ' \
+            f'{utils.truncate(self.auth_tag)}, {self.recipients}]>'

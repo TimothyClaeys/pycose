@@ -1,9 +1,10 @@
 Encrypt0
 ========
 
-:class:`~cose.messages.enc0message.Enc0Message` messages are used when there is a single receiver. The sender assumes that the receiver knows how
-to find/derive the CEK to decrypt the payload. In case there are multiple receivers (each using a different key) or the
-receiver requires more information to find/derive the CEK a :class:`~cose.messages.encmessage.EncMessage` should be used.
+:class:`~cose.messages.enc0message.Enc0Message` messages are used when there is a single receiver. The sender assumes
+that the receiver knows how to find/derive the CEK to decrypt the payload. In case there are multiple receivers
+(each using a different key) or the receiver requires more information to find/derive the CEK a
+:class:`~cose.messages.encmessage.EncMessage` should be used.
 
 .. image:: ../../../images/encrypt0.png
     :width: 500px
@@ -11,27 +12,6 @@ receiver requires more information to find/derive the CEK a :class:`~cose.messag
 
 .. doctest::
 
-    >>> from cose import SymmetricKey, Enc0Message, CoseAlgorithms, KeyOps, CoseHeaderKeys
-
-    # create a SymmetricKey COSE key (key bytes are generated with os.urandom)
-    >>> key = SymmetricKey.generate_key(CoseAlgorithms.A128GCM, KeyOps.ENCRYPT, key_len=16)
-
-    # create a COSE_encrypt0 message
-    >>> payload = b"Secret Message."
-    >>> nonce = b'\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03\x00\x01\x02\x03'
-    >>> msg = Enc0Message({CoseHeaderKeys.ALG: CoseAlgorithms.A128GCM}, {CoseHeaderKeys.IV: nonce}, payload)
-
-    # encode and encrypt the COSE message
-    >>> msg = msg.encode(nonce, key)
-
-    # change the key operation and decode/decrypt the message
-    >>> key.key_ops = KeyOps.DECRYPT
-    >>> msg = Enc0Message.decode(msg)
-    >>> msg.phdr[CoseHeaderKeys.ALG]
-    <CoseAlgorithms.A128GCM: 1>
-
-    >>> msg.decrypt(nonce, key)
-    b'Secret Message.'
 
 
 .. module:: cose.messages.enc0message

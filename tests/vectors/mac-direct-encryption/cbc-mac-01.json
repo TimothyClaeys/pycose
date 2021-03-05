@@ -1,0 +1,50 @@
+{
+  "title": "CBC-MAC-01: MAC example with direct shared key and AES-CBC-MAC-128/64",
+  "cek": {
+    "__key__": true,
+    "alg": "AES_MAC_128_64",
+    "kty": "SYMMETRIC",
+    "kid": "our-secret",
+    "k": "849B57219DAE48DE646D07DBB533566E"
+  },
+  "input": {
+    "__input__": true,
+    "protected": {
+      "__header__": true,
+      "alg": "AES_MAC_128_64"
+    },
+    "unprotected": {
+      "__header__": true
+    },
+    "plaintext": "This is the content.",
+    "external_aad": "",
+    "recipients": [
+      {
+        "__recipient__": true,
+        "protected": {},
+        "unprotected": {
+          "__header__": true,
+          "alg": "DIRECT",
+          "kid": "our-secret"
+        }
+      }
+    ]
+  },
+  "output": {
+    "__output__": true,
+    "protected": "A1010E",
+    "unprotected": "{}",
+    "ciphertext": "546869732069732074686520636F6E74656E742E",
+    "tag": "C1CA820E6E247089",
+    "structure": "84634D414343A1010E4054546869732069732074686520636F6E74656E742E",
+    "recipients": [
+      {
+        "__encode_rcpt__": true,
+        "protected": "",
+        "unprotected": "{1: -6, 4: b'our-secret'}",
+        "ciphertext": ""
+      }
+    ],
+    "result": "D8618543A1010EA054546869732069732074686520636F6E74656E742E48C1CA820E6E247089818340A20125044A6F75722D73656372657440"
+  }
+}
