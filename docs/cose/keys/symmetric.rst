@@ -4,6 +4,8 @@ Symmetric Key
 To encode/encrypt/authenticate or decode/decrypt/verify the payload of COSE messages Enc0message, Mac0Message,
 EncMessage, and/or MacMessage the COSE message object requires a COSE key of type :class:`~cose.keys.symmetric.SymmetricKey`.
 
+COSE keys can be created from a standard dictionary object (see example 1 and example 3).
+
 
 Example usage COSE Symmetric Keys:
 
@@ -44,6 +46,31 @@ Example 2:
 
     >>> # generate a random key
     >>> cose_key = SymmetricKey.generate_key(key_len=16)
+
+Example 3:
+----------
+
+.. doctest::
+    :pyversion: >= 3.6
+
+    >>> from binascii import unhexlify
+    >>> from cose.keys import SymmetricKey, CoseKey
+
+    >>> # create key object from a dict
+    >>> simple_dict = {
+    ...     1: 'SYMMETRIC',
+    ...     3: 'A128GCM',
+    ...     -1: unhexlify(b'000102030405060708090a0b0c0d0e0f')}
+
+    >>> cose_key = CoseKey.from_dict(simple_dict)
+
+    >>> #encode/serialize key
+    >>> serialized_key = cose_key.encode()
+    >>> serialized_key
+    b'\xa4\x01\x04\x03\x01 P\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f\x04\x80'
+
+    >>> CoseKey.decode(serialized_key)
+    <COSE_Key(Symmetric): {'SymKpK': b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f', 'KpKty': 'KtySymmetric', 'KpAlg': 'A128GCM', 'KpKeyOps': []}>
 
 .. module:: cose.keys.symmetric
 
