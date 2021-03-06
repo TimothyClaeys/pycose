@@ -30,6 +30,7 @@ if TYPE_CHECKING:
     from cose.keys.symmetric import SK
     from cose.keys.ec2 import EC2
     from cose.keys.okp import OKP
+    from cose.keys.rsa import RSA
     from cose.curves import CoseCurve
     from cose.messages.context import CoseKDFContext
 
@@ -79,8 +80,11 @@ class _Rsa(CoseAlgorithm, ABC):
     def verify(cls, key: 'RSA', data: bytes, signature: bytes) -> bool:
         hash_cls = cls.get_hash_func()
         pad = cls.get_pad_func(hash_cls)
+
         pk = key.to_cryptograpy_key_obj()
-        
+        if isinstance(pk, rsa.RSAPrivateKey):
+            pk = pk.public_key()
+
         try:
             pk.verify(
                 signature,
@@ -112,7 +116,6 @@ class _Rsa(CoseAlgorithm, ABC):
         pad = cls.get_pad_func(hash_cls)
         pk = key.to_cryptograpy_key_obj()
 
-        print('key size', pk.key_size, 'data size', len(data))
         return pk.decrypt(
             data,
             pad
