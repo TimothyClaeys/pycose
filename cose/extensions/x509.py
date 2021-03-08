@@ -1,9 +1,8 @@
-from typing import List, Union
-
-from cryptography.hazmat.backends import openssl
+from typing import List, Set, Union
+from datetime import datetime
+from certvalidator import CertificateValidator, ValidationContext
 
 from cose.algorithms import CoseAlg, CoseAlgorithm
-from cose.headers import CoseAttr
 
 
 class X5Bag:
@@ -76,9 +75,13 @@ class X5Chain:
         if verify:
             self.verify_chain()
 
-    def verify_chain(self):
-        # TODO: verify certificate chain
-        pass
+    def verify_chain(self, ctx: ValidationContext, key_usage: Set[str]):
+        val = CertificateValidator(
+            end_entity_cert=self.cert_chain[0],
+            intermediate_certs=self.cert_chain[1:],
+            validation_context=ctx
+        )
+        return val.validate_usage(key_usage)
 
     def encode(self) -> Union[bytes, List[bytes]]:
         return self.cert_chain
