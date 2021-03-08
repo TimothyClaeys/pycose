@@ -1,11 +1,9 @@
 from typing import List, Union
 
 from cryptography.hazmat.backends import openssl
-from cryptography.hazmat.primitives.hashes import Hash
 
-from cose.algorithms import CoseAlgorithms
-from cose.algorithms import config
-from cose.exceptions import CoseIllegalAlgorithm
+from cose.algorithms import CoseAlg, CoseAlgorithm
+from cose.headers import CoseAttr
 
 
 class X5Bag:
@@ -20,28 +18,45 @@ class X5Bag:
 
 
 class X5T:
-    def __init__(self, alg_id: CoseAlgorithms, certificate: bytes):
-        self.alg = alg_id
-        self.certificate = certificate
+    @classmethod
+    def from_certificate(cls, alg: CoseAlg, certificate: bytes):
+        ''' Extract thumbprint from an encoded certificate.
+        '''
+        return cls(
+            alg=alg,
+            thumbprint=alg.compute_hash(certificate)
+        )
 
-    def compute_hash(self) -> bytes:
-        try:
-            alg_cfg = config(CoseAlgorithms(self.alg))
-        except KeyError as err:
-            raise CoseIllegalAlgorithm(err)
+    @classmethod
+    def decode(cls, item):
+        ''' Decode from a CBOR item.
+        '''
+        return cls(
+            alg=CoseAlgorithm.from_id(item[0]),
+            thumbprint=item[1]
+        )
 
-        h = Hash(algorithm=alg_cfg.hash(), backend=openssl.backend)
-        h.update(self.certificate)
-        digest = h.finalize()
+    def __init__(self, alg: CoseAlg, thumbprint: bytes):
+        self.alg = alg
+        self.thumbprint = thumbprint
 
-        if alg_cfg.tag_length is not None:
-            digest = digest[:8]
-
-        return digest
+    def __eq__(self, other: 'X5T'):
+        return (
+            self.alg == other.alg
+            and self.thumbprint == other.thumbprint
+        )
 
     def encode(self):
-        return [self.alg, self.compute_hash()]
+        ''' Encode to a CBOR item.
+        '''
+        return [self.alg, self.thumbprint]
 
+    def matches(self, certificate: bytes) -> bool:
+        ''' Determine if this thumbprint is for a given certificate.
+        '''
+        if not self.thumbprint:
+            return False
+        return self.thumbprint == self.alg.compute_hash(certificate)
 
 class X5U:
     def __init__(self, uri: str):
