@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from binascii import hexlify, unhexlify
 from hashlib import sha512, sha384, sha256
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, Optional, TypeVar
 
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.backends import default_backend
@@ -12,7 +12,7 @@ from cryptography.hazmat.primitives.asymmetric.ed448 import Ed448PrivateKey, Ed4
 from cryptography.hazmat.primitives.ciphers import modes, Cipher
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM, AESCCM
 from cryptography.hazmat.primitives.ciphers.algorithms import AES
-from cryptography.hazmat.primitives.hashes import HashAlgorithm, SHA1, SHA256, SHA512, SHA384
+from cryptography.hazmat.primitives.hashes import Hash, HashAlgorithm, SHA1, SHA256, SHA512, SHA384, SHAKE128, SHAKE256
 from cryptography.hazmat.primitives.hmac import HMAC
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.primitives.keywrap import aes_key_wrap, aes_key_unwrap
@@ -41,6 +41,28 @@ class CoseAlgorithm(_CoseAttribute, ABC):
     @classmethod
     def get_registered_classes(cls):
         return cls._registered_algorithms
+
+
+class _HashAlg(CoseAlgorithm, ABC):
+    #: Set in derived class to hash constructor
+    hash_cls = None
+    #: Set in derived class to optional trucation size in byte count
+    truc_size: Optional[int] = None
+
+    @classmethod
+    def get_hash_func(cls) -> HashAlgorithm:
+        return cls.hash_cls()
+
+    @classmethod
+    def compute_hash(cls, data: bytes) -> bytes:
+        h = Hash(algorithm=cls.get_hash_func(), backend=default_backend())
+        h.update(data)
+        digest = h.finalize()
+
+        if cls.truc_size:
+            digest = digest[:cls.truc_size]
+
+        return digest
 
 
 class _EncAlg(CoseAlgorithm, ABC):
@@ -340,6 +362,27 @@ class _AesCcm(_EncAlg, ABC):
 ##################################################
 
 @CoseAlgorithm.register_attribute()
+class Shake256(_HashAlg):
+    identifier = -45
+    fullname = "SHAKE-256"
+    hash_cls = SHAKE256
+
+
+@CoseAlgorithm.register_attribute()
+class Sha512(_HashAlg):
+    identifier = -44
+    fullname = "SHA-512"
+    hash_cls = SHA512
+
+
+@CoseAlgorithm.register_attribute()
+class Sha384(_HashAlg):
+    identifier = -43
+    fullname = "SHA-384"
+    hash_cls = SHA384
+
+
+@CoseAlgorithm.register_attribute()
 class RsaPkcs1Sha1(_RsaPkcs1):
     identifier = -65535
     fullname = "RS1"
@@ -629,6 +672,43 @@ class EcdhEsHKDF256(_EcdhHkdf):
     @classmethod
     def get_key_wrap_func(cls):
         return Direct()
+
+
+@CoseAlgorithm.register_attribute()
+class Shake128(_HashAlg):
+    identifier = -18
+    fullname = "SHAKE-128"
+    hash_cls = SHAKE128
+
+
+@CoseAlgorithm.register_attribute()
+class Sha512Trunc256(_HashAlg):
+    identifier = -17
+    fullname = "SHA-512/256"
+    hash_cls = SHA512
+    truc_size = 32
+
+
+@CoseAlgorithm.register_attribute()
+class Sha256(_HashAlg):
+    identifier = -16
+    fullname = "SHA-256"
+    hash_cls = SHA256
+
+
+@CoseAlgorithm.register_attribute()
+class Sha256Trunc64(_HashAlg):
+    identifier = -15
+    fullname = "SHA-256/64"
+    hash_cls = SHA256
+    truc_size = 8
+
+
+@CoseAlgorithm.register_attribute()
+class Sha1(_HashAlg):
+    identifier = -14
+    fullname = "SHA-1"
+    hash_cls = SHA1
 
 
 @CoseAlgorithm.register_attribute()
