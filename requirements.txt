@@ -2,6 +2,7 @@ cryptography
 cbor2
 ecdsa
 attrs
+certvalidator
 
 # to build docs
 Sphinx>=3.3.1
