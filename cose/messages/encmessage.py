@@ -4,6 +4,7 @@ from typing import List, Optional, TYPE_CHECKING
 from cose import utils, headers
 from cose.exceptions import CoseException
 from cose.keys.keyops import EncryptOp
+from cose.keys.keyparam import KpAlg, KpKeyOps
 from cose.keys.symmetric import SymmetricKey
 from cose.messages import enccommon, cosemessage
 from cose.messages.recipient import DirectEncryption, DirectKeyAgreement, KeyWrap, KeyAgreementWithKeyWrap, \
@@ -94,7 +95,7 @@ class EncMessage(enccommon.EncCommon):
                 else:
                     key_bytes = r.payload
                 r.encrypt(target_algorithm)
-            self.key = SymmetricKey(k=key_bytes, alg=target_algorithm, key_ops=[EncryptOp])
+            self.key = SymmetricKey(key=key_bytes, optional_params={KpAlg: target_algorithm, KpKeyOps: [EncryptOp]})
             payload = super(EncMessage, self).encrypt()
 
         else:

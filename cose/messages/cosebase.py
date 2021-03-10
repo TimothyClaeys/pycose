@@ -4,6 +4,7 @@ from typing import Optional, Any, Dict, Type, Tuple
 
 import cbor2
 
+from cose import utils
 from cose.keys.cosekey import CoseKey
 from cose.headers import CoseHeaderAttribute
 from cose.exceptions import CoseException
@@ -162,5 +163,17 @@ class CoseBase(metaclass=abc.ABCMeta):
 
         uhdr = {(k.__name__ if hasattr(k, '__name__') else k): (
             self._uhdr[k].__name__ if hasattr(self._uhdr[k], '__name__') else self._uhdr[k]) for k in self._uhdr}
+
+        if 'IV' in phdr and len(phdr['IV']) > 0:
+            phdr['IV'] = utils.truncate(phdr['IV'])
+
+        if 'IV' in uhdr and len(uhdr['IV']) > 0:
+            uhdr['IV'] = utils.truncate(uhdr['IV'])
+
+        if 'PARTIAL_IV' in phdr and len(phdr['PARTIAL_IV']) > 0:
+            phdr['PARTIAL_IV'] = utils.truncate(phdr['PARTIAL_IV'])
+
+        if 'PARTIAL_IV' in uhdr and len(uhdr['PARTIAL_IV']) > 0:
+            uhdr['PARTIAL_IV'] = utils.truncate(uhdr['PARTIAL_IV'])
 
         return phdr, uhdr

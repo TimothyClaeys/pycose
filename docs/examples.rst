@@ -27,7 +27,7 @@ The example creates a COSE Encrypt0 message. The message is encrypted with AES-G
     ...     payload = 'some secret message'.encode('utf-8'))
 
     >>> msg
-    <COSE_Encrypt0: [{'Algorithm': 'A128GCM', 'IV': b'000102030405060708090a0b0c'}, {'KID': b'kid1'}, b'some ' ... (19 B)]>
+    <COSE_Encrypt0: [{'Algorithm': 'A128GCM', 'IV': "b'00010' ... (26 B)"}, {'KID': b'kid1'}, b'some ' ... (19 B)]>
 
     >>> cose_key = {
     ...     KpKty: KtySymmetric,
@@ -36,7 +36,7 @@ The example creates a COSE Encrypt0 message. The message is encrypted with AES-G
 
     >>> cose_key = CoseKey.from_dict(cose_key)
     >>> cose_key
-    <COSE_Key(Symmetric): {'SymKpK': b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f', 'KpKty': 'KtySymmetric', 'KpKeyOps': ['EncryptOp', 'DecryptOp']}>
+    <COSE_Key(Symmetric): {'SymKpK': "b'\\x00\\x01\\x02\\x03\\x04' ... (16 B)", 'KpKty': 'KtySymmetric', 'KpKeyOps': ['EncryptOp', 'DecryptOp']}>
 
     >>> msg.key = cose_key
     >>> # the encode() function performs the encryption automatically
@@ -47,7 +47,7 @@ The example creates a COSE Encrypt0 message. The message is encrypted with AES-G
     >>> # decode and decrypt
     >>> decoded = CoseMessage.decode(encoded)
     >>> decoded
-    <COSE_Encrypt0: [{'Algorithm': 'A128GCM', 'IV': b'000102030405060708090a0b0c'}, {'KID': b'kid1'}, b'\xcc\xa3D\x1a$' ... (35 B)]>
+    <COSE_Encrypt0: [{'Algorithm': 'A128GCM', 'IV': "b'00010' ... (26 B)"}, {'KID': b'kid1'}, b'\xcc\xa3D\x1a$' ... (35 B)]>
 
     >>> decoded.key = cose_key
     >>> hexlify(decoded.payload)
@@ -93,7 +93,7 @@ The example creates a COSE Sign1 message. The message is signed with EdDSA.
 
     >>> cose_key = CoseKey.from_dict(cose_key)
     >>> cose_key
-    <COSE_Key(OKPKey): {'OKPKpD': b'\x9da\xb1\x9d\xef\xfdZ`\xba\x84J\xf4\x92\xec,\xc4DI\xc5i{2i\x19p;\xac\x03\x1c\xae\x7f`', 'OKPKpX': b'\xd7Z\x98\x01\x82\xb1\n\xb7\xd5K\xfe\xd3\xc9d\x07:\x0e\xe1r\xf3\xda\xa6#%\xaf\x02\x1ah\xf7\x07Q\x1a', 'OKPKpCurve': 'Ed25519', 'KpKty': 'KtyOKP', 'KpKeyOps': ['SignOp', 'VerifyOp']}>
+    <COSE_Key(OKPKey): {'OKPKpD': "b'\\x9da\\xb1\\x9d\\xef' ... (32 B)", 'OKPKpX': "b'\\xd7Z\\x98\\x01\\x82' ... (32 B)", 'OKPKpCurve': 'Ed25519', 'KpKty': 'KtyOKP', 'KpKeyOps': ['SignOp', 'VerifyOp']}>
 
     >>> msg.key = cose_key
     >>> # the encode() function performs the signing automatically
@@ -147,7 +147,7 @@ The example creates a COSE Mac0 message. The message is authenticated with HMAC-
 
     >>> cose_key = CoseKey.from_dict(cose_key)
     >>> cose_key
-    <COSE_Key(Symmetric): {'SymKpK': b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f', 'KpKty': 'KtySymmetric', 'KpKeyOps': ['MacCreateOp', 'MacVerifyOp']}>
+    <COSE_Key(Symmetric): {'SymKpK': "b'\\x00\\x01\\x02\\x03\\x04' ... (32 B)", 'KpKty': 'KtySymmetric', 'KpKeyOps': ['MacCreateOp', 'MacVerifyOp']}>
 
     >>> msg.key = cose_key
     >>> # the encode() function automatically computes the authentication tag
@@ -203,7 +203,7 @@ direct key agreement method. The sender is using an ephemeral key.
     ...     EC2KpD: unhexlify(b'02d1f7e6f26c43d4868d87ceb2353161740aacf1f7163647984b522a848df1c3')}
     >>> ephemeral_sender_key = CoseKey.from_dict(ephemeral_sender_key)
     >>> ephemeral_sender_key
-    <COSE_Key(EC2Key): {'EC2KpD': b'\x02\xd1\xf7\xe6\xf2lC\xd4\x86\x8d\x87\xce\xb251at\n\xac\xf1\xf7\x166G\x98KR*\x84\x8d\xf1\xc3', 'EC2KpY': b'\xf0\x14\x00\xb0\x89\x86x\x04\xb8\xe9\xfc\x96\xc3\x93!a\xf1\x93OB#\x06\x91p\xd9$\xb7\xe0;\xf8"\xbb', 'EC2KpX': b'\x98\xf5\nO\xf6\xc0Xa\xc8\x86\r\x13\xa68\xeaV\xc3\xf5\xadu\x90\xbb\xfb\xf0T\xe1\xc7\xb4\xd9\x1db\x80', 'EC2KpCurve': 'P256', 'KpKty': 'KtyEC2', 'KpKid': b'peregrin.took@tuckborough.example', 'KpKeyOps': ['DeriveKeyOp']}>
+    <COSE_Key(EC2Key): {'EC2KpD': "b'\\x02\\xd1\\xf7\\xe6\\xf2' ... (32 B)", 'EC2KpY': "b'\\xf0\\x14\\x00\\xb0\\x89' ... (32 B)", 'EC2KpX': "b'\\x98\\xf5\\nO\\xf6' ... (32 B)", 'EC2KpCurve': 'P256', 'KpKty': 'KtyEC2', 'KpKid': b'peregrin.took@tuckborough.example', 'KpKeyOps': ['DeriveKeyOp']}>
 
     >>> # static receiver key must be obtained in an out-of-bounds way
     >>> # (public key of the receiver, necessary for an ECDH computation)
@@ -216,7 +216,7 @@ direct key agreement method. The sender is using an ephemeral key.
     ...     EC2KpY: unhexlify(b'1e52ed75701163f7f9e40ddf9f341b3dc9ba860af7e0ca7ca7e9eecd0084d19c')}
     >>> static_receiver_key = CoseKey.from_dict(static_receiver_key)
     >>> static_receiver_key
-    <COSE_Key(EC2Key): {'EC2KpY': b'\x1eR\xedup\x11c\xf7\xf9\xe4\r\xdf\x9f4\x1b=\xc9\xba\x86\n\xf7\xe0\xca|\xa7\xe9\xee\xcd\x00\x84\xd1\x9c', 'EC2KpX': b'e\xed\xa5\xa1%w\xc2\xba\xe8)C\x7f\xe38p\x1a\x10\xaa\xa3u\xe1\xbb[]\xe1\x08\xdeC\x9c\x08U\x1d', 'EC2KpCurve': 'P256', 'KpKty': 'KtyEC2', 'KpKid': b'meriadoc.brandybuck@buckland.example', 'KpKeyOps': ['DeriveKeyOp']}>
+    <COSE_Key(EC2Key): {'EC2KpY': "b'\\x1eR\\xedup' ... (32 B)", 'EC2KpX': "b'e\\xed\\xa5\\xa1%' ... (32 B)", 'EC2KpCurve': 'P256', 'KpKty': 'KtyEC2', 'KpKid': b'meriadoc.brandybuck@buckland.example', 'KpKeyOps': ['DeriveKeyOp']}>
 
     >>> # Make a copy from the ephemeral key and make sure the public part is added to the header of recipient.
     >>> # Otherwise the receiving side cannot derive the CEK, using the ECDH computation.
@@ -226,7 +226,7 @@ direct key agreement method. The sender is using an ephemeral key.
     >>> del ephemeral_public[KpKeyOps]
     >>> del ephemeral_public[EC2KpD]
     >>> ephemeral_public
-    <COSE_Key(EC2Key): {'EC2KpY': b'\xf0\x14\x00\xb0\x89\x86x\x04\xb8\xe9\xfc\x96\xc3\x93!a\xf1\x93OB#\x06\x91p\xd9$\xb7\xe0;\xf8"\xbb', 'EC2KpX': b'\x98\xf5\nO\xf6\xc0Xa\xc8\x86\r\x13\xa68\xeaV\xc3\xf5\xadu\x90\xbb\xfb\xf0T\xe1\xc7\xb4\xd9\x1db\x80', 'EC2KpCurve': 'P256', 'KpKty': 'KtyEC2', 'KpKid': b'peregrin.took@tuckborough.example'}>
+    <COSE_Key(EC2Key): {'EC2KpY': "b'\\xf0\\x14\\x00\\xb0\\x89' ... (32 B)", 'EC2KpX': "b'\\x98\\xf5\\nO\\xf6' ... (32 B)", 'EC2KpCurve': 'P256', 'KpKty': 'KtyEC2', 'KpKid': b'peregrin.took@tuckborough.example'}>
 
     >>> recipient = DirectKeyAgreement(
     ...     phdr = {Algorithm: EcdhEsHKDF256},
@@ -242,19 +242,19 @@ direct key agreement method. The sender is using an ephemeral key.
     ...     payload = 'This is the content'.encode('utf-8'),
     ...     recipients = [recipient])
     >>> msg
-    <COSE_Encrypt: [{'Algorithm': 'A128GCM'}, {'IV': b'\xc9\xcfM\xf2\xfelc+\xf7\x88d\x13'}, b'This ' ... (19 B), [<COSE_Recipient: [{'Algorithm': 'EcdhEsHKDF256'}, {'EphemeralKey': <COSE_Key(EC2Key): {'EC2KpY': b'\xf0\x14\x00\xb0\x89\x86x\x04\xb8\xe9\xfc\x96\xc3\x93!a\xf1\x93OB#\x06\x91p\xd9$\xb7\xe0;\xf8"\xbb', 'EC2KpX': b'\x98\xf5\nO\xf6\xc0Xa\xc8\x86\r\x13\xa68\xeaV\xc3\xf5\xadu\x90\xbb\xfb\xf0T\xe1\xc7\xb4\xd9\x1db\x80', 'EC2KpCurve': 'P256', 'KpKty': 'KtyEC2', 'KpKid': b'peregrin.took@tuckborough.example'}>}, b'' ... (0 B), []]>]]>
+    <COSE_Encrypt: [{'Algorithm': 'A128GCM'}, {'IV': "b'\\xc9\\xcfM\\xf2\\xfe' ... (12 B)"}, b'This ' ... (19 B), [<COSE_Recipient: [{'Algorithm': 'EcdhEsHKDF256'}, {'EphemeralKey': <COSE_Key(EC2Key): {'EC2KpY': "b'\\xf0\\x14\\x00\\xb0\\x89' ... (32 B)", 'EC2KpX': "b'\\x98\\xf5\\nO\\xf6' ... (32 B)", 'EC2KpCurve': 'P256', 'KpKty': 'KtyEC2', 'KpKid': b'peregrin.took@tuckborough.example'}>}, b'' ... (0 B), []]>]]>
 
     >>> encoded = msg.encode()
     >>> hexlify(encoded)
-    b'd8608443a10101a1054cc9cf4df2fe6c632bf788641358237adbe2709ca818fb415f1e5df66f4e1a51053b791f61288b65d131fa62bf37731aba62818344a1013818a120a50102025821706572656772696e2e746f6f6b407475636b626f726f7567682e6578616d706c65200121582098f50a4ff6c05861c8860d13a638ea56c3f5ad7590bbfbf054e1c7b4d91d6280225820f01400b089867804b8e9fc96c3932161f1934f4223069170d924b7e03bf822bb40'
+    b'd8608443a10101a1054cc9cf4df2fe6c632bf788641358237adbe2709ca818fb415f1e5df66f4e1a51053b791f61288b65d131fa62bf37731aba62818344a1013818a120a50102200121582098f50a4ff6c05861c8860d13a638ea56c3f5ad7590bbfbf054e1c7b4d91d6280225820f01400b089867804b8e9fc96c3932161f1934f4223069170d924b7e03bf822bb025821706572656772696e2e746f6f6b407475636b626f726f7567682e6578616d706c6540'
 
     >>> # decode and decrypt
     >>> decoded = CoseMessage.decode(encoded)
     >>> decoded
-    <COSE_Encrypt: [{'Algorithm': 'A128GCM'}, {'IV': b'\xc9\xcfM\xf2\xfelc+\xf7\x88d\x13'}, b'z\xdb\xe2p\x9c' ... (35 B), [<COSE_Recipient: [{'Algorithm': 'EcdhEsHKDF256'}, {'EphemeralKey': <COSE_Key(EC2Key): {'EC2KpY': b'\xf0\x14\x00\xb0\x89\x86x\x04\xb8\xe9\xfc\x96\xc3\x93!a\xf1\x93OB#\x06\x91p\xd9$\xb7\xe0;\xf8"\xbb', 'EC2KpX': b'\x98\xf5\nO\xf6\xc0Xa\xc8\x86\r\x13\xa68\xeaV\xc3\xf5\xadu\x90\xbb\xfb\xf0T\xe1\xc7\xb4\xd9\x1db\x80', 'EC2KpCurve': 'P256', 'KpKty': 'KtyEC2', 'KpKid': b'peregrin.took@tuckborough.example', 'KpKeyOps': []}>}, b'' ... (0 B), []]>]]>
+    <COSE_Encrypt: [{'Algorithm': 'A128GCM'}, {'IV': "b'\\xc9\\xcfM\\xf2\\xfe' ... (12 B)"}, b'z\xdb\xe2p\x9c' ... (35 B), [<COSE_Recipient: [{'Algorithm': 'EcdhEsHKDF256'}, {'EphemeralKey': <COSE_Key(EC2Key): {'EC2KpY': "b'\\xf0\\x14\\x00\\xb0\\x89' ... (32 B)", 'EC2KpX': "b'\\x98\\xf5\\nO\\xf6' ... (32 B)", 'EC2KpCurve': 'P256', 'KpKty': 'KtyEC2', 'KpKid': b'peregrin.took@tuckborough.example'}>}, b'' ... (0 B), []]>]]>
 
     >>> decoded.recipients
-    [<COSE_Recipient: [{'Algorithm': 'EcdhEsHKDF256'}, {'EphemeralKey': <COSE_Key(EC2Key): {'EC2KpY': b'\xf0\x14\x00\xb0\x89\x86x\x04\xb8\xe9\xfc\x96\xc3\x93!a\xf1\x93OB#\x06\x91p\xd9$\xb7\xe0;\xf8"\xbb', 'EC2KpX': b'\x98\xf5\nO\xf6\xc0Xa\xc8\x86\r\x13\xa68\xeaV\xc3\xf5\xadu\x90\xbb\xfb\xf0T\xe1\xc7\xb4\xd9\x1db\x80', 'EC2KpCurve': 'P256', 'KpKty': 'KtyEC2', 'KpKid': b'peregrin.took@tuckborough.example', 'KpKeyOps': []}>}, b'' ... (0 B), []]>]
+    [<COSE_Recipient: [{'Algorithm': 'EcdhEsHKDF256'}, {'EphemeralKey': <COSE_Key(EC2Key): {'EC2KpY': "b'\\xf0\\x14\\x00\\xb0\\x89' ... (32 B)", 'EC2KpX': "b'\\x98\\xf5\\nO\\xf6' ... (32 B)", 'EC2KpCurve': 'P256', 'KpKty': 'KtyEC2', 'KpKid': b'peregrin.took@tuckborough.example'}>}, b'' ... (0 B), []]>]
 
     >>> # set up static receiver key (this time with the private part included)
     >>> static_receiver_key = {
