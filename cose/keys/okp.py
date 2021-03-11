@@ -152,8 +152,8 @@ class OKPKey(CoseKey):
         Generate a random OKPKey COSE key object.
 
         :param curve: Specify an elliptic curve.
-        :param optional_params: Optional key attributes for the :class:`~cose.keys.okp.OKPKey` object, e.g.,
-        :class:`~cose.keys.keyparam.KpAlg` or  :class:`~cose.keys.keyparam.KpKid`
+        :param optional_params: Optional key attributes for the :class:`~cose.keys.okp.OKPKey` object, e.g., \
+        :class:`~cose.keys.keyparam.KpAlg` or  :class:`~cose.keys.keyparam.KpKid`.
 
         :returns: A COSE `OKPKey` key.
         """
