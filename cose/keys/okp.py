@@ -23,7 +23,8 @@ class OKPKey(CoseKey):
         """
         Returns an initialized COSE Key object of type OKPKey.
 
-        :param cose_key: Dict containing COSE Key parameters and there values.
+        :param cose_key: Dictionary containing COSE Key parameters and there values.
+
         :return: an initialized OKPKey key
         """
 
@@ -60,7 +61,8 @@ class OKPKey(CoseKey):
     def _key_transform(key: Union[Type['OKPKeyParam'], Type['KeyParam'], str, int]):
         return OKPKeyParam.from_id(key)
 
-    def __init__(self, crv: Type['CoseCurve'], x: bytes = b'', d: bytes = b'', optional_params: Optional[dict] = None):
+    def __init__(self, crv: Union[Type['CoseCurve'], str, int], x: bytes = b'', d: bytes = b'',
+                 optional_params: Optional[dict] = None):
         transformed_dict = {}
 
         if len(x) == 0 and len(d) == 0:
@@ -98,6 +100,10 @@ class OKPKey(CoseKey):
 
     @property
     def crv(self) -> Optional[Type['CoseCurve']]:
+        """
+        Returns the mandatory :class:`~cose.keys.keyparam.OKPKpCurve` attribute of the COSE OKP Key object.
+        """
+
         if OKPKpCurve in self.store:
             return self.store[OKPKpCurve]
         else:
@@ -114,6 +120,10 @@ class OKPKey(CoseKey):
 
     @property
     def x(self) -> bytes:
+        """
+        Returns the mandatory :class:`~cose.keys.keyparam.OKPKpX` attribute of the COSE OKP Key object.
+        """
+
         return self.store.get(OKPKpX, b'')
 
     @x.setter
@@ -124,6 +134,10 @@ class OKPKey(CoseKey):
 
     @property
     def d(self) -> bytes:
+        """
+        Returns the mandatory :class:`~cose.keys.keyparam.OKPKpD` attribute of the COSE OKP Key object.
+        """
+
         return self.store.get(OKPKpD, b'')
 
     @d.setter
@@ -133,14 +147,13 @@ class OKPKey(CoseKey):
         self.store[OKPKpD] = d
 
     @staticmethod
-    def generate_key(curve: Type['CoseCurve']) -> 'OKPKey':
+    def generate_key(curve: Union[Type['CoseCurve'], str, int]) -> 'OKPKey':
         """
         Generate a random OKPKey COSE key object.
 
         :param curve: Specify an elliptic curve.
-        :raises CoseIllegalCurve: Invalid curve for this key type.
-        :raises CoseIllegalKeyOps: Invalid key operation for this key type.
-        :returns: An COSE `OKPKey` key.
+
+        :returns: A COSE `OKPKey` key.
         """
 
         if type(curve) == str or type(curve) == int:
@@ -176,7 +189,7 @@ class OKPKey(CoseKey):
             else:
                 return super(OKPKey, self).__delitem__(key)
 
-        raise CoseInvalidKey(f"Deleting {key} attribute would lead to an invalide COSE Symmetric Key")
+        raise CoseInvalidKey(f"Deleting {key} attribute would lead to an invalid COSE OKP Key")
 
     def __repr__(self):
         _key = self._key_repr()

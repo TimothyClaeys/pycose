@@ -66,7 +66,7 @@ class EC2Key(CoseKey):
     def _key_transform(key: Union[Type['EC2KeyParam'], Type['KeyParam'], str, int]):
         return EC2KeyParam.from_id(key)
 
-    def __init__(self, crv: Type['CoseCurve'], x: bytes = b'', y: bytes = b'', d: bytes = b'',
+    def __init__(self, crv: Union[Type['CoseCurve'], str, int], x: bytes = b'', y: bytes = b'', d: bytes = b'',
                  optional_params: Optional[dict] = None):
         transformed_dict = {}
 
@@ -108,6 +108,10 @@ class EC2Key(CoseKey):
 
     @property
     def crv(self) -> Optional[Type['CoseCurve']]:
+        """
+        Returns the mandatory :class:`~cose.keys.keyparam.EC2KpCurve` attribute of the COSE EC2 Key object.
+        """
+
         if EC2KpCurve in self.store:
             return self.store[EC2KpCurve]
         else:
@@ -124,6 +128,10 @@ class EC2Key(CoseKey):
 
     @property
     def x(self) -> bytes:
+        """
+        Returns the mandatory :class:`~cose.keys.keyparam.EC2KpX` attribute of the COSE EC2 Key object.
+        """
+
         return self.store.get(EC2KpX, b'')
 
     @x.setter
@@ -134,6 +142,10 @@ class EC2Key(CoseKey):
 
     @property
     def y(self) -> bytes:
+        """
+        Returns the mandatory :class:`~cose.keys.keyparam.EC2KpY` attribute of the COSE EC2 Key object.
+        """
+
         return self.store.get(EC2KpY, b'')
 
     @y.setter
@@ -144,6 +156,10 @@ class EC2Key(CoseKey):
 
     @property
     def d(self) -> bytes:
+        """
+        Returns the mandatory :class:`~cose.keys.keyparam.EC2KpD` attribute of the COSE EC2 Key object.
+        """
+
         return self.store.get(EC2KpD, b'')
 
     @d.setter
@@ -199,7 +215,7 @@ class EC2Key(CoseKey):
             else:
                 return super(EC2Key, self).__delitem__(key)
 
-        raise CoseInvalidKey(f"Deleting {key} attribute would lead to an invalide COSE Symmetric Key")
+        raise CoseInvalidKey(f"Deleting {key} attribute would lead to an invalid COSE EC2 Key")
 
     def __repr__(self):
         _key = self._key_repr()

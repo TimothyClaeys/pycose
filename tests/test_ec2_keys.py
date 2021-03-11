@@ -85,7 +85,7 @@ def test_ec2_key_generation(crv):
     assert _is_valid_ec2_key(key)
 
 
-@pytest.mark.parametrize('crv', [P256, P384, P521])
+@pytest.mark.parametrize('crv', [P256, P384, P521, 'P_256', 'P_384', 1, 2])
 def test_ec2_key_construction(crv):
     key = EC2Key(crv=crv, x=os.urandom(32), y=os.urandom(32), d=os.urandom(32))
 
@@ -96,6 +96,16 @@ def test_ec2_key_construction(crv):
 def test_fail_on_missing_key_values(crv):
     with pytest.raises(CoseInvalidKey) as excinfo:
         _ = EC2Key(crv=crv)
+
+    assert "Either the public values or the private value must be specified" in str(excinfo.value)
+
+
+@pytest.mark.parametrize('crv', [P256, P384, P521])
+def test_fail_on_missing_key_values_from_dict(crv):
+    d = {'KTY': 'EC2', 'CURVE': 'P_384'}
+
+    with pytest.raises(CoseInvalidKey) as excinfo:
+        _ = CoseKey.from_dict(d)
 
     assert "Either the public values or the private value must be specified" in str(excinfo.value)
 
@@ -236,5 +246,5 @@ def test_dict_invalid_deletion():
     with pytest.raises(CoseInvalidKey) as excinfo:
         del key[EC2KpD]
 
-    assert "Deleting <class 'cose.keys.keyparam.EC2KpD'> attribute would lead to an invalide COSE Symmetric Key" in str(
+    assert "Deleting <class 'cose.keys.keyparam.EC2KpD'> attribute would lead to an invalid COSE EC2 Key" in str(
         excinfo.value)

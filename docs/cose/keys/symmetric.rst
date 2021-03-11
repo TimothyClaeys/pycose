@@ -9,8 +9,27 @@ To encode/encrypt/authenticate or decode/decrypt/verify the payload of COSE mess
 :class:`~cose.messages.encmessage.EncMessage`, and :class:`~cose.messages.macmessage.Mac0Message`
 the COSE message object requires a COSE key of type :class:`~cose.keys.symmetric.SymmetricKey`.
 
-COSE Symmetric keys can be created from a standard Python dictionary. The following example creates a COSE Symmetric
-Key from a dictionary, serializes the key object, and deserializes the CBOR bytes.
+COSE Symmetric keys can be created using the :class:`~cose.keys.symmetric.SymmetricKey` class or from a standard Python
+dictionary. The following two examples shows how to create COSE Symmetric keys using both methods. The keys are
+serialized and subsequently deserialized.
+
+.. doctest::
+    :pyversion: >= 3.6
+
+    >>> from binascii import unhexlify
+    >>> from cose.keys import SymmetricKey, CoseKey
+
+    >>> cose_key = SymmetricKey(key=unhexlify(b'000102030405060708090a0b0c0d0e0f'), optional_params={'ALG': 'A128GCM'})
+
+    >>> #encode/serialize key
+    >>> serialized_key = cose_key.encode()
+    >>> serialized_key
+    b'\xa3\x01\x04 P\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f\x03\x01'
+
+    >>> # deserialize key
+    >>> CoseKey.decode(serialized_key)
+    <COSE_Key(Symmetric): {'SymKpK': "b'\\x00\\x01\\x02\\x03\\x04' ... (16 B)", 'KpKty': 'KtySymmetric', 'KpAlg': 'A128GCM'}>
+
 
 .. doctest::
     :pyversion: >= 3.6
@@ -31,10 +50,11 @@ Key from a dictionary, serializes the key object, and deserializes the CBOR byte
     >>> serialized_key
     b'\xa3\x01\x04 P\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f\x03\x01'
 
+    >>> # deserialize key
     >>> CoseKey.decode(serialized_key)
     <COSE_Key(Symmetric): {'SymKpK': "b'\\x00\\x01\\x02\\x03\\x04' ... (16 B)", 'KpKty': 'KtySymmetric', 'KpAlg': 'A128GCM'}>
 
-Alternatively you can use the :meth:`~cose.keys.symmetric.SymmetricKey.generate_key` method. It generated a random
+Alternatively you can use the :meth:`~cose.keys.symmetric.SymmetricKey.generate_key` method. It generates a random
 COSE Symmetric Key with a given key length. Valid key lengths are 16, 24 and 32.
 
 .. doctest::
@@ -53,7 +73,7 @@ exception.
 .. doctest::
     :pyversion: >= 3.6
 
-    >>> from cose.keys import SymmetricKey
+    >>> from cose.keys import SymmetricKey, CoseKey
 
     >>> key_attribute_dict = {
     ...     'ALG': 'A128GCM',

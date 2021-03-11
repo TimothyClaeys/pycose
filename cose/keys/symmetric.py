@@ -14,7 +14,7 @@ class SymmetricKey(CoseKey):
     @classmethod
     def from_dict(cls, cose_key: dict) -> 'SymmetricKey':
         """
-        Returns an initialized COSE Key object of type EC2Key.
+        Returns an initialized COSE Key object of type SymmetricKey.
 
         :param cose_key: Dict containing COSE Key parameters and their values.
 
@@ -75,7 +75,7 @@ class SymmetricKey(CoseKey):
 
     @property
     def k(self) -> bytes:
-        """ Returns the mandatory SymKpK attribute of the COSE Symmetric Key object. """
+        """ Returns the mandatory :class:`~cose.keys.keyparam.SymKpK` attribute of the COSE Symmetric Key object. """
         if SymKpK in self.store:
             return self.store[SymKpK]
         else:
