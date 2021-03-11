@@ -18,5 +18,9 @@ class CoseMalformedMessage(Exception):
     pass
 
 
+class CoseInvalidKey(Exception):
+    pass
+
+
 class CoseException(Exception):
     pass

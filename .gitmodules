@@ -1,3 +1,0 @@
-[submodule "tests/examples"]
-	path = tests/examples
-	url = https://github.com/cose-wg/Examples.git

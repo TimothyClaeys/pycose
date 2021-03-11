@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Any, Callable
 
+from cose.exceptions import CoseException
+
 
 class _CoseAttribute(ABC):
     @classmethod
@@ -25,14 +27,17 @@ class _CoseAttribute(ABC):
 
     @classmethod
     def from_id(cls, attribute: Any) -> Any:
-        if isinstance(attribute, int):
+        if isinstance(attribute, int) and attribute in cls.get_registered_classes():
             return cls.get_registered_classes()[attribute]
-        elif isinstance(attribute, str):
+        elif isinstance(attribute, str) and attribute in cls.get_registered_classes():
             return cls.get_registered_classes()[attribute.upper()]
-        elif hasattr(attribute, 'identifier'):
+        elif isinstance(attribute, list):
+            translated_list = [cls.from_id(attr) for attr in attribute]
+            return translated_list
+        elif hasattr(attribute, 'identifier') and attribute.identifier in cls.get_registered_classes():
             return cls.get_registered_classes()[attribute.identifier]
         else:
-            return attribute
+            raise CoseException(f"Unknown COSE header attribute with value: [{cls.__name__} - {attribute}]")
 
     @property
     @abstractmethod
