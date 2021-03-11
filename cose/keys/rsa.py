@@ -23,21 +23,21 @@ def to_bstr(dec):
     blen = (dec.bit_length() + 7) // 8
     return dec.to_bytes(blen, byteorder='big')
 
+#: Map from kwarg key to parameter object
+PARAM = {
+    'e': RSAKpE,
+    'n': RSAKpN,
+    'd': RSAKpD,
+    'p': RSAKpP,
+    'q': RSAKpQ,
+    'dp': RSAKpDP,
+    'dq': RSAKpDQ,
+    'qinv': RSAKpQInv,
+}
+
 
 @CoseKey.record_kty(KtyRSA)
 class RSAKey(CoseKey):
-
-    #: Map from kwarg key and parameter object
-    PARAM = {
-        'e': RSAKpE,
-        'n': RSAKpN,
-        'd': RSAKpD,
-        'p': RSAKpP,
-        'q': RSAKpQ,
-        'dp': RSAKpDP,
-        'dq': RSAKpDQ,
-        'qinv': RSAKpQInv,
-    }
 
     @classmethod
     def from_dict(cls, cose_key: dict) -> 'RSAKey':
