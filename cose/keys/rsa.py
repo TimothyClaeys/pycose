@@ -50,7 +50,7 @@ class RSAKey(CoseKey):
 
         kwargs = {}
 
-        for (attr, kob) in RSAKey.PARAM.items():
+        for (attr, kob) in PARAM.items():
             if kob in cose_key:
                 val = cose_key[kob]
             elif kob.identifier in cose_key:
