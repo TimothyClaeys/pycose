@@ -4,8 +4,8 @@ from typing import Optional, List, TYPE_CHECKING, Type
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
 
-from cose.exceptions import CoseIllegalAlgorithm
-from cose.keys.cosekey import CoseKey, KpKty
+from cose.exceptions import CoseIllegalKeyType, CoseInvalidKey
+from cose.keys.cosekey import CoseKey, KeyParam, KpKty
 from cose.keys.keyparam import (RSAKeyParam, RSAKpN, RSAKpE, RSAKpD, RSAKpP,
                                 RSAKpQ, RSAKpDP, RSAKpDQ, RSAKpQInv)
 from cose.keys.keytype import KtyRSA
@@ -27,6 +27,18 @@ def to_bstr(dec):
 @CoseKey.record_kty(KtyRSA)
 class RSAKey(CoseKey):
 
+    #: Map from kwarg key and parameter object
+    PARAM = {
+        'e': RSAKpE,
+        'n': RSAKpN,
+        'd': RSAKpD,
+        'p': RSAKpP,
+        'q': RSAKpQ,
+        'dp': RSAKpDP,
+        'dq': RSAKpDQ,
+        'qinv': RSAKpQInv,
+    }
+
     @classmethod
     def from_dict(cls, cose_key: dict) -> 'RSAKey':
         """
@@ -36,7 +48,21 @@ class RSAKey(CoseKey):
         :return: an initialized RSAKey key
         """
 
-        return cls(cose_key)
+        kwargs = {}
+
+        for (attr, kob) in RSAKey.PARAM.items():
+            if kob in cose_key:
+                val = cose_key[kob]
+            elif kob.identifier in cose_key:
+                val = cose_key[kob.identifier]
+            elif kob.fullname in cose_key:
+                val = cose_key[kob.fullname]
+            else:
+                val = b''
+            kwargs[attr] = val
+
+        kwargs['optional_params'] = cose_key
+        return cls(**kwargs)
 
     @classmethod
     def from_cryptograpy_key_obj(cls, ext_key) -> 'RSAKey':
@@ -52,39 +78,66 @@ class RSAKey(CoseKey):
             priv_nums = None
             pub_nums = ext_key.public_numbers()
 
-        kwargs = {}
+        cose_key = {}
         if pub_nums:
-            kwargs.update(dict(
-                n=to_bstr(pub_nums.n),
-                e=to_bstr(pub_nums.e),
-            ))
+            cose_key.update({
+                RSAKpE: to_bstr(pub_nums.e),
+                RSAKpN: to_bstr(pub_nums.n),
+            })
         if priv_nums:
-            kwargs.update(dict(
-                p=to_bstr(priv_nums.p),
-                q=to_bstr(priv_nums.q),
-                d=to_bstr(priv_nums.d),
-                dP=to_bstr(priv_nums.dmp1),
-                dQ=to_bstr(priv_nums.dmq1),
-                qInv=to_bstr(priv_nums.iqmp),
-            ))
-        return cls(**kwargs)
+            cose_key.update({
+                RSAKpD: to_bstr(priv_nums.d),
+                RSAKpP: to_bstr(priv_nums.p),
+                RSAKpQ: to_bstr(priv_nums.q),
+                RSAKpDP: to_bstr(priv_nums.dmp1),
+                RSAKpDQ: to_bstr(priv_nums.dmq1),
+                RSAKpQInv: to_bstr(priv_nums.iqmp),
+            })
+        return RSAKey.from_dict(cose_key)
 
-    def __init__(self, key: Optional[dict]=None, **kwargs):
+    def __init__(self, e: bytes=b'', n: bytes=b'',
+                 d: bytes=b'', p: bytes=b'', q: bytes=b'',
+                 dp: bytes=b'', dq: bytes=b'', qinv: bytes=b'',
+                 optional_params: Optional[dict]=None):
         transformed_dict = {}
-        if key is None:
-            key = {}
 
-        new_dict = dict(key, **kwargs)
-        new_dict[KpKty] = KtyRSA
+        if len(e) == 0 and len(n) == 0:
+            raise CoseInvalidKey("Either the public values or the private value must be specified")
 
-        for k, v in new_dict.items():
+        new_dict = dict({KpKty: KtyRSA, RSAKpE: e, RSAKpN: n})
+        if len(d) != 0:
+            new_dict.update({RSAKpD: d})
+        if len(p) != 0:
+            new_dict.update({RSAKpP: p})
+        if len(q) != 0:
+            new_dict.update({RSAKpQ: q})
+        if len(dp) != 0:
+            new_dict.update({RSAKpDP: dp})
+        if len(dq) != 0:
+            new_dict.update({RSAKpDQ: dq})
+        if len(qinv) != 0:
+            new_dict.update({RSAKpQInv: qinv})
+
+        if optional_params is not None:
+            new_dict.update(optional_params)
+
+        for _key_attribute, _value in new_dict.items():
             try:
-                kp = RSAKeyParam.from_id(k)
+                # translate the key_attribute
+                kp = RSAKeyParam.from_id(_key_attribute)
+
+                # parse the value of the key attribute if possible
                 if hasattr(kp.value_parser, '__call__'):
-                    v = kp.value_parser(v)
-                transformed_dict[kp] = v
+                    _value = kp.value_parser(_value)
+
+                # store in new dict
+                transformed_dict[kp] = _value
             except ValueError:
-                transformed_dict[k] = v
+                transformed_dict[_key_attribute] = _value
+
+        # final check if key type is correct
+        if transformed_dict.get(KpKty) != KtyRSA:
+            raise CoseIllegalKeyType(f"Illegal key type in RSA COSE Key: {transformed_dict.get(KpKty)}")
 
         super(RSAKey, self).__init__(transformed_dict)
 

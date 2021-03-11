@@ -1,12 +1,13 @@
 import base64
-from abc import ABC, abstractmethod
+from abc import ABC
 from collections.abc import MutableMapping
 from typing import Optional, TypeVar, Type, List, Any, TYPE_CHECKING
 
 import cbor2
 
+from cose import utils
 from cose.algorithms import CoseAlgorithm
-from cose.exceptions import CoseException
+from cose.exceptions import CoseException, CoseIllegalKeyType, CoseIllegalAlgorithm, CoseIllegalKeyOps
 from cose.headers import EphemeralKey, StaticKey
 from cose.keys.keyops import KeyOps
 from cose.keys.keyparam import KpKty, KpKeyOps, KpAlg, KpKid, KpBaseIV, KeyParam
@@ -28,6 +29,8 @@ class CoseKey(MutableMapping, ABC):
 
     @classmethod
     def decode(cls, received: bytes):
+        """ Decodes a CBOR-encoded COSE key object. """
+
         return CoseKey.from_dict(cbor2.loads(received))
 
     @classmethod
@@ -59,14 +62,13 @@ class CoseKey(MutableMapping, ABC):
         """
 
         if KpKty in received:
-            r = received[KpKty]
-            key_obj = cls._key_types[r].from_dict(received)
+            key_obj = cls._key_types[received[KpKty]].from_dict(received)
         elif KpKty.identifier in received:
             key_obj = cls._key_types[received[KpKty.identifier]].from_dict(received)
         elif KpKty.fullname in received:
             key_obj = cls._key_types[received[KpKty.fullname]].from_dict(received)
         else:
-            raise CoseException("Could not decode CoseKey type")
+            raise CoseIllegalKeyType("Could not decode CoseKey type, KpKty not set or unknown.")
 
         return key_obj
 
@@ -104,9 +106,11 @@ class CoseKey(MutableMapping, ABC):
 
     def __init__(self, key_dict: dict):
         self.store = dict()
-        self.store.update(key_dict)
 
-        self.store.setdefault(KpKeyOps, [])
+        if KpKeyOps in key_dict and len(key_dict[KpKeyOps]) == 0:
+            del key_dict[KpKeyOps]
+
+        self.store.update(key_dict)
 
     def verify(self, key_type: Type['CK'], algorithm: Type['CoseAlg'], key_ops: List[Type['KEYOPS']]):
         """ Verify attributes of the COSE_key object."""
@@ -115,7 +119,7 @@ class CoseKey(MutableMapping, ABC):
             raise CoseException("Wrong key type")
 
         if self.alg is not None and self.alg.identifier != algorithm.identifier:
-            raise CoseException("Conflicting algorithms in key and COSE headers")
+            raise CoseIllegalAlgorithm("Conflicting algorithms in key and COSE headers")
 
         if len(self.key_ops):
             match_key_ops = False
@@ -125,7 +129,7 @@ class CoseKey(MutableMapping, ABC):
                     match_key_ops = True
 
             if not match_key_ops:
-                raise CoseException("Wrong key operations specified")
+                raise CoseIllegalKeyOps(f"Illegal key operations specified. Allowed: {key_ops}, found: {self.key_ops}")
 
     def __getitem__(self, key):
         return self.store[self._key_transform(key)]
@@ -144,6 +148,8 @@ class CoseKey(MutableMapping, ABC):
 
     @property
     def kty(self) -> Optional[Type['KTYPE']]:
+        """ Returns the value of the mandatory :class:`~cose.keys.keyparam.KpKty` key parameter """
+
         return self.store.get(KpKty)
 
     @kty.setter
@@ -152,6 +158,8 @@ class CoseKey(MutableMapping, ABC):
 
     @property
     def alg(self) -> Optional[Type['CoseAlg']]:
+        """ Returns the value of the :class:`~cose.keys.keyparam.KpAlg` key parameter """
+
         return self.store.get(KpAlg)
 
     @alg.setter
@@ -160,6 +168,8 @@ class CoseKey(MutableMapping, ABC):
 
     @property
     def kid(self) -> bytes:
+        """ Returns the value of the :class:`~cose.keys.keyparam.KpKid` key parameter """
+
         return self.store.get(KpKid, b'')
 
     @kid.setter
@@ -170,19 +180,21 @@ class CoseKey(MutableMapping, ABC):
 
     @property
     def key_ops(self) -> List[Type['KEYOPS']]:
-        return self.store.get(KpKeyOps)
+        """ Returns the value of the :class:`~cose.keys.keyparam.KpKeyOps` key parameter """
+
+        return self.store.get(KpKeyOps, [])
 
     @key_ops.setter
     def key_ops(self, new_key_ops: List[Type['KEYOPS']]):
-        if new_key_ops is None:
-            self.store[KpKeyOps] = []
-        elif isinstance(new_key_ops, list):
+        if isinstance(new_key_ops, list):
             self.store[KpKeyOps] = [KeyOps.from_id(k) for k in new_key_ops]
         else:
             raise ValueError("Key operations should be a list with KeyOps values.")
 
     @property
     def base_iv(self) -> bytes:
+        """ Returns the value of the :class:`~cose.keys.keyparam.KpBaseIV` key parameter """
+
         return self.store.get(KpBaseIV, b'')
 
     @base_iv.setter
@@ -194,21 +206,13 @@ class CoseKey(MutableMapping, ABC):
     def encode(self):
         return cbor2.dumps(self.store, default=self._custom_cbor_encoder)
 
-    @property
-    @abstractmethod
-    def is_valid_key(self):
-        raise NotImplementedError()
-
     @classmethod
     def _custom_cbor_encoder(cls, encoder, cose_attribute: 'CoseHeaderAttribute'):
         encoder.encode(cose_attribute.identifier)
 
     @staticmethod
     def _key_transform(key):
-        try:
-            return KeyParam.from_id(key.identifier)
-        except KeyError:
-            return key
+        return KeyParam.from_id(key)
 
     def _key_repr(self) -> dict:
         names = {kp.__name__: self.store[kp].__name__ if hasattr(self.store[kp], '__name__') else self.store[kp] for kp
@@ -217,6 +221,9 @@ class CoseKey(MutableMapping, ABC):
         if KpKeyOps.__name__ in names:
             names[KpKeyOps.__name__] = [ops.__name__ if hasattr(ops, '__name__') else ops for ops in
                                         names[KpKeyOps.__name__]]
+
+        if 'BASE_IV' in names and len(names['BASE_IV']) > 0:
+            names['BASE_IV'] = utils.truncate(names['BASE_IV'])
 
         return names
 
