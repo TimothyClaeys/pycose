@@ -29,7 +29,7 @@ class Sign1Message(SignCommon):
                  uhdr: Optional[dict] = None,
                  payload: bytes = b'',
                  external_aad: bytes = b'',
-                 key: Optional[Union['EC2', 'OKP']] = None):
+                 key: Optional[Union['EC2', 'OKP', 'RSA']] = None):
         if phdr is None:
             phdr = {}
         if uhdr is None:
