@@ -169,13 +169,14 @@ class EC2Key(CoseKey):
         self.store[EC2KpD] = d
 
     @staticmethod
-    def generate_key(curve: Union[Type['CoseCurve'], str, int]) -> 'EC2Key':
+    def generate_key(curve: Union[Type['CoseCurve'], str, int], optional_params: dict = None) -> 'EC2Key':
         """
         Generate a random EC2Key COSE key object.
 
         :param curve: Specify an :class:`~cose.attributes.algorithms.CoseEllipticCurves`.
-        :raises CoseIllegalCurve: Invalid curves for this key type.
-        :raises CoseIllegalKeyOps: Invalid key operation for this key type.
+        :param optional_params: Optional key attributes for the :class:`~cose.keys.ec2.EC2Key` object, e.g.,
+        :class:`~cose.keys.keyparam.KpAlg` or  :class:`~cose.keys.keyparam.KpKid`
+
         :return: An COSE `EC2Key` key.
         """
 
@@ -200,7 +201,8 @@ class EC2Key(CoseKey):
             crv=curve,
             d=d_value.to_bytes((d_value.bit_length() + 7) // 8, byteorder="big"),
             x=x_coor.to_bytes((x_coor.bit_length() + 7) // 8, byteorder="big"),
-            y=y_coor.to_bytes((y_coor.bit_length() + 7) // 8, byteorder="big"))
+            y=y_coor.to_bytes((y_coor.bit_length() + 7) // 8, byteorder="big"),
+            optional_params=optional_params)
 
     def __delitem__(self, key):
         if self._key_transform(key) != KpKty and self._key_transform(key) != EC2KpCurve:

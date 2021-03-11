@@ -147,11 +147,13 @@ class OKPKey(CoseKey):
         self.store[OKPKpD] = d
 
     @staticmethod
-    def generate_key(curve: Union[Type['CoseCurve'], str, int]) -> 'OKPKey':
+    def generate_key(curve: Union[Type['CoseCurve'], str, int], optional_params: dict = None) -> 'OKPKey':
         """
         Generate a random OKPKey COSE key object.
 
         :param curve: Specify an elliptic curve.
+        :param optional_params: Optional key attributes for the :class:`~cose.keys.okp.OKPKey` object, e.g.,
+        :class:`~cose.keys.keyparam.KpAlg` or  :class:`~cose.keys.keyparam.KpKid`
 
         :returns: A COSE `OKPKey` key.
         """
@@ -178,7 +180,8 @@ class OKPKey(CoseKey):
         return OKPKey(
             crv=curve,
             x=private_key.public_key().public_bytes(encoding, public_format),
-            d=private_key.private_bytes(encoding, private_format, encryption))
+            d=private_key.private_bytes(encoding, private_format, encryption),
+            optional_params=optional_params)
 
     def __delitem__(self, key):
         if self._key_transform(key) != KpKty and self._key_transform(key) != OKPKpCurve:
