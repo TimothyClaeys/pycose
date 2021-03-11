@@ -174,8 +174,8 @@ class EC2Key(CoseKey):
         Generate a random EC2Key COSE key object.
 
         :param curve: Specify an :class:`~cose.attributes.algorithms.CoseEllipticCurves`.
-        :param optional_params: Optional key attributes for the :class:`~cose.keys.ec2.EC2Key` object, e.g.,
-        :class:`~cose.keys.keyparam.KpAlg` or  :class:`~cose.keys.keyparam.KpKid`
+        :param optional_params: Optional key attributes for the :class:`~cose.keys.ec2.EC2Key` object, e.g., \
+        :class:`~cose.keys.keyparam.KpAlg` or  :class:`~cose.keys.keyparam.KpKid`.
 
         :return: An COSE `EC2Key` key.
         """

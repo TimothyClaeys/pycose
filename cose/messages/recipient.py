@@ -23,7 +23,7 @@ from cose.algorithms import \
     EcdhSsA128KW, \
     EcdhSsA192KW, \
     EcdhSsA256KW
-from cose.exceptions import CoseException, CoseMalformedMessage
+from cose.exceptions import CoseException, CoseMalformedMessage, CoseIllegalAlgorithm
 from cose.keys.ec2 import EC2Key, EC2KpD
 from cose.keys.keyops import DeriveKeyOp, EncryptOp, DecryptOp, WrapOp, UnwrapOp, DeriveBitsOp
 from cose.keys.keyparam import KpAlg, KpKeyOps
@@ -165,8 +165,8 @@ class CoseRecipient(CoseMessage, metaclass=abc.ABCMeta):
 
         return CoseKDFContext(algorithm, supp_pub, u, v, supp_priv)
 
-    def _setup_ephemeral_key(self, peer_key):
-        self.key = EC2Key.generate_key(peer_key.crv)
+    def _setup_ephemeral_key(self, peer_key, optional_params: dict = None):
+        self.key = EC2Key.generate_key(peer_key.crv, optional_params)
 
         if self.get_attr(headers.EphemeralKey) is not None:
             # public key was already set in the header bucket but we just generated a new ephemeral key.
@@ -334,7 +334,7 @@ class KeyWrap(CoseRecipient):
 
             return alg.key_wrap(self.key, self.payload)
         else:
-            raise CoseException("Unsupported algorithm for key wrapping")
+            raise CoseIllegalAlgorithm(f"Algorithm {alg} for {self.__name__}")
 
     def decrypt(self, target_alg: '_EncAlg') -> bytes:
         alg = self.get_attr(headers.Algorithm)
@@ -361,10 +361,10 @@ class DirectKeyAgreement(CoseRecipient):
 
         alg = msg.get_attr(headers.Algorithm)
         if alg in {EcdhEsHKDF256, EcdhEsHKDF512} and msg.get_attr(headers.EphemeralKey) is None:
-            raise CoseMalformedMessage(f'Recipient class DIRECT_KEY_AGREEMENT must carry an ephemeral COSE key object')
+            raise CoseMalformedMessage(f'Recipient class {cls.__name__} must carry an ephemeral COSE key object')
 
         if len(msg.recipients):
-            raise CoseMalformedMessage(f'Recipient class DIRECT_KEY_AGREEMENT cannot carry more recipients')
+            raise CoseMalformedMessage(f'Recipient class {cls.__name__} cannot carry more recipients')
 
         return msg
 
@@ -380,7 +380,8 @@ class DirectKeyAgreement(CoseRecipient):
         alg = self.get_attr(headers.Algorithm)
 
         if alg is None:
-            raise CoseException("The algorithm parameter should at least be included in the unprotected header")
+            raise CoseMalformedMessage("The algorithm parameter should be included in either the protected header or "
+                                       "unprotected header")
 
         # static receiver key
         peer_key: 'EC2Key' = self.local_attrs.get(headers.StaticKey)
@@ -427,7 +428,7 @@ class DirectKeyAgreement(CoseRecipient):
                 else:
                     peer_key = self.get_attr(headers.EphemeralKey)
         else:
-            raise CoseException("Unsupported algorithm for DIRECT_KEY_AGREEMENT")
+            raise CoseIllegalAlgorithm(f"Algorithm {alg} unsupported for {self.__name__}")
 
         if peer_key is None:
             raise CoseException("Unknown static receiver public key")
@@ -529,7 +530,7 @@ class KeyAgreementWithKeyWrap(CoseRecipient):
         elif alg in {EcdhSsA256KW, EcdhSsA192KW, EcdhSsA128KW}:
             peer_key = self.get_attr(headers.StaticKey)
         else:
-            raise CoseException("Unsupported algorithm for DIRECT_KEY_AGREEMENT")
+            raise CoseIllegalAlgorithm(f"Algorithm {alg} unsupported for {self.__name__}")
 
         kek = SymmetricKey(key=self._compute_kek(alg.get_key_wrap_func(), peer_key, self.key, alg),
                            optional_params={KpAlg: alg, KpKeyOps: [UnwrapOp, DecryptOp]})

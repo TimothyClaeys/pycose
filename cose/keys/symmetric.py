@@ -94,8 +94,8 @@ class SymmetricKey(CoseKey):
         Generate a random Symmetric COSE key object.
 
         :param key_len: Symmetric key length in bytes, must be of size 16, 24 or 32.
-        :param optional_params: Optional key attributes for the :class:`~cose.keys.symmetric.SymmetricKey` object, e.g.,
-        :class:`~cose.keys.keyparam.KpAlg` or  :class:`~cose.keys.keyparam.KpKid`
+        :param optional_params: Optional key attributes for the :class:`~cose.keys.symmetric.SymmetricKey` object, \
+        e.g., :class:`~cose.keys.keyparam.KpAlg` or  :class:`~cose.keys.keyparam.KpKid`.
 
         :raises ValueError: For invalid key lengths.
 
