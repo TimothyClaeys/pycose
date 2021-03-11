@@ -37,7 +37,7 @@ class _CoseAttribute(ABC):
         elif hasattr(attribute, 'identifier') and attribute.identifier in cls.get_registered_classes():
             return cls.get_registered_classes()[attribute.identifier]
         else:
-            return CoseException("Unknown COSE key/header attribute")
+            raise CoseException(f"Unknown COSE header attribute with value: [{cls.__name__} - {attribute}]")
 
     @property
     @abstractmethod

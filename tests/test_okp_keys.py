@@ -64,28 +64,31 @@ def test_okp_public_keys_from_dicts(kty_attr, kty_value, crv_attr, crv_value, x_
 
 
 @pytest.mark.parametrize('crv', [X25519, X448, Ed25519, Ed448, 4, 'X25519', 'X448'])
-def test_ec2_key_generation_encoding_decoding(crv):
+def test_okp_key_generation_encoding_decoding(crv):
     trails = 256
 
     for i in range(trails):
-        ec2_test = OKPKey.generate_key(curve=crv)
-        ec2_encoded = ec2_test.encode()
-        ec2_decoded = CoseKey.decode(ec2_encoded)
-        assert _is_valid_okp_key(ec2_decoded)
+        okp_test = OKPKey.generate_key(curve=crv)
+        okp_encoded = okp_test.encode()
+        okp_decoded = CoseKey.decode(okp_encoded)
+        assert _is_valid_okp_key(okp_decoded)
 
 
-@pytest.mark.parametrize('crv', [X25519, X448, Ed25519, Ed448])
-def test_ec2_key_generation(crv):
+@pytest.mark.parametrize('crv', [X25519, X448, Ed25519, Ed448, 'X25519', 4, 5])
+def test_okp_key_generation(crv):
     key = OKPKey.generate_key(crv)
 
     assert _is_valid_okp_key(key)
 
 
 @pytest.mark.parametrize('crv', [X25519, X448, Ed25519, Ed448])
-def test_ec2_key_construction(crv):
-    key = OKPKey(crv=crv, x=os.urandom(32), d=os.urandom(32))
+def test_okp_key_construction(crv):
+    key = OKPKey(crv=crv, x=os.urandom(32), d=os.urandom(32), optional_params={'ALG': 'EDDSA'})
 
     assert _is_valid_okp_key(key)
+
+    serialized = key.encode()
+    _ = CoseKey.decode(serialized)
 
 
 @pytest.mark.parametrize('crv', [X25519, X448, Ed25519, Ed448])
