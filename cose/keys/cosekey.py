@@ -215,8 +215,10 @@ class CoseKey(MutableMapping, ABC):
         return KeyParam.from_id(key)
 
     def _key_repr(self) -> dict:
-        names = {kp.__name__: self.store[kp].__name__ if hasattr(self.store[kp], '__name__') else self.store[kp] for kp
-                 in sorted(self.store, key=lambda item: item.identifier)}
+        names = {
+            kp.__name__ if hasattr(kp, '__name__') else kp:
+                self.store[kp].__name__ if hasattr(self.store[kp], '__name__') else self.store[kp] for kp
+            in sorted(self.store, key=lambda item: item.identifier if hasattr(item, 'identifier') else 65536)}
 
         if KpKeyOps.__name__ in names:
             names[KpKeyOps.__name__] = [ops.__name__ if hasattr(ops, '__name__') else ops for ops in

@@ -84,7 +84,7 @@ class OKPKey(CoseKey):
                 kp = OKPKeyParam.from_id(_key_attribute)
 
                 # parse the value of the key attribute if possible
-                if hasattr(kp.value_parser, '__call__'):
+                if hasattr(kp, 'value_parser') and hasattr(kp.value_parser, '__call__'):
                     _value = kp.value_parser(_value)
 
                 # store in new dict

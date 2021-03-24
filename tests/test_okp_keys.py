@@ -1,4 +1,5 @@
 import os
+from binascii import unhexlify
 
 import pytest
 
@@ -147,3 +148,11 @@ def test_dict_operations_on_okp_key():
     assert -4 in key
     assert KpAlg in key
     assert 'ALG' in key
+
+
+def test_unknown_key_attributes():
+    key = 'a401012004215820a3ff263595beb377d1a0ce1d04dad2d40966ac6bcb622051b84659184d5d9a326c7375626a656374206e616d6560'
+
+    key = CoseKey.decode(unhexlify(key))
+
+    assert "subject name" in key
