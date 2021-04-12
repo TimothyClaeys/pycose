@@ -8,3 +8,4 @@ COSE Keys
    ec2.rst
    okp.rst
    symmetric.rst
+   keyparam.rst

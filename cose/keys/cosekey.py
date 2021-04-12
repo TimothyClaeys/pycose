@@ -1,7 +1,7 @@
 import base64
 from abc import ABC
 from collections.abc import MutableMapping
-from typing import Optional, TypeVar, Type, List, Any, TYPE_CHECKING
+from typing import Optional, TypeVar, Type, List, Any, TYPE_CHECKING, Callable
 
 import cbor2
 
@@ -23,23 +23,28 @@ if TYPE_CHECKING:
 
 
 class CoseKey(MutableMapping, ABC):
-    """ Abstract base class for all key type in COSE. """
+    """ Abstract base class for all COSE key types. """
 
     _key_types = {}
 
     @classmethod
-    def decode(cls, received: bytes):
-        """ Decodes a CBOR-encoded COSE key object. """
+    def decode(cls, received: bytes) -> 'CK':
+        """
+        Decodes a CBOR-encoded COSE key object.
+
+        :param received: A CBOR-encoded bytestring.
+        :return: An initialized COSE key.
+        """
 
         return CoseKey.from_dict(cbor2.loads(received))
 
     @classmethod
-    def record_kty(cls, kty: Type['KTYPE']):
+    def record_kty(cls, kty: Type['KTYPE']) -> Callable:
         """
         Decorator to record all the COSE key types dynamically.
 
-        :param kty: Integer identifying the COSE key type (see RFC 8152)
-        :return: A Decorator function.
+        :param kty: A :class:`cose.keys.keytype.KTY`
+        :return: A decorator function.
         """
 
         def decorator(the_class: Type['CK']) -> Type['CK']:
@@ -55,10 +60,10 @@ class CoseKey(MutableMapping, ABC):
     @classmethod
     def from_dict(cls, received: dict) -> 'CK':
         """
-        Decoding function for COSE key objects.
+        Initialize a COSE key from a dictionary.
 
-        :param received: Dictionary must contain the element otherwise the key object cannot be decoded properly.
-        :return: A COSE Key object.
+        :param received: Dictionary to translate to COSE key.
+        :return: An initialized COSE Key object.
         """
 
         if KpKty in received:
@@ -163,7 +168,7 @@ class CoseKey(MutableMapping, ABC):
         return self.store.get(KpAlg)
 
     @alg.setter
-    def alg(self, alg: Type['CoseAlg']):
+    def alg(self, alg: Type['CoseAlg']) -> None:
         self.store[KpAlg] = CoseAlgorithm.from_id(alg)
 
     @property
@@ -173,7 +178,7 @@ class CoseKey(MutableMapping, ABC):
         return self.store.get(KpKid, b'')
 
     @kid.setter
-    def kid(self, kid: bytes):
+    def kid(self, kid: bytes) -> None:
         if type(kid) is not bytes:
             raise TypeError(f"kid must be of type 'bytes'")
         self.store[KpKid] = kid
@@ -185,7 +190,7 @@ class CoseKey(MutableMapping, ABC):
         return self.store.get(KpKeyOps, [])
 
     @key_ops.setter
-    def key_ops(self, new_key_ops: List[Type['KEYOPS']]):
+    def key_ops(self, new_key_ops: List[Type['KEYOPS']]) -> None:
         if isinstance(new_key_ops, list):
             self.store[KpKeyOps] = [KeyOps.from_id(k) for k in new_key_ops]
         else:
@@ -198,12 +203,17 @@ class CoseKey(MutableMapping, ABC):
         return self.store.get(KpBaseIV, b'')
 
     @base_iv.setter
-    def base_iv(self, base_iv: bytes):
+    def base_iv(self, base_iv: bytes) -> None:
         if type(base_iv) is not bytes:
             raise TypeError(f"base_iv must be of type 'bytes'")
         self.store[KpBaseIV] = base_iv
 
-    def encode(self):
+    def encode(self) -> bytes:
+        """
+        Encodes the COSE key as a CBOR map
+
+        :return: A COSE key encoded as CBOR map
+        """
         return cbor2.dumps(self.store, default=self._custom_cbor_encoder)
 
     @classmethod
