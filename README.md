@@ -19,7 +19,7 @@ CBOR Encoded Message Syntax (COSE) is a data format for concise representation o
 - **Encrypt**: An encrypted COSE message can have multiple recipients. For each recipient the CEK is encrypted with a KEK (Key Encryption Key) - using AES key wrap - and added to the message.
 - **MAC0**: An authenticated COSE message with one recipient.
 - **MAC**: An authenticated COSE message that can have multiple recipients. For each recipient, the authentication key is encrypted with a KEK and added to the message.
-- **Sign0**: A signed COSE message with a single signature.
+- **Sign1**: A signed COSE message with a single signature.
 - **Sign**: A COSE message that has been signed by multiple entities (each signature is carried in a COSE signature structure, added to the message).
 
 A basic COSE message consists of 2 _information_ _buckets_ and the _payload_:
