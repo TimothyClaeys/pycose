@@ -46,7 +46,7 @@ class CoseAlgorithm(_CoseAttribute, ABC):
 class _HashAlg(CoseAlgorithm, ABC):
     #: Set in derived class to hash constructor
     hash_cls = None
-    #: Set in derived class to optional trucation size in byte count
+    #: Set in derived class to optional truncation size in byte count
     trunc_size: Optional[int] = None
 
     @classmethod
@@ -315,6 +315,7 @@ class Es512(_Ecdsa):
         fullname       ES512
 
     """
+
     identifier = -36
     fullname = "ES512"
 
@@ -339,6 +340,7 @@ class Es384(_Ecdsa):
 
         fullname       ES384
     """
+
     identifier = -35
     fullname = "ES384"
 
@@ -363,6 +365,7 @@ class EcdhSsA256KW(_EcdhHkdf):
 
         fullname       ECDH_SS_A256KW
     """
+
     identifier = -34
     fullname = "ECDH_SS_A256KW"
 
@@ -392,6 +395,7 @@ class EcdhSsA192KW(_EcdhHkdf):
 
         fullname       ECDH_SS_A192KW
     """
+
     identifier = -33
     fullname = "ECDH_SS_A192KW"
 
@@ -421,6 +425,7 @@ class EcdhSsA128KW(_EcdhHkdf):
 
         fullname       ECDH_SS_A128KW
     """
+
     identifier = -32
     fullname = "ECDH_SS_A128KW"
 
@@ -450,6 +455,7 @@ class EcdhEsA256KW(_EcdhHkdf):
 
         fullname       ECDH_ES_A256KW
     """
+
     identifier = -31
     fullname = "ECDH_ES_A256KW"
 
@@ -479,6 +485,7 @@ class EcdhEsA192KW(_EcdhHkdf):
 
         fullname       ECDH_ES_A192KW
     """
+
     identifier = -30
     fullname = "ECDH_ES_A192KW"
 
@@ -508,6 +515,7 @@ class EcdhEsA128KW(_EcdhHkdf):
 
         fullname       ECDH_ES_A128KW
     """
+
     identifier = -29
     fullname = "ECDH_ES_A128KW"
 
@@ -537,6 +545,7 @@ class EcdhSsHKDF512(_EcdhHkdf):
 
         fullname       ECDH_SS_HKDF_512
     """
+
     identifier = -28
     fullname = "ECDH_SS_HKDF_512"
 
@@ -561,6 +570,7 @@ class EcdhSsHKDF256(_EcdhHkdf):
 
         fullname       ECDH_SS_HKDF_256
     """
+
     identifier = -27
     fullname = "ECDH_SS_HKDF_256"
 
@@ -585,6 +595,7 @@ class EcdhEsHKDF512(_EcdhHkdf):
 
         fullname       ECDH_ES_HKDF_512
     """
+
     identifier = -26
     fullname = "ECDH_ES_HKDF_512"
 
@@ -609,6 +620,7 @@ class EcdhEsHKDF256(_EcdhHkdf):
 
         fullname       ECDH_ES_HKDF_256
     """
+
     identifier = -25
     fullname = "ECDH_ES_HKDF_256"
 
@@ -625,6 +637,15 @@ class EcdhEsHKDF256(_EcdhHkdf):
 
 @CoseAlgorithm.register_attribute()
 class Shake128(_HashAlg):
+    """
+    SHAKE-128 256-bit Hash Value
+
+    Attributes:
+        identifier     -18
+
+        fullname       SHAKE-128
+    """
+
     identifier = -18
     fullname = "SHAKE-128"
     hash_cls = SHAKE128
@@ -632,6 +653,15 @@ class Shake128(_HashAlg):
 
 @CoseAlgorithm.register_attribute()
 class Sha512Trunc256(_HashAlg):
+    """
+    SHA-2 512-bit Hash truncated to 256-bits
+
+    Attributes:
+        identifier     -17
+
+        fullname       "SHA-512/256"-256
+    """
+
     identifier = -17
     fullname = "SHA-512/256"
     hash_cls = SHA512
@@ -640,6 +670,15 @@ class Sha512Trunc256(_HashAlg):
 
 @CoseAlgorithm.register_attribute()
 class Sha256(_HashAlg):
+    """
+    SHA-2 256-bit Hash
+
+    Attributes:
+        identifier     -16
+
+        fullname       SHA-256
+    """
+
     identifier = -16
     fullname = "SHA-256"
     hash_cls = SHA256
@@ -647,6 +686,15 @@ class Sha256(_HashAlg):
 
 @CoseAlgorithm.register_attribute()
 class Sha256Trunc64(_HashAlg):
+    """
+    SHA-2 256-bit Hash truncated to 64-bits
+
+    Attributes:
+        identifier     -15
+
+        fullname       SHA256/64
+    """
+
     identifier = -15
     fullname = "SHA-256/64"
     hash_cls = SHA256
@@ -655,6 +703,15 @@ class Sha256Trunc64(_HashAlg):
 
 @CoseAlgorithm.register_attribute()
 class Sha1(_HashAlg):
+    """
+    SHA-1 Hash
+
+    Attributes:
+        identifier     -14
+
+        fullname       SHA-1
+    """
+
     identifier = -14
     fullname = "SHA-1"
     hash_cls = SHA1
@@ -662,30 +719,74 @@ class Sha1(_HashAlg):
 
 @CoseAlgorithm.register_attribute()
 class DirectHKDFAES256(CoseAlgorithm):
+    """
+    Shared secret w/ AES-MAC 256-bit key
+
+    Attributes:
+        identifier     -13
+
+        fullname       DIRECT_HKDF_AES_256
+    """
+
     identifier = - 13
     fullname = "DIRECT_HKDF_AES_256"
 
 
 @CoseAlgorithm.register_attribute()
 class DirectHKDFAES128(CoseAlgorithm):
+    """
+    Shared secret w/ AES-MAC 128-bit key
+
+    Attributes:
+        identifier     -12
+
+        fullname       DIRECT_HKDF_AES_128
+    """
     identifier = - 12
     fullname = "DIRECT_HKDF_AES_128"
 
 
 @CoseAlgorithm.register_attribute()
 class DirecHKDFSHA512(CoseAlgorithm):
+    """
+    Shared secret w/ HKDF and SHA-512
+
+    Attributes:
+        identifier     -11
+
+        fullname       DIRECT_HKDF_SHA_512
+    """
+
     identifier = - 11
     fullname = "DIRECT_HKDF_SHA_512"
 
 
 @CoseAlgorithm.register_attribute()
 class DirectHKDFSHA256(CoseAlgorithm):
+    """
+    Shared secret w/ HKDF and SHA-256
+
+    Attributes:
+        identifier     -10
+
+        fullname       DIRECT_HKDF_SHA_256
+    """
+
     identifier = - 10
     fullname = "DIRECT_HKDF_SHA_256"
 
 
 @CoseAlgorithm.register_attribute()
 class EdDSA(CoseAlgorithm):
+    """
+    EdDSA
+
+    Attributes:
+        identifier     -8
+
+        fullname       EDDSA
+    """
+
     identifier = -8
     fullname = "EDDSA"
 
@@ -718,6 +819,15 @@ class EdDSA(CoseAlgorithm):
 
 @CoseAlgorithm.register_attribute()
 class Es256(_Ecdsa):
+    """
+    ECDSA w/ SHA-256
+
+    Attributes:
+        identifier     -7
+
+        fullname       ES256
+    """
+
     identifier = -7
     fullname = "ES256"
 
@@ -732,12 +842,30 @@ class Es256(_Ecdsa):
 
 @CoseAlgorithm.register_attribute()
 class Direct(CoseAlgorithm):
+    """
+    Direct use of CEK
+
+    Attributes:
+        identifier     -6
+
+        fullname       DIRECT
+    """
+
     identifier = -6
     fullname = "DIRECT"
 
 
 @CoseAlgorithm.register_attribute()
 class A256KW(_AesKw):
+    """
+    AES Key Wrap w/ 256-bit key
+
+    Attributes:
+        identifier     -5
+
+        fullname       A256KW
+    """
+
     identifier = -5
     fullname = "A256KW"
 
@@ -748,6 +876,15 @@ class A256KW(_AesKw):
 
 @CoseAlgorithm.register_attribute()
 class A192KW(_AesKw):
+    """
+    AES Key Wrap w/ 192-bit key
+
+    Attributes:
+        identifier     -4
+
+        fullname       A192KW
+    """
+
     identifier = -4
     fullname = "A192KW"
 
@@ -758,6 +895,15 @@ class A192KW(_AesKw):
 
 @CoseAlgorithm.register_attribute()
 class A128KW(_AesKw):
+    """
+    AES Key Wrap w/ 128-bit key
+
+    Attributes:
+        identifier     -3
+
+        fullname       A128KW
+    """
+
     identifier = -3
     fullname = "A128KW"
 
@@ -768,6 +914,15 @@ class A128KW(_AesKw):
 
 @CoseAlgorithm.register_attribute()
 class A128GCM(_AesGcm):
+    """
+    AES-GCM mode w/ 128-bit key, 128-bit tag
+
+    Attributes:
+        identifier     1
+
+        fullname       A128GCM
+    """
+
     identifier = 1
     fullname = 'A128GCM'
 
@@ -778,6 +933,15 @@ class A128GCM(_AesGcm):
 
 @CoseAlgorithm.register_attribute()
 class A192GCM(_AesGcm):
+    """
+    AES-GCM mode w/ 192-bit key, 128-bit tag
+
+    Attributes:
+        identifier     2
+
+        fullname       A192GCM
+    """
+
     identifier = 2
     fullname = 'A192GCM'
 
@@ -788,6 +952,15 @@ class A192GCM(_AesGcm):
 
 @CoseAlgorithm.register_attribute()
 class A256GCM(_AesGcm):
+    """
+    AES-GCM mode w/ 256-bit key, 128-bit tag
+
+    Attributes:
+        identifier     3
+
+        fullname       A256CM
+    """
+    
     identifier = 3
     fullname = 'A256GCM'
 
