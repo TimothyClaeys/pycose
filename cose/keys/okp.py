@@ -63,6 +63,15 @@ class OKPKey(CoseKey):
 
     def __init__(self, crv: Union[Type['CoseCurve'], str, int], x: bytes = b'', d: bytes = b'',
                  optional_params: Optional[dict] = None):
+        """
+        Create an COSE OKP key.
+
+        :param crv: An OKP elliptic curve.
+        :param x: Public value of the OKP key.
+        :param d: Private value of the OKP key.
+        :param optional_params: A dictionary with optional key parameters.
+        """
+
         transformed_dict = {}
 
         if len(x) == 0 and len(d) == 0:
@@ -110,10 +119,10 @@ class OKPKey(CoseKey):
             raise CoseInvalidKey("OKP COSE key must have the OKP KpCurve attribute")
 
     @crv.setter
-    def crv(self, crv: Type['CoseCurve']):
+    def crv(self, crv: Union[Type['CoseCurve'], int, str]):
         if crv not in [X25519, X448, Ed25519, Ed448] \
-                or crv not in [X25519.identifier, X448.identifier, Ed25519.identifier, Ed448.identifier] \
-                or crv not in [X25519.fullname, X448.fullname, Ed25519.fullname, Ed448.identifier]:
+                and crv not in [X25519.identifier, X448.identifier, Ed25519.identifier, Ed448.identifier] \
+                and crv not in [X25519.fullname, X448.fullname, Ed25519.fullname, Ed448.identifier]:
             raise CoseIllegalCurve("Invalid COSE curve attribute")
         else:
             self.store[OKPKpCurve] = CoseCurve.from_id(crv)
@@ -183,7 +192,7 @@ class OKPKey(CoseKey):
             d=private_key.private_bytes(encoding, private_format, encryption),
             optional_params=optional_params)
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: Union['KeyParam', str, int]):
         if self._key_transform(key) != KpKty and self._key_transform(key) != OKPKpCurve:
             if self._key_transform(key) == OKPKpD and OKPKpX not in self.store:
                 pass

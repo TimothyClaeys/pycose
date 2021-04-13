@@ -34,6 +34,8 @@ if TYPE_CHECKING:
 
 
 class CoseAlgorithm(_CoseAttribute, ABC):
+    """ Base class for all COSE algorithms. """
+
     _registered_algorithms = {}
 
     @classmethod
@@ -45,7 +47,7 @@ class _HashAlg(CoseAlgorithm, ABC):
     #: Set in derived class to hash constructor
     hash_cls = None
     #: Set in derived class to optional trucation size in byte count
-    truc_size: Optional[int] = None
+    trunc_size: Optional[int] = None
 
     @classmethod
     def get_hash_func(cls) -> HashAlgorithm:
@@ -57,8 +59,8 @@ class _HashAlg(CoseAlgorithm, ABC):
         h.update(data)
         digest = h.finalize()
 
-        if cls.truc_size:
-            digest = digest[:cls.truc_size]
+        if cls.trunc_size:
+            digest = digest[:cls.trunc_size]
 
         return digest
 
@@ -633,7 +635,7 @@ class Sha512Trunc256(_HashAlg):
     identifier = -17
     fullname = "SHA-512/256"
     hash_cls = SHA512
-    truc_size = 32
+    trunc_size = 32
 
 
 @CoseAlgorithm.register_attribute()
@@ -648,7 +650,7 @@ class Sha256Trunc64(_HashAlg):
     identifier = -15
     fullname = "SHA-256/64"
     hash_cls = SHA256
-    truc_size = 8
+    trunc_size = 8
 
 
 @CoseAlgorithm.register_attribute()

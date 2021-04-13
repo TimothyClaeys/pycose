@@ -118,10 +118,10 @@ class EC2Key(CoseKey):
             raise CoseInvalidKey("EC2 COSE key must have the EC2KpCurve attribute")
 
     @crv.setter
-    def crv(self, crv: Type['CoseCurve']):
+    def crv(self, crv: Union[Type['CoseCurve'], int, str]):
         if crv not in [P256, P384, P521] \
-                or crv not in [P256.identifier, P384.identifier, P521.identifier] \
-                or crv not in [P256.fullname, P384.fullname, P521.fullname]:
+                and crv not in [P256.identifier, P384.identifier, P521.identifier] \
+                and crv not in [P256.fullname, P384.fullname, P521.fullname]:
             raise CoseIllegalCurve("Invalid COSE curve attribute")
         else:
             self.store[EC2KpCurve] = CoseCurve.from_id(crv)
