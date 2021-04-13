@@ -1,10 +1,11 @@
 import os
+from binascii import unhexlify
 
 import pytest
 
 from cose.algorithms import EdDSA
 from cose.curves import Ed448, Ed25519, X448, X25519
-from cose.exceptions import CoseInvalidKey, CoseIllegalKeyType
+from cose.exceptions import CoseInvalidKey, CoseIllegalKeyType, CoseIllegalCurve
 from cose.keys import OKPKey, CoseKey
 from cose.keys.keyops import SignOp
 from cose.keys.keyparam import KpKty, OKPKpCurve, OKPKpX, OKPKpD, KpAlg, KpKeyOps
@@ -147,3 +148,32 @@ def test_dict_operations_on_okp_key():
     assert -4 in key
     assert KpAlg in key
     assert 'ALG' in key
+
+
+def test_unknown_key_attributes():
+    key = 'a401012004215820a3ff263595beb377d1a0ce1d04dad2d40966ac6bcb622051b84659184d5d9a326c7375626a656374206e616d6560'
+
+    key = CoseKey.decode(unhexlify(key))
+
+    assert "subject name" in key
+
+
+def test_key_set_curve():
+    key = 'a401012006215820898ff79a02067a16ea1eccb90fa52246f5aa4dd6ec076bba0259d904b7ec8b0c2358208f781a095372f85b6d' \
+          '9f6109ae422611734d7dbfa0069a2df2935bb2e053bf35'
+    key = CoseKey.decode(unhexlify(key))
+
+    assert key.crv == Ed25519
+
+    key.crv = X25519
+
+    assert key.crv == X25519
+
+    with pytest.raises(CoseIllegalCurve) as excinfo:
+        key.crv = 3
+
+    assert "Invalid COSE curve attribute" in str(excinfo.value)
+
+    key.crv = X448.identifier
+
+    assert key.crv == X448

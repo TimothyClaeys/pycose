@@ -7,7 +7,7 @@ import cbor2
 
 from cose import utils
 from cose.algorithms import CoseAlgorithm
-from cose.exceptions import CoseException, CoseIllegalKeyType
+from cose.exceptions import CoseException, CoseIllegalKeyType, CoseIllegalAlgorithm, CoseIllegalKeyOps
 from cose.headers import EphemeralKey, StaticKey
 from cose.keys.keyops import KeyOps
 from cose.keys.keyparam import KpKty, KpKeyOps, KpAlg, KpKid, KpBaseIV, KeyParam
@@ -124,7 +124,7 @@ class CoseKey(MutableMapping, ABC):
             raise CoseException("Wrong key type")
 
         if self.alg is not None and self.alg.identifier != algorithm.identifier:
-            raise CoseException("Conflicting algorithms in key and COSE headers")
+            raise CoseIllegalAlgorithm("Conflicting algorithms in key and COSE headers")
 
         if len(self.key_ops):
             match_key_ops = False
@@ -134,7 +134,7 @@ class CoseKey(MutableMapping, ABC):
                     match_key_ops = True
 
             if not match_key_ops:
-                raise CoseException("Wrong key operations specified")
+                raise CoseIllegalKeyOps(f"Illegal key operations specified. Allowed: {key_ops}, found: {self.key_ops}")
 
     def __getitem__(self, key):
         return self.store[self._key_transform(key)]
@@ -225,8 +225,10 @@ class CoseKey(MutableMapping, ABC):
         return KeyParam.from_id(key)
 
     def _key_repr(self) -> dict:
-        names = {kp.__name__: self.store[kp].__name__ if hasattr(self.store[kp], '__name__') else self.store[kp] for kp
-                 in sorted(self.store, key=lambda item: item.identifier)}
+        names = {
+            kp.__name__ if hasattr(kp, '__name__') else kp:
+                self.store[kp].__name__ if hasattr(self.store[kp], '__name__') else self.store[kp] for kp
+            in sorted(self.store, key=lambda item: item.identifier if hasattr(item, 'identifier') else 65536)}
 
         if KpKeyOps.__name__ in names:
             names[KpKeyOps.__name__] = [ops.__name__ if hasattr(ops, '__name__') else ops for ops in

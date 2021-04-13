@@ -44,8 +44,11 @@ class CoseBase(metaclass=abc.ABCMeta):
             raise TypeError("unprotected header should be of type 'dict'")
 
         self._local_attrs = {}
-        self._phdr = deepcopy(phdr)
-        self._uhdr = deepcopy(uhdr)
+        self._phdr = {}
+        self._uhdr = {}
+
+        CoseBase._transform_headers(self._phdr, phdr)
+        CoseBase._transform_headers(self._uhdr, uhdr)
 
         # can be plaintext or ciphertext
         if type(payload) is not bytes:
@@ -147,6 +150,22 @@ class CoseBase(metaclass=abc.ABCMeta):
             encoder.encode(new_dict)
         else:
             encoder.encode(cose_attribute.identifier)
+
+    @staticmethod
+    def _transform_headers(output_header, base_header: dict):
+        for _header_attribute, _value in base_header.items():
+            try:
+                # translate the header attribute
+                hp = CoseHeaderAttribute.from_id(_header_attribute)
+
+                # parse the value of the key attribute if possible
+                if hasattr(hp.value_parser, '__call__'):
+                    _value = hp.value_parser(_value)
+
+                # store in new dict
+                output_header[hp] = _value
+            except ValueError:
+                output_header[_header_attribute] = _value
 
     @classmethod
     def _parse_header(cls, hdr) -> dict:

@@ -89,11 +89,14 @@ class SymmetricKey(CoseKey):
         self.store[SymKpK] = k
 
     @staticmethod
-    def generate_key(key_len: int) -> 'SymmetricKey':
+    def generate_key(key_len: int, optional_params: dict = None) -> 'SymmetricKey':
         """
         Generate a random Symmetric COSE key object.
 
         :param key_len: Symmetric key length in bytes, must be of size 16, 24 or 32.
+        :param optional_params: Optional key attributes for the :class:`~cose.keys.symmetric.SymmetricKey` object, \
+        e.g., :class:`~cose.keys.keyparam.KpAlg` or  :class:`~cose.keys.keyparam.KpKid`.
+
         :raises ValueError: For invalid key lengths.
 
         :returns: A COSE_key of type SymmetricKey.
@@ -102,7 +105,7 @@ class SymmetricKey(CoseKey):
         if key_len not in [16, 24, 32]:
             raise ValueError("key_len must be of size 16, 24 or 32")
 
-        return SymmetricKey(key=os.urandom(key_len))
+        return SymmetricKey(key=os.urandom(key_len), optional_params=optional_params)
 
     def __repr__(self):
         _key = self._key_repr()

@@ -1,5 +1,6 @@
 # pycose:snake:  --- CBOR Object Signing and Encryption
 [![Python package](https://github.com/TimothyClaeys/pycose/actions/workflows/python-package.yml/badge.svg)](https://github.com/TimothyClaeys/pycose/actions/workflows/python-package.yml)
+[![Documentation Status](https://readthedocs.org/projects/pycose/badge/?version=latest)](https://pycose.readthedocs.io/en/latest/?badge=latest)
 
 This project is a Python implementation of the IETF CBOR Encoded Message Syntax (COSE). COSE has reached RFC status and is now available at RFC 8152.
 
@@ -34,7 +35,63 @@ Additionally, based on the message type, other message fields can be added:
 - _COSE recipients_ or _COSE signatures_ (for **MAC**, **Encrypt**, and **Sign** messages)
 
 ## Examples
-A set of examples can be found [here](https://pycose.readthedocs.io/en/latest/examples.html)
+
+### Encoding
+
+```python
+from binascii import unhexlify
+from cose.messages import Enc0Message
+from cose.keys import SymmetricKey
+
+# Create a COSE Encrypt0 Message
+msg = Enc0Message(
+    phdr={'ALG': 'A128GCM', 'IV': unhexlify(b'01010101010101010101010101010101')},
+    uhdr={'KID': b'meriadoc.brandybuck@buckland.example'},
+    payload='a secret message'.encode('utf-8')
+)
+
+# Create a COSE Symmetric Key
+cose_key = SymmetricKey(key=unhexlify(b'000102030405060708090a0b0c0d0e0f'))
+msg.key = cose_key
+
+# Performs encryption and CBOR serialization
+msg.encode()
+b'\xd0\x83U\xa2\x01\x01\x05P\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\xa1\x04X$meriadoc.brandybuck@buckland.exampleX \xc4\xaf\x85\xacJQ4\x93\x19\x93\xec\n\x18c\xa6\xe8\xc6n\xf4\xc9\xac\x161^\xe6\xfe\xcd\x9b.\x1cy\xa1'
+```
+
+### Decoding
+```python
+from binascii import unhexlify
+from cose.messages import CoseMessage
+from cose.keys import SymmetricKey
+
+# message bytes (CBOR encoded)
+msg =  b'\xd0\x83U\xa2\x01\x01\x05P\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\xa1\x04X$meriadoc.brandybuck@buckland.exampleX \xc4\xaf\x85\xacJQ4\x93\x19\x93\xec\n\x18c\xa6\xe8\xc6n\xf4\xc9\xac\x161^\xe6\xfe\xcd\x9b.\x1cy\xa1'
+
+cose_msg = CoseMessage.decode(msg)
+
+# Create a COSE Symmetric Key
+cose_key = SymmetricKey(key=unhexlify(b'000102030405060708090a0b0c0d0e0f'))
+cose_msg.key = cose_key
+
+cose_msg.decrypt()
+b'a secret message'
+```
+
+### More examples
+More examples can be found [here](https://pycose.readthedocs.io/en/latest/examples.html)
+
+## Testing
+
+To run the test suite you need `pytest`:
+```shell
+$ pip install pytest
+```
+Move to the root of the repository and type:
+
+```shell
+$ pytest
+```
 
 ## Cryptography
 

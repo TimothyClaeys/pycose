@@ -6,6 +6,10 @@ from cose.keys.keytype import KTY
 from cose.utils import _CoseAttribute
 
 
+#########################################
+# Base Key Parameters
+#########################################
+
 class KeyParam(_CoseAttribute, ABC):
     _registered_algorithms = {}
 
@@ -44,6 +48,10 @@ class KpBaseIV(KeyParam):
     fullname = 'BASE_IV'
 
 
+#########################################
+# EC2 Key Parameters
+#########################################
+
 class EC2KeyParam(_CoseAttribute, ABC):
     _registered_algorithms = {}
     _registered_algorithms.update(KeyParam.get_registered_classes())
@@ -77,6 +85,10 @@ class EC2KpD(EC2KeyParam):
     fullname = "D"
 
 
+#########################################
+# OKP Key Parameters
+#########################################
+
 class OKPKeyParam(_CoseAttribute, ABC):
     _registered_algorithms = {}
     _registered_algorithms.update(KeyParam.get_registered_classes())
@@ -103,6 +115,10 @@ class OKPKpX(OKPKeyParam):
     identifier = -2
     fullname = "X"
 
+
+#########################################
+# Symmetric Key Parameters
+#########################################
 
 class SymmetricKeyParam(_CoseAttribute, ABC):
     _registered_algorithms = {}

@@ -1,6 +1,8 @@
 import cbor2
 import pytest
 
+from cose.exceptions import CoseIllegalAlgorithm, CoseIllegalKeyOps
+from cose.keys import OKPKey, EC2Key
 from cose.keys.cosekey import CoseKey
 from cose.keys.keyops import SignOp, VerifyOp
 from cose.messages.cosemessage import CoseMessage
@@ -46,3 +48,53 @@ def test_sign1_decoding(test_sign1):
     assert msg.uhdr == test_input['unprotected']
 
     assert msg.verify_signature()
+
+
+@pytest.mark.parametrize('alg', ['ES384', 'ES512'])
+def test_fail_on_non_matching_algorithms_phdr(alg):
+    msg = Sign1Message(phdr={'ALG': 'ES256'}, payload="signed message".encode('utf-8'))
+
+    ec2_key = EC2Key.generate_key(curve='P_256', optional_params={'ALG': alg})
+    msg.key = ec2_key
+
+    with pytest.raises(CoseIllegalAlgorithm) as excinfo:
+        msg.encode()
+
+    assert "Conflicting algorithms" in str(excinfo.value)
+
+
+@pytest.mark.parametrize('ops',
+                         ['VERIFY', 'ENCRYPT', 'DECRYPT', 'WRAP', 'UNWRAP',
+                          'DERIVE_KEY', 'DERIVE_BITS', 'MAC_CREATE', 'MAC_VERIFY'])
+def test_fail_on_illegal_keyops_signing(ops):
+    msg = Sign1Message(phdr={'ALG': 'ES256'}, payload="signed message".encode('utf-8'))
+
+    ec2_key = EC2Key.generate_key(curve='P_256', optional_params={'KEY_OPS': [ops]})
+    msg.key = ec2_key
+
+    with pytest.raises(CoseIllegalKeyOps) as excinfo:
+        msg.encode()
+
+    assert "Illegal key operations specified." in str(excinfo.value)
+
+
+@pytest.mark.parametrize('ops',
+                         ['SIGN', 'ENCRYPT', 'DECRYPT', 'WRAP', 'UNWRAP',
+                          'DERIVE_KEY', 'DERIVE_BITS', 'MAC_CREATE', 'MAC_VERIFY'])
+def test_fail_on_illegal_keyops_verifying(ops):
+    msg = Sign1Message(phdr={'ALG': 'ES256'}, payload="signed message".encode('utf-8'))
+
+    ec2_key = EC2Key.generate_key(curve='P_256')
+    msg.key = ec2_key
+
+    msg = msg.encode()
+
+    msg = CoseMessage.decode(msg)
+    # set an illegal key op
+    ec2_key.key_ops = [ops]
+    msg.key = ec2_key
+
+    with pytest.raises(CoseIllegalKeyOps) as excinfo:
+        msg.verify_signature()
+
+    assert "Illegal key operations specified." in str(excinfo.value)
