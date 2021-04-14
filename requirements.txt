@@ -3,10 +3,3 @@ cbor2
 ecdsa
 attrs
 certvalidator
-
-# to build docs
-Sphinx>=3.3.1
-sphinx_rtd_theme>=0.5.0
-
-# this has to be here, otherwise the documentation build will fail
-sphinxemoji

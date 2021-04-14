@@ -1,5 +1,16 @@
+cryptography
+cbor2
+ecdsa
+attrs
+certvalidator
+
 pytest>=6.0.1
 mypy>=0.782
 coverage>=5.2.1
 flake8>=3.8.3
 pep8-naming>=0.11.1
+
+# to build docs
+Sphinx>=3.3.1
+sphinx_rtd_theme>=0.5.0
+sphinxemoji
