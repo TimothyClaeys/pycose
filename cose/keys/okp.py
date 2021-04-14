@@ -55,14 +55,18 @@ class OKPKey(CoseKey):
         else:
             raise CoseInvalidKey("COSE OKP Key must have an OKPKpCurve attribute")
 
-        return cls(crv=curve, x=x, d=d, optional_params=cose_key)
+        return cls(crv=curve, x=x, d=d, optional_params=cose_key, allow_unknown_key_attrs=True)
 
     @staticmethod
-    def _key_transform(key: Union[Type['OKPKeyParam'], Type['KeyParam'], str, int]):
-        return OKPKeyParam.from_id(key)
+    def _key_transform(key: Union[Type['OKPKeyParam'], Type['KeyParam'], str, int],
+                       allow_unknown_attrs: bool = False):
+        return OKPKeyParam.from_id(key, allow_unknown_attrs)
 
-    def __init__(self, crv: Union[Type['CoseCurve'], str, int], x: bytes = b'', d: bytes = b'',
-                 optional_params: Optional[dict] = None):
+    def __init__(self, crv: Union[Type['CoseCurve'], str, int],
+                 x: bytes = b'',
+                 d: bytes = b'',
+                 optional_params: Optional[dict] = None,
+                 allow_unknown_key_attrs: bool = False):
         """
         Create an COSE OKP key.
 
@@ -70,6 +74,7 @@ class OKPKey(CoseKey):
         :param x: Public value of the OKP key.
         :param d: Private value of the OKP key.
         :param optional_params: A dictionary with optional key parameters.
+        :param allow_unknown_key_attrs: Allow unknown key attributes (not registered at the IANA registry)
         """
 
         transformed_dict = {}
@@ -90,7 +95,7 @@ class OKPKey(CoseKey):
         for _key_attribute, _value in new_dict.items():
             try:
                 # translate the key_attribute
-                kp = OKPKeyParam.from_id(_key_attribute)
+                kp = OKPKeyParam.from_id(_key_attribute, allow_unknown_key_attrs)
 
                 # parse the value of the key attribute if possible
                 if hasattr(kp, 'value_parser') and hasattr(kp.value_parser, '__call__'):

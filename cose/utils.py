@@ -26,7 +26,7 @@ class _CoseAttribute(ABC):
         return decorator
 
     @classmethod
-    def from_id(cls, attribute: Any, allow_unknown_attributes: bool = True) -> Any:
+    def from_id(cls, attribute: Any, allow_unknown_attributes: bool = False) -> Any:
         if isinstance(attribute, int) and attribute in cls.get_registered_classes():
             return cls.get_registered_classes()[attribute]
         elif isinstance(attribute, str) and attribute in cls.get_registered_classes():
@@ -40,7 +40,7 @@ class _CoseAttribute(ABC):
             if allow_unknown_attributes:
                 return attribute
             else:
-                raise CoseException(f"Unknown COSE header attribute with value: [{cls.__name__} - {attribute}]")
+                raise CoseException(f"Unknown COSE header or key attribute with value: [{cls.__name__} - {attribute}]")
 
     @property
     @abstractmethod

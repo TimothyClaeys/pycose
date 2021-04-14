@@ -33,8 +33,9 @@ class SymmetricKey(CoseKey):
         return cls(key=key_bytes, optional_params=cose_key)
 
     @staticmethod
-    def _key_transform(key: Union[Type['SymmetricKeyParam'], Type['KeyParam'], str, int]):
-        return SymmetricKeyParam.from_id(key)
+    def _key_transform(key: Union[Type['SymmetricKeyParam'], Type['KeyParam'], str, int],
+                       allow_unknown_attrs: bool = False):
+        return SymmetricKeyParam.from_id(key, allow_unknown_attrs)
 
     def __init__(self, key: bytes, optional_params: Optional[dict] = None):
         transformed_dict = {}

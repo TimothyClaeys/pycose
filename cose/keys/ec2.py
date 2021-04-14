@@ -63,8 +63,8 @@ class EC2Key(CoseKey):
         return cls(crv=curve, x=x, y=y, d=d, optional_params=cose_key)
 
     @staticmethod
-    def _key_transform(key: Union[Type['EC2KeyParam'], Type['KeyParam'], str, int]):
-        return EC2KeyParam.from_id(key)
+    def _key_transform(key: Union[Type['EC2KeyParam'], Type['KeyParam'], str, int], allow_unknown_attrs: bool = False):
+        return EC2KeyParam.from_id(key, allow_unknown_attrs)
 
     def __init__(self, crv: Union[Type['CoseCurve'], str, int], x: bytes = b'', y: bytes = b'', d: bytes = b'',
                  optional_params: Optional[dict] = None):

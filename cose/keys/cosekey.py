@@ -137,13 +137,16 @@ class CoseKey(MutableMapping, ABC):
                 raise CoseIllegalKeyOps(f"Illegal key operations specified. Allowed: {key_ops}, found: {self.key_ops}")
 
     def __getitem__(self, key):
-        return self.store[self._key_transform(key)]
+        return self.store[self._key_transform(key, allow_unknown_attrs=True)]
 
     def __setitem__(self, key, value):
-        self.store[self._key_transform(key)] = value
+        self.store[self._key_transform(key, allow_unknown_attrs=True)] = value
 
     def __delitem__(self, key):
-        del self.store[self._key_transform(key)]
+        del self.store[self._key_transform(key, allow_unknown_attrs=True)]
+
+    def __contains__(self, item):
+        return self.store.__contains__(self._key_transform(item, allow_unknown_attrs=True))
 
     def __iter__(self):
         return iter(self.store)
@@ -221,8 +224,8 @@ class CoseKey(MutableMapping, ABC):
         encoder.encode(cose_attribute.identifier)
 
     @staticmethod
-    def _key_transform(key):
-        return KeyParam.from_id(key)
+    def _key_transform(key, allow_unknown_attrs=False):
+        return KeyParam.from_id(key, allow_unknown_attrs)
 
     def _key_repr(self) -> dict:
         names = {

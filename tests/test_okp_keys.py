@@ -5,11 +5,10 @@ import pytest
 
 from cose.algorithms import EdDSA
 from cose.curves import Ed448, Ed25519, X448, X25519
-from cose.exceptions import CoseInvalidKey, CoseIllegalKeyType, CoseIllegalCurve
+from cose.exceptions import CoseInvalidKey, CoseIllegalKeyType, CoseIllegalCurve, CoseException
 from cose.keys import OKPKey, CoseKey
 from cose.keys.keyops import SignOp
 from cose.keys.keyparam import KpKty, OKPKpCurve, OKPKpX, OKPKpD, KpAlg, KpKeyOps
-
 ###############################################################
 # OKP key checks
 ###############################################################
@@ -177,3 +176,13 @@ def test_key_set_curve():
     key.crv = X448.identifier
 
     assert key.crv == X448
+
+
+def test_set_curve_in_key():
+    with pytest.raises(CoseException) as excinfo:
+        key = OKPKey(crv='Ed25519', d=os.urandom(32))
+
+    assert "Unknown COSE header or key attribute" in str(excinfo)
+
+    key = OKPKey(crv='ED25519', d=os.urandom(32))
+    assert key.crv == Ed25519
