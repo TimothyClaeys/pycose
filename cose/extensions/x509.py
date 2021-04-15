@@ -1,6 +1,7 @@
-from typing import List, Set, Union
-from datetime import datetime
-from certvalidator import CertificateValidator, ValidationContext
+from typing import List, Set, Union, Type
+
+import cbor2
+from certvalidator import CertificateValidator
 
 from cose.algorithms import CoseAlg, CoseAlgorithm
 
@@ -18,44 +19,41 @@ class X5Bag:
 
 class X5T:
     @classmethod
-    def from_certificate(cls, alg: CoseAlg, certificate: bytes):
-        ''' Extract thumbprint from an encoded certificate.
-        '''
-        return cls(
-            alg=alg,
-            thumbprint=alg.compute_hash(certificate)
-        )
+    def from_certificate(cls, alg: Type['CoseAlg'], certificate: bytes, cbor_encoded: bool = False):
+        """ Extract thumbprint from an encoded certificate. """
+        if cbor_encoded:
+            certificate = cbor2.loads(certificate)
+
+        return cls(alg=alg, thumbprint=alg.compute_hash(certificate))
 
     @classmethod
     def decode(cls, item):
-        ''' Decode from a CBOR item.
-        '''
-        return cls(
-            alg=CoseAlgorithm.from_id(item[0]),
-            thumbprint=item[1]
-        )
+        """ Decode from a CBOR item. """
 
-    def __init__(self, alg: CoseAlg, thumbprint: bytes):
+        return cls(alg=CoseAlgorithm.from_id(item[0]), thumbprint=item[1])
+
+    def __init__(self, alg: Type['CoseAlg'], thumbprint: bytes):
         self.alg = alg
         self.thumbprint = thumbprint
 
     def __eq__(self, other: 'X5T'):
-        return (
-            self.alg == other.alg
-            and self.thumbprint == other.thumbprint
-        )
+        return self.alg == other.alg and self.thumbprint == other.thumbprint
 
     def encode(self):
-        ''' Encode to a CBOR item.
-        '''
+        """ Encode to a CBOR item. """
         return [self.alg, self.thumbprint]
 
-    def matches(self, certificate: bytes) -> bool:
-        ''' Determine if this thumbprint is for a given certificate.
-        '''
+    def matches(self, certificate: bytes, cbor_encoded: bool = False) -> bool:
+        """ Determine if this thumbprint is for a given certificate."""
+
         if not self.thumbprint:
             return False
+
+        if cbor_encoded:
+            certificate = cbor2.loads(certificate)
+
         return self.thumbprint == self.alg.compute_hash(certificate)
+
 
 class X5U:
     def __init__(self, uri: str):
@@ -73,13 +71,12 @@ class X5Chain:
             self.cert_chain = cert_chain
 
         if verify:
-            self.verify_chain()
+            self.verify_chain({'digital_signature'})
 
-    def verify_chain(self, ctx: ValidationContext, key_usage: Set[str]):
+    def verify_chain(self, key_usage: Set[str]):
         val = CertificateValidator(
             end_entity_cert=self.cert_chain[0],
             intermediate_certs=self.cert_chain[1:],
-            validation_context=ctx
         )
         return val.validate_usage(key_usage)
 
