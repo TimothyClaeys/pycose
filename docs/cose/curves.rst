@@ -13,11 +13,11 @@ curves and their identifiers can be found at the IANA registry.
     >>> from cose.curves import Ed25519
     >>> from cose.keys import OKPKey, EC2Key
 
-    >>> key = OKPKey.generate_key(curve=Ed25519)
+    >>> key = OKPKey.generate_key(crv=Ed25519)
     >>> key.crv.fullname
     'ED25519'
 
-    >>> key = EC2Key.generate_key(curve="P_256")
+    >>> key = EC2Key.generate_key(crv="P_256")
     >>> key.crv.identifier
     1
 

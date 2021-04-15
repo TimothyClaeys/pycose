@@ -19,7 +19,7 @@ serialized and subsequently deserialized.
     >>> from binascii import unhexlify
     >>> from cose.keys import SymmetricKey, CoseKey
 
-    >>> cose_key = SymmetricKey(key=unhexlify(b'000102030405060708090a0b0c0d0e0f'), optional_params={'ALG': 'A128GCM'})
+    >>> cose_key = SymmetricKey(k=unhexlify(b'000102030405060708090a0b0c0d0e0f'), optional_params={'ALG': 'A128GCM'})
 
     >>> #encode/serialize key
     >>> serialized_key = cose_key.encode()

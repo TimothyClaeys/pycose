@@ -4,7 +4,7 @@ import pytest
 
 from cose.algorithms import Es256
 from cose.curves import P521, P384, P256
-from cose.exceptions import CoseInvalidKey, CoseIllegalKeyType
+from cose.exceptions import CoseInvalidKey, CoseIllegalKeyType, CoseException
 from cose.keys import EC2Key, CoseKey
 from cose.keys.keyops import SignOp
 from cose.keys.keyparam import KpKty, EC2KpCurve, EC2KpX, EC2KpY, EC2KpD, KpAlg, KpKeyOps
@@ -72,7 +72,7 @@ def test_ec2_key_generation_encoding_decoding(crv):
     trails = 256
 
     for i in range(trails):
-        ec2_test = EC2Key.generate_key(curve=crv)
+        ec2_test = EC2Key.generate_key(crv=crv)
         ec2_encoded = ec2_test.encode()
         ec2_decoded = CoseKey.decode(ec2_encoded)
         assert _is_valid_ec2_key(ec2_decoded)
@@ -193,6 +193,9 @@ def test_dict_operations_on_ec2_key():
 
     del key['ALG']
 
+    key['subject_name'] = 'verifying key'
+    assert 'subject_name' in key
+
     assert 'ALG' not in key
 
 
@@ -248,3 +251,25 @@ def test_dict_invalid_deletion():
 
     assert "Deleting <class 'cose.keys.keyparam.EC2KpD'> attribute would lead to an invalid COSE EC2 Key" in str(
         excinfo.value)
+
+
+def test_set_curve_in_key():
+    with pytest.raises(CoseException) as excinfo:
+        key = EC2Key(crv='P257', d=os.urandom(32))
+
+    assert "Unknown COSE header or key attribute" in str(excinfo)
+
+    with pytest.raises(CoseException) as excinfo:
+        key = EC2Key(crv='Ed25519', d=os.urandom(32))
+
+    assert "Unknown COSE header or key attribute" in str(excinfo)
+
+    key = EC2Key(crv='P_256', d=os.urandom(32))
+    assert key.crv == P256
+
+
+def test_unknown_key_attribute():
+    key = EC2Key(crv='P_256', d=os.urandom(32), optional_params={"subject_name": "signing key"})
+
+    assert "subject_name" in key
+    assert key['subject_name'] == "signing key"

@@ -54,7 +54,7 @@ def test_sign1_decoding(test_sign1):
 def test_fail_on_non_matching_algorithms_phdr(alg):
     msg = Sign1Message(phdr={'ALG': 'ES256'}, payload="signed message".encode('utf-8'))
 
-    ec2_key = EC2Key.generate_key(curve='P_256', optional_params={'ALG': alg})
+    ec2_key = EC2Key.generate_key(crv='P_256', optional_params={'ALG': alg})
     msg.key = ec2_key
 
     with pytest.raises(CoseIllegalAlgorithm) as excinfo:
@@ -69,7 +69,7 @@ def test_fail_on_non_matching_algorithms_phdr(alg):
 def test_fail_on_illegal_keyops_signing(ops):
     msg = Sign1Message(phdr={'ALG': 'ES256'}, payload="signed message".encode('utf-8'))
 
-    ec2_key = EC2Key.generate_key(curve='P_256', optional_params={'KEY_OPS': [ops]})
+    ec2_key = EC2Key.generate_key(crv='P_256', optional_params={'KEY_OPS': [ops]})
     msg.key = ec2_key
 
     with pytest.raises(CoseIllegalKeyOps) as excinfo:
@@ -84,14 +84,22 @@ def test_fail_on_illegal_keyops_signing(ops):
 def test_fail_on_illegal_keyops_verifying(ops):
     msg = Sign1Message(phdr={'ALG': 'ES256'}, payload="signed message".encode('utf-8'))
 
-    ec2_key = EC2Key.generate_key(curve='P_256')
+    ec2_key = EC2Key.generate_key(crv='P_256')
     msg.key = ec2_key
 
     msg = msg.encode()
 
     msg = CoseMessage.decode(msg)
     # set an illegal key op
-    ec2_key.key_ops = [ops]
+    if ops in {'ENCRYPT', 'DECRYPT', 'WRAP', 'UNWRAP', 'MAC_CREATE', 'MAC_VERIFY'}:
+        with pytest.raises(CoseIllegalKeyOps) as excinfo:
+            ec2_key.key_ops = [ops]
+
+        assert "Invalid COSE key operation" in str(excinfo.value)
+        return
+    else:
+        ec2_key.key_ops = [ops]
+
     msg.key = ec2_key
 
     with pytest.raises(CoseIllegalKeyOps) as excinfo:

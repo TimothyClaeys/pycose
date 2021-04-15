@@ -1,7 +1,7 @@
 import base64
 from abc import ABC
 from collections.abc import MutableMapping
-from typing import Optional, TypeVar, Type, List, Any, TYPE_CHECKING, Callable
+from typing import Optional, TypeVar, Type, List, Any, TYPE_CHECKING, Callable, Set
 
 import cbor2
 
@@ -11,9 +11,6 @@ from cose.exceptions import CoseException, CoseIllegalKeyType, CoseIllegalAlgori
 from cose.headers import EphemeralKey, StaticKey
 from cose.keys.keyops import KeyOps
 from cose.keys.keyparam import KpKty, KpKeyOps, KpAlg, KpKid, KpBaseIV, KeyParam
-
-# noinspection PyUnresolvedReferences
-from cose.keys.keytype import KTY
 
 if TYPE_CHECKING:
     from cose.headers import CoseHeaderAttribute
@@ -137,13 +134,16 @@ class CoseKey(MutableMapping, ABC):
                 raise CoseIllegalKeyOps(f"Illegal key operations specified. Allowed: {key_ops}, found: {self.key_ops}")
 
     def __getitem__(self, key):
-        return self.store[self._key_transform(key)]
+        return self.store[self._key_transform(key, allow_unknown_attrs=True)]
 
     def __setitem__(self, key, value):
-        self.store[self._key_transform(key)] = value
+        self.store[self._key_transform(key, allow_unknown_attrs=True)] = value
 
     def __delitem__(self, key):
-        del self.store[self._key_transform(key)]
+        del self.store[self._key_transform(key, allow_unknown_attrs=True)]
+
+    def __contains__(self, item):
+        return self.store.__contains__(self._key_transform(item, allow_unknown_attrs=True))
 
     def __iter__(self):
         return iter(self.store)
@@ -221,8 +221,14 @@ class CoseKey(MutableMapping, ABC):
         encoder.encode(cose_attribute.identifier)
 
     @staticmethod
-    def _key_transform(key):
-        return KeyParam.from_id(key)
+    def _key_transform(key, allow_unknown_attrs=False):
+        return KeyParam.from_id(key, allow_unknown_attrs)
+
+    @classmethod
+    def _supported_by_key_type(cls, attribute, supported: Set[Any]):
+        return attribute in supported \
+               or attribute in map(lambda x: getattr(x, 'identifier'), supported) \
+               or attribute in map(lambda x: getattr(x, 'fullname'), supported)
 
     def _key_repr(self) -> dict:
         names = {

@@ -1,4 +1,4 @@
-from typing import Optional, Type, Union
+from typing import Optional, Type, Union, List
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
@@ -9,8 +9,9 @@ from cryptography.hazmat.primitives.serialization import PrivateFormat, PublicFo
 
 from cose import utils
 from cose.curves import X448, X25519, Ed25519, Ed448, CoseCurve
-from cose.exceptions import CoseIllegalCurve, CoseInvalidKey, CoseIllegalKeyType
+from cose.exceptions import CoseIllegalCurve, CoseInvalidKey, CoseIllegalKeyType, CoseIllegalKeyOps
 from cose.keys.cosekey import CoseKey, KpKty
+from cose.keys.keyops import KEYOPS, SignOp, VerifyOp, DeriveBitsOp, DeriveKeyOp
 from cose.keys.keyparam import OKPKeyParam, OKPKpCurve, OKPKpX, OKPKpD, KeyParam
 from cose.keys.keytype import KtyOKP
 
@@ -55,14 +56,18 @@ class OKPKey(CoseKey):
         else:
             raise CoseInvalidKey("COSE OKP Key must have an OKPKpCurve attribute")
 
-        return cls(crv=curve, x=x, d=d, optional_params=cose_key)
+        return cls(crv=curve, x=x, d=d, optional_params=cose_key, allow_unknown_key_attrs=True)
 
     @staticmethod
-    def _key_transform(key: Union[Type['OKPKeyParam'], Type['KeyParam'], str, int]):
-        return OKPKeyParam.from_id(key)
+    def _key_transform(key: Union[Type['OKPKeyParam'], Type['KeyParam'], str, int],
+                       allow_unknown_attrs: bool = False):
+        return OKPKeyParam.from_id(key, allow_unknown_attrs)
 
-    def __init__(self, crv: Union[Type['CoseCurve'], str, int], x: bytes = b'', d: bytes = b'',
-                 optional_params: Optional[dict] = None):
+    def __init__(self, crv: Union[Type['CoseCurve'], str, int],
+                 x: bytes = b'',
+                 d: bytes = b'',
+                 optional_params: Optional[dict] = None,
+                 allow_unknown_key_attrs: bool = True):
         """
         Create an COSE OKP key.
 
@@ -70,6 +75,7 @@ class OKPKey(CoseKey):
         :param x: Public value of the OKP key.
         :param d: Private value of the OKP key.
         :param optional_params: A dictionary with optional key parameters.
+        :param allow_unknown_key_attrs: Allow unknown key attributes (not registered at the IANA registry)
         """
 
         transformed_dict = {}
@@ -90,7 +96,7 @@ class OKPKey(CoseKey):
         for _key_attribute, _value in new_dict.items():
             try:
                 # translate the key_attribute
-                kp = OKPKeyParam.from_id(_key_attribute)
+                kp = OKPKeyParam.from_id(_key_attribute, allow_unknown_key_attrs)
 
                 # parse the value of the key attribute if possible
                 if hasattr(kp, 'value_parser') and hasattr(kp.value_parser, '__call__'):
@@ -120,10 +126,9 @@ class OKPKey(CoseKey):
 
     @crv.setter
     def crv(self, crv: Union[Type['CoseCurve'], int, str]):
-        if crv not in [X25519, X448, Ed25519, Ed448] \
-                and crv not in [X25519.identifier, X448.identifier, Ed25519.identifier, Ed448.identifier] \
-                and crv not in [X25519.fullname, X448.fullname, Ed25519.fullname, Ed448.identifier]:
-            raise CoseIllegalCurve("Invalid COSE curve attribute")
+        supported_curves = {X25519, X448, Ed25519, Ed448}
+        if not self._supported_by_key_type(crv, supported_curves):
+            raise CoseIllegalCurve(f"Invalid COSE curve {crv} for key type {OKPKey.__name__}")
         else:
             self.store[OKPKpCurve] = CoseCurve.from_id(crv)
 
@@ -155,28 +160,43 @@ class OKPKey(CoseKey):
             raise TypeError("private key must be of type 'bytes'")
         self.store[OKPKpD] = d
 
+    @property
+    def key_ops(self) -> List[Type['KEYOPS']]:
+        """ Returns the value of the :class:`~cose.keys.keyparam.KpKeyOps` key parameter """
+
+        return CoseKey.key_ops.fget(self)
+
+    @key_ops.setter
+    def key_ops(self, new_key_ops: List[Type['KEYOPS']]) -> None:
+        supported = {SignOp, VerifyOp, DeriveKeyOp, DeriveBitsOp}
+        for ops in new_key_ops:
+            if not self._supported_by_key_type(ops, supported):
+                raise CoseIllegalKeyOps(f"Invalid COSE key operation {ops} for key type {OKPKey.__name__}")
+            else:
+                CoseKey.key_ops.fset(self, new_key_ops)
+
     @staticmethod
-    def generate_key(curve: Union[Type['CoseCurve'], str, int], optional_params: dict = None) -> 'OKPKey':
+    def generate_key(crv: Union[Type['CoseCurve'], str, int], optional_params: dict = None) -> 'OKPKey':
         """
         Generate a random OKPKey COSE key object.
 
-        :param curve: Specify an elliptic curve.
+        :param crv: Specify an elliptic curve.
         :param optional_params: Optional key attributes for the :class:`~cose.keys.okp.OKPKey` object, e.g., \
         :class:`~cose.keys.keyparam.KpAlg` or  :class:`~cose.keys.keyparam.KpKid`.
 
         :returns: A COSE `OKPKey` key.
         """
 
-        if type(curve) == str or type(curve) == int:
-            curve = CoseCurve.from_id(curve)
+        if type(crv) == str or type(crv) == int:
+            crv = CoseCurve.from_id(crv)
 
-        if curve == X25519:
+        if crv == X25519:
             private_key = X25519PrivateKey.generate()
-        elif curve == Ed25519:
+        elif crv == Ed25519:
             private_key = Ed25519PrivateKey.generate()
-        elif curve == Ed448:
+        elif crv == Ed448:
             private_key = Ed448PrivateKey.generate()
-        elif curve == X448:
+        elif crv == X448:
             private_key = X448PrivateKey.generate()
         else:
             raise CoseIllegalCurve(f"Curve must be of type {X25519}, {X448}, {Ed25519}, or {Ed448}")
@@ -187,7 +207,7 @@ class OKPKey(CoseKey):
         encryption = serialization.NoEncryption()
 
         return OKPKey(
-            crv=curve,
+            crv=crv,
             x=private_key.public_key().public_bytes(encoding, public_format),
             d=private_key.private_bytes(encoding, private_format, encryption),
             optional_params=optional_params)
