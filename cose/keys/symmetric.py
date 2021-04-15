@@ -1,11 +1,15 @@
 import os
-from typing import Optional, Union, Type
+from typing import Optional, Union, Type, List, TYPE_CHECKING
 
 from cose import utils
-from cose.exceptions import CoseInvalidKey, CoseIllegalKeyType
+from cose.exceptions import CoseInvalidKey, CoseIllegalKeyType, CoseIllegalKeyOps
 from cose.keys.cosekey import CoseKey
+from cose.keys.keyops import MacCreateOp, MacVerifyOp, EncryptOp, DecryptOp, UnwrapOp, WrapOp
 from cose.keys.keyparam import KpKty, SymmetricKeyParam, SymKpK, KeyParam
 from cose.keys.keytype import KtySymmetric
+
+if TYPE_CHECKING:
+    from cose.keys.keyops import KEYOPS
 
 
 @CoseKey.record_kty(KtySymmetric)
@@ -30,20 +34,20 @@ class SymmetricKey(CoseKey):
         else:
             raise CoseInvalidKey("COSE Symmetric Key must have an SymKpK attribute")
 
-        return cls(key=key_bytes, optional_params=cose_key)
+        return cls(k=key_bytes, optional_params=cose_key, allow_unknown_key_attrs=True)
 
     @staticmethod
     def _key_transform(key: Union[Type['SymmetricKeyParam'], Type['KeyParam'], str, int],
                        allow_unknown_attrs: bool = False):
         return SymmetricKeyParam.from_id(key, allow_unknown_attrs)
 
-    def __init__(self, key: bytes, optional_params: Optional[dict] = None):
+    def __init__(self, k: bytes, optional_params: Optional[dict] = None, allow_unknown_key_attrs: bool = True):
         transformed_dict = {}
 
-        if len(key) not in [16, 24, 32]:
+        if len(k) not in [16, 24, 32]:
             raise CoseInvalidKey("Key length should be either 16, 24, or 32 bytes")
 
-        new_dict = dict({KpKty: KtySymmetric, SymKpK: key})
+        new_dict = dict({KpKty: KtySymmetric, SymKpK: k})
 
         if optional_params is not None:
             new_dict.update(optional_params)
@@ -51,10 +55,10 @@ class SymmetricKey(CoseKey):
         for _key_attribute, _value in new_dict.items():
             try:
                 # translate the key_attribute
-                kp = SymmetricKeyParam.from_id(_key_attribute)
+                kp = SymmetricKeyParam.from_id(_key_attribute, allow_unknown_key_attrs)
 
                 # parse the value of the key attribute if possible
-                if hasattr(kp.value_parser, '__call__'):
+                if hasattr(kp, 'value_parser') and hasattr(kp.value_parser, '__call__'):
                     _value = kp.value_parser(_value)
 
                 # store in new dict
@@ -89,6 +93,21 @@ class SymmetricKey(CoseKey):
             raise ValueError("symmetric key must be of type 'bytes'")
         self.store[SymKpK] = k
 
+    @property
+    def key_ops(self) -> List[Type['KEYOPS']]:
+        """ Returns the value of the :class:`~cose.keys.keyparam.KpKeyOps` key parameter """
+
+        return CoseKey.key_ops.fget(self)
+
+    @key_ops.setter
+    def key_ops(self, new_key_ops: List[Type['KEYOPS']]) -> None:
+        supported = {MacCreateOp, MacVerifyOp, EncryptOp, DecryptOp, UnwrapOp, WrapOp}
+        for ops in new_key_ops:
+            if not self._supported_by_key_type(ops, supported):
+                raise CoseIllegalKeyOps(f"Invalid COSE key operation {ops} for key type {SymmetricKey.__name__}")
+            else:
+                CoseKey.key_ops.fset(self, new_key_ops)
+
     @staticmethod
     def generate_key(key_len: int, optional_params: dict = None) -> 'SymmetricKey':
         """
@@ -106,7 +125,7 @@ class SymmetricKey(CoseKey):
         if key_len not in [16, 24, 32]:
             raise ValueError("key_len must be of size 16, 24 or 32")
 
-        return SymmetricKey(key=os.urandom(key_len), optional_params=optional_params)
+        return SymmetricKey(k=os.urandom(key_len), optional_params=optional_params)
 
     def __repr__(self):
         _key = self._key_repr()

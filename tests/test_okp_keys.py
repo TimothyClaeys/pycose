@@ -5,9 +5,9 @@ import pytest
 
 from cose.algorithms import EdDSA
 from cose.curves import Ed448, Ed25519, X448, X25519
-from cose.exceptions import CoseInvalidKey, CoseIllegalKeyType, CoseIllegalCurve, CoseException
+from cose.exceptions import CoseInvalidKey, CoseIllegalKeyType, CoseIllegalCurve, CoseException, CoseIllegalKeyOps
 from cose.keys import OKPKey, CoseKey
-from cose.keys.keyops import SignOp
+from cose.keys.keyops import SignOp, MacVerifyOp
 from cose.keys.keyparam import KpKty, OKPKpCurve, OKPKpX, OKPKpD, KpAlg, KpKeyOps
 ###############################################################
 # OKP key checks
@@ -68,7 +68,7 @@ def test_okp_key_generation_encoding_decoding(crv):
     trails = 256
 
     for i in range(trails):
-        okp_test = OKPKey.generate_key(curve=crv)
+        okp_test = OKPKey.generate_key(crv=crv)
         okp_encoded = okp_test.encode()
         okp_decoded = CoseKey.decode(okp_encoded)
         assert _is_valid_okp_key(okp_decoded)
@@ -135,6 +135,18 @@ def test_existing_non_empty_keyops_list():
     assert KpKeyOps in key
 
 
+def test_key_ops_setter_getter():
+    key = OKPKey.generate_key('ED25519')
+    key.key_ops = [SignOp]
+
+    assert SignOp in key.key_ops
+
+    with pytest.raises(CoseIllegalKeyOps) as excinfo:
+        key.key_ops = [MacVerifyOp]
+
+    assert "Invalid COSE key operation" in str(excinfo)
+
+
 def test_dict_operations_on_okp_key():
     cose_key = {KpKty: KtyOKP, OKPKpD: os.urandom(16), KpAlg: EdDSA, OKPKpCurve: Ed448, KpKeyOps: [SignOp]}
 
@@ -169,9 +181,9 @@ def test_key_set_curve():
     assert key.crv == X25519
 
     with pytest.raises(CoseIllegalCurve) as excinfo:
-        key.crv = 3
+        key.crv = 3  # P-521
 
-    assert "Invalid COSE curve attribute" in str(excinfo.value)
+    assert "Invalid COSE curve" in str(excinfo.value)
 
     key.crv = X448.identifier
 

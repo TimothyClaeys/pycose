@@ -1,7 +1,7 @@
 import base64
 from abc import ABC
 from collections.abc import MutableMapping
-from typing import Optional, TypeVar, Type, List, Any, TYPE_CHECKING, Callable
+from typing import Optional, TypeVar, Type, List, Any, TYPE_CHECKING, Callable, Set
 
 import cbor2
 
@@ -11,9 +11,6 @@ from cose.exceptions import CoseException, CoseIllegalKeyType, CoseIllegalAlgori
 from cose.headers import EphemeralKey, StaticKey
 from cose.keys.keyops import KeyOps
 from cose.keys.keyparam import KpKty, KpKeyOps, KpAlg, KpKid, KpBaseIV, KeyParam
-
-# noinspection PyUnresolvedReferences
-from cose.keys.keytype import KTY
 
 if TYPE_CHECKING:
     from cose.headers import CoseHeaderAttribute
@@ -226,6 +223,12 @@ class CoseKey(MutableMapping, ABC):
     @staticmethod
     def _key_transform(key, allow_unknown_attrs=False):
         return KeyParam.from_id(key, allow_unknown_attrs)
+
+    @classmethod
+    def _supported_by_key_type(cls, attribute, supported: Set[Any]):
+        return attribute in supported \
+               or attribute in map(lambda x: getattr(x, 'identifier'), supported) \
+               or attribute in map(lambda x: getattr(x, 'fullname'), supported)
 
     def _key_repr(self) -> dict:
         names = {

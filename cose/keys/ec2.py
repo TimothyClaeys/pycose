@@ -1,15 +1,19 @@
-from typing import Optional, Type, Union
+from typing import Optional, Type, Union, List, TYPE_CHECKING
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric.ec import SECP256R1, SECP384R1, SECP521R1
 
 from cose import utils
-from cose.curves import P256, P521, P384, CoseCurve
-from cose.exceptions import CoseIllegalCurve, CoseInvalidKey, CoseIllegalKeyType
+from cose.curves import P256, P521, P384, CoseCurve, SECP256K1
+from cose.exceptions import CoseIllegalCurve, CoseInvalidKey, CoseIllegalKeyType, CoseIllegalKeyOps
 from cose.keys.cosekey import CoseKey
+from cose.keys.keyops import SignOp, VerifyOp, DeriveKeyOp, DeriveBitsOp
 from cose.keys.keyparam import EC2KeyParam, EC2KpCurve, EC2KpX, EC2KpY, EC2KpD, KpKty, KeyParam
 from cose.keys.keytype import KtyEC2
+
+if TYPE_CHECKING:
+    from cose.keys.keyops import KEYOPS
 
 
 @CoseKey.record_kty(KtyEC2)
@@ -60,14 +64,18 @@ class EC2Key(CoseKey):
         else:
             raise CoseInvalidKey("COSE EC2 Key must have an EC2KpCurve attribute")
 
-        return cls(crv=curve, x=x, y=y, d=d, optional_params=cose_key)
+        return cls(crv=curve, x=x, y=y, d=d, optional_params=cose_key, allow_unknown_key_attrs=True)
 
     @staticmethod
     def _key_transform(key: Union[Type['EC2KeyParam'], Type['KeyParam'], str, int], allow_unknown_attrs: bool = False):
         return EC2KeyParam.from_id(key, allow_unknown_attrs)
 
-    def __init__(self, crv: Union[Type['CoseCurve'], str, int], x: bytes = b'', y: bytes = b'', d: bytes = b'',
-                 optional_params: Optional[dict] = None):
+    def __init__(self, crv: Union[Type['CoseCurve'], str, int],
+                 x: bytes = b'',
+                 y: bytes = b'',
+                 d: bytes = b'',
+                 optional_params: Optional[dict] = None,
+                 allow_unknown_key_attrs: bool = True):
         transformed_dict = {}
 
         if len(x) == 0 and len(y) == 0 and len(d) == 0:
@@ -89,10 +97,10 @@ class EC2Key(CoseKey):
         for _key_attribute, _value in new_dict.items():
             try:
                 # translate the key_attribute
-                kp = EC2KeyParam.from_id(_key_attribute)
+                kp = EC2KeyParam.from_id(_key_attribute, allow_unknown_key_attrs)
 
                 # parse the value of the key attribute if possible
-                if hasattr(kp.value_parser, '__call__'):
+                if hasattr(kp, 'value_parser') and hasattr(kp.value_parser, '__call__'):
                     _value = kp.value_parser(_value)
 
                 # store in new dict
@@ -119,9 +127,8 @@ class EC2Key(CoseKey):
 
     @crv.setter
     def crv(self, crv: Union[Type['CoseCurve'], int, str]):
-        if crv not in [P256, P384, P521] \
-                and crv not in [P256.identifier, P384.identifier, P521.identifier] \
-                and crv not in [P256.fullname, P384.fullname, P521.fullname]:
+        supported_curves = {P256, P384, P521, SECP256K1}
+        if not self._supported_by_key_type(crv, supported_curves):
             raise CoseIllegalCurve("Invalid COSE curve attribute")
         else:
             self.store[EC2KpCurve] = CoseCurve.from_id(crv)
@@ -168,29 +175,44 @@ class EC2Key(CoseKey):
             raise TypeError("private key must be of type 'bytes'")
         self.store[EC2KpD] = d
 
+    @property
+    def key_ops(self) -> List[Type['KEYOPS']]:
+        """ Returns the value of the :class:`~cose.keys.keyparam.KpKeyOps` key parameter """
+
+        return CoseKey.key_ops.fget(self)
+
+    @key_ops.setter
+    def key_ops(self, new_key_ops: List[Type['KEYOPS']]) -> None:
+        supported = {SignOp, VerifyOp, DeriveKeyOp, DeriveBitsOp}
+        for ops in new_key_ops:
+            if not self._supported_by_key_type(ops, supported):
+                raise CoseIllegalKeyOps(f"Invalid COSE key operation {ops} for key type {EC2Key.__name__}")
+            else:
+                CoseKey.key_ops.fset(self, new_key_ops)
+
     @staticmethod
-    def generate_key(curve: Union[Type['CoseCurve'], str, int], optional_params: dict = None) -> 'EC2Key':
+    def generate_key(crv: Union[Type['CoseCurve'], str, int], optional_params: dict = None) -> 'EC2Key':
         """
         Generate a random EC2Key COSE key object.
 
-        :param curve: Specify an :class:`~cose.attributes.algorithms.CoseEllipticCurves`.
+        :param crv: Specify an :class:`~cose.attributes.algorithms.CoseEllipticCurves`.
         :param optional_params: Optional key attributes for the :class:`~cose.keys.ec2.EC2Key` object, e.g., \
         :class:`~cose.keys.keyparam.KpAlg` or  :class:`~cose.keys.keyparam.KpKid`.
 
         :return: An COSE `EC2Key` key.
         """
 
-        if type(curve) == str or type(curve) == int:
-            curve = CoseCurve.from_id(curve)
+        if type(crv) == str or type(crv) == int:
+            crv = CoseCurve.from_id(crv)
 
-        if curve == P256:
+        if crv == P256:
             curve_obj = SECP256R1()
-        elif curve == P384:
+        elif crv == P384:
             curve_obj = SECP384R1()
-        elif curve == P521:
+        elif crv == P521:
             curve_obj = SECP521R1()
         else:
-            raise CoseIllegalCurve(f'Illegal COSE curve: {curve}')
+            raise CoseIllegalCurve(f'Illegal COSE curve: {crv}')
 
         private_key = ec.generate_private_key(curve_obj, backend=default_backend())
         d_value = private_key.private_numbers().private_value
@@ -198,7 +220,7 @@ class EC2Key(CoseKey):
         y_coor = private_key.public_key().public_numbers().y
 
         return EC2Key(
-            crv=curve,
+            crv=crv,
             d=d_value.to_bytes((d_value.bit_length() + 7) // 8, byteorder="big"),
             x=x_coor.to_bytes((x_coor.bit_length() + 7) // 8, byteorder="big"),
             y=y_coor.to_bytes((y_coor.bit_length() + 7) // 8, byteorder="big"),

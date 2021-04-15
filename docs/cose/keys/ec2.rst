@@ -73,7 +73,7 @@ COSE EC2 Key for a given curve. Valid curves are :class:`~cose.curves.P256`, :cl
     >>> from cose.keys import EC2Key
 
     >>> # generate a random key
-    >>> cose_key = EC2Key.generate_key(curve='P_521')
+    >>> cose_key = EC2Key.generate_key(crv='P_521')
 
 When creating a COSE EC2 Key from a dictionary, you have to make sure that the dictionary holds the
 :class:`~cose.keys.keyparam.KpKty`, :class:`~cose.keys.keyparam.EC2KpCurve`, and either
@@ -165,4 +165,4 @@ API
 .. autoclass:: EC2Key
     :members:
     :inherited-members: alg, kty, kid, key_ops, base_iv
-    :exclude-members: record_kty, clear,  get, items, keys, pop, popitem, setdefault, update, values, verify
+    :exclude-members: record_kty, clear, decode, get, items, keys, pop, popitem, setdefault, update, values, verify

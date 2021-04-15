@@ -70,7 +70,7 @@ def test_symmetric_key_generation(length):
 
 @pytest.mark.parametrize('length', [16, 24, 32])
 def test_symmetric_key_construction(length):
-    key = SymmetricKey(key=os.urandom(length))
+    key = SymmetricKey(k=os.urandom(length))
 
     assert _is_valid_symmetric_key(key)
 
@@ -94,7 +94,7 @@ def test_fail_on_invalid_symmetric_key_length():
     assert "Key length should be either 16, 24, or 32 bytes" in str(excinfo.value)
 
     with pytest.raises(CoseInvalidKey) as excinfo:
-        _ = SymmetricKey(key=os.urandom(17))
+        _ = SymmetricKey(k=os.urandom(17))
 
     assert "Key length should be either 16, 24, or 32 bytes" in str(excinfo.value)
 
@@ -152,3 +152,10 @@ def test_dict_invalid_deletion():
 
     with pytest.raises(CoseInvalidKey) as excinfo:
         del key[KpKty]
+
+
+def test_unknown_key_attribute():
+    key = SymmetricKey(k=os.urandom(32), optional_params={"subject_name": "signing key"})
+
+    assert "subject_name" in key
+    assert key['subject_name'] == "signing key"

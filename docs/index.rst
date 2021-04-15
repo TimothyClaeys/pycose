@@ -28,7 +28,7 @@ There are 6 different types of COSE messages:
 - **Encrypt**: An encrypted COSE message can have multiple recipients. For each recipient the CEK is encrypted with a KEK (Key Encryption Key) - using AES key wrap - and added to the message.
 - **MAC0**: An authenticated COSE message with one recipient.
 - **MAC**: An authenticated COSE message that can have multiple recipients. For each recipient, the authentication key is encrypted with a KEK and added to the message.
-- **Sign0**: A signed COSE message with a single signature.
+- **Sign1**: A signed COSE message with a single signature.
 - **Sign**: A COSE message that has been signed by multiple entities (each signature is carried in a COSE signature structure, added to the message).
 
 Based on the message type, extra fields are appended to the basic COSE structure:

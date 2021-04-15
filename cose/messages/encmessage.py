@@ -95,7 +95,7 @@ class EncMessage(enccommon.EncCommon):
                 else:
                     key_bytes = r.payload
                 r.encrypt(target_algorithm)
-            self.key = SymmetricKey(key=key_bytes, optional_params={KpAlg: target_algorithm, KpKeyOps: [EncryptOp]})
+            self.key = SymmetricKey(k=key_bytes, optional_params={KpAlg: target_algorithm, KpKeyOps: [EncryptOp]})
             payload = super(EncMessage, self).encrypt()
 
         else:

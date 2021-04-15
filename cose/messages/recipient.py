@@ -294,7 +294,7 @@ class KeyWrap(CoseRecipient):
                         key_bytes = os.urandom(self.get_attr(headers.Algorithm))
                         for r in self.recipients:
                             r.payload = key_bytes
-                        self.key = SymmetricKey(key=key_bytes)
+                        self.key = SymmetricKey(k=key_bytes)
                     else:
                         raise CoseException('Unsupported COSE recipient class')
                 else:
@@ -313,9 +313,9 @@ class KeyWrap(CoseRecipient):
             if self.payload == b'':
                 return None
             else:
-                return SymmetricKey(key=self.payload, optional_params={KpAlg: target_alg, KpKeyOps: [EncryptOp]})
+                return SymmetricKey(k=self.payload, optional_params={KpAlg: target_alg, KpKeyOps: [EncryptOp]})
         else:
-            return SymmetricKey(key=self.decrypt(target_alg),
+            return SymmetricKey(k=self.decrypt(target_alg),
                                 optional_params={KpAlg: target_alg, KpKeyOps: [DecryptOp]})
 
     def encrypt(self, target_alg: '_EncAlg') -> bytes:
@@ -328,7 +328,7 @@ class KeyWrap(CoseRecipient):
             if alg is None:
                 raise CoseException("The algorithm parameter should at least be included in the unprotected header")
 
-            self.key = SymmetricKey(key=self._compute_kek(target_alg, ops='encrypt'),
+            self.key = SymmetricKey(k=self._compute_kek(target_alg, ops='encrypt'),
                                     optional_params={KpAlg: alg, KpKeyOps: [WrapOp, EncryptOp]})
             self.key.verify(SymmetricKey, alg, [WrapOp, EncryptOp])
 
@@ -339,7 +339,7 @@ class KeyWrap(CoseRecipient):
     def decrypt(self, target_alg: '_EncAlg') -> bytes:
         alg = self.get_attr(headers.Algorithm)
 
-        kek = SymmetricKey(key=self._compute_kek(target_alg, 'decrypt'),
+        kek = SymmetricKey(k=self._compute_kek(target_alg, 'decrypt'),
                            optional_params={KpAlg: alg, KpKeyOps: [DecryptOp, UnwrapOp]})
         kek.verify(SymmetricKey, alg, [UnwrapOp, DecryptOp])
 
@@ -436,7 +436,7 @@ class DirectKeyAgreement(CoseRecipient):
         peer_key.verify(EC2Key, alg, [DeriveKeyOp, DeriveBitsOp])
         self.key.verify(EC2Key, alg, [DeriveKeyOp, DeriveBitsOp])
 
-        return SymmetricKey(key=self._compute_kek(target_alg, peer_key, self.key, alg),
+        return SymmetricKey(k=self._compute_kek(target_alg, peer_key, self.key, alg),
                             optional_params={KpAlg: target_alg})
 
     def __repr__(self) -> str:
@@ -474,9 +474,9 @@ class KeyAgreementWithKeyWrap(CoseRecipient):
             if self.payload == b'':
                 return None
             else:
-                return SymmetricKey(key=self.payload, optional_params={KpAlg: target_alg, KpKeyOps: [EncryptOp]})
+                return SymmetricKey(k=self.payload, optional_params={KpAlg: target_alg, KpKeyOps: [EncryptOp]})
         else:
-            return SymmetricKey(key=self.decrypt(target_alg),
+            return SymmetricKey(k=self.decrypt(target_alg),
                                 optional_params={KpAlg: target_alg, KpKeyOps: [DecryptOp]})
 
     def encode(self, *args, **kwargs) -> list:
@@ -518,7 +518,7 @@ class KeyAgreementWithKeyWrap(CoseRecipient):
         key_bytes = self._compute_kek((self.get_attr(headers.Algorithm)).get_key_wrap_func(), peer_key, self.key, alg)
         wrap_func = alg.get_key_wrap_func()
 
-        return wrap_func.key_wrap(SymmetricKey(key=key_bytes, optional_params={KpAlg: alg, KpKeyOps: [DeriveKeyOp]}),
+        return wrap_func.key_wrap(SymmetricKey(k=key_bytes, optional_params={KpAlg: alg, KpKeyOps: [DeriveKeyOp]}),
                                   self.payload)
 
     def decrypt(self, target_alg: '_EncAlg') -> bytes:
@@ -532,7 +532,7 @@ class KeyAgreementWithKeyWrap(CoseRecipient):
         else:
             raise CoseIllegalAlgorithm(f"Algorithm {alg} unsupported for {self.__name__}")
 
-        kek = SymmetricKey(key=self._compute_kek(alg.get_key_wrap_func(), peer_key, self.key, alg),
+        kek = SymmetricKey(k=self._compute_kek(alg.get_key_wrap_func(), peer_key, self.key, alg),
                            optional_params={KpAlg: alg, KpKeyOps: [UnwrapOp, DecryptOp]})
 
         kek.verify(SymmetricKey, alg, [UnwrapOp, DecryptOp])

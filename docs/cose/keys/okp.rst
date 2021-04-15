@@ -68,7 +68,7 @@ COSE OKP Key for a given curve. Valid curves are :class:`~cose.curves.X22519`, :
     >>> from cose.keys import OKPKey
 
     >>> # generate a random key
-    >>> cose_key = OKPKey.generate_key(curve='ED25519')
+    >>> cose_key = OKPKey.generate_key(crv='ED25519')
 
 When creating a COSE OKP Key from a dictionary, you have to make sure that the dictionary holds the
 :class:`~cose.keys.keyparam.KpKty`, :class:`~cose.keys.keyparam.OKPKpCurve`, and either
@@ -160,5 +160,5 @@ API
 .. autoclass:: OKPKey
     :members:
     :inherited-members: alg, kty, kid, key_ops, base_iv
-    :exclude-members: record_kty, clear,  get, items, keys, pop, popitem, setdefault, update, values, verify
+    :exclude-members: record_kty, decode, clear,  get, items, keys, pop, popitem, setdefault, update, values, verify
 
