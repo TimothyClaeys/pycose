@@ -3,11 +3,12 @@ from typing import Optional, TypeVar, TYPE_CHECKING
 
 import cbor2
 
-from cose.keys.symmetric import SymmetricKey
-from cose.keys.okp import OKPKey
+from cose.exceptions import CoseInvalidKey
 from cose.keys.ec2 import EC2Key
+from cose.keys.okp import OKPKey
+from cose.keys.rsa import RSAKey
+from cose.keys.symmetric import SymmetricKey
 from cose.messages.cosebase import CoseBase
-from cose.exceptions import CoseException
 
 if TYPE_CHECKING:
     from cose.keys.cosekey import CK
@@ -104,22 +105,15 @@ class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
 
     @key.setter
     def key(self, key: Optional['CK']):
-        if isinstance(key, SymmetricKey):
-            if key.k == b'':
-                raise CoseException("Key does not contain secret bytes")
-            self._key = key
-        elif isinstance(key, EC2Key):
-            if key.d == b'' and key.x == b'' and key.y == b'':
-                raise CoseException("Key does not contain private bytes or public bytes")
-            self._key = key
-        elif isinstance(key, OKPKey):
-            if key.d == b'' and key.x == b'':
-                raise CoseException("Key does not contain private bytes or public bytes")
-            self._key = key
-        elif key is None:
-            self._key = key
+        if not isinstance(key, SymmetricKey) and \
+                not isinstance(key, EC2Key) and \
+                not isinstance(key, OKPKey) and \
+                not isinstance(key, RSAKey) and \
+                key is not None:
+
+            raise CoseInvalidKey(f"Unknown key type: {type(key)}")
         else:
-            raise CoseException("Invalid COSE key")
+            self._key = key
 
     @property
     def payload(self) -> bytes:

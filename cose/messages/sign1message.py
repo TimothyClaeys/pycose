@@ -9,6 +9,7 @@ from cose.messages.signcommon import SignCommon
 if TYPE_CHECKING:
     from cose.keys.ec2 import EC2
     from cose.keys.okp import OKP
+    from cose.keys.rsa import RSA
 
 CBOR = bytes
 
@@ -29,7 +30,7 @@ class Sign1Message(SignCommon):
                  uhdr: Optional[dict] = None,
                  payload: bytes = b'',
                  external_aad: bytes = b'',
-                 key: Optional[Union['EC2', 'OKP']] = None):
+                 key: Optional[Union['EC2', 'OKP', 'RSA']] = None):
         if phdr is None:
             phdr = {}
         if uhdr is None:
