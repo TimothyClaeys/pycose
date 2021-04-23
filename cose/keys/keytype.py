@@ -31,6 +31,12 @@ class KtyEC2(KTY):
 
 
 @KTY.register_attribute()
+class KtyRSA(KTY):
+    identifier = 3
+    fullname = 'RSA'
+
+
+@KTY.register_attribute()
 class KtySymmetric(KTY):
     identifier = 4
     fullname = 'SYMMETRIC'
