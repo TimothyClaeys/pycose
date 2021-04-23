@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from cose.algorithms import CoseAlg
     from cose.keys.keytype import KTYPE
     from cose.keys.keyops import KEYOPS
+    from cose.keys.keyparam import KP
 
 
 class CoseKey(MutableMapping, ABC):
@@ -53,6 +54,25 @@ class CoseKey(MutableMapping, ABC):
             return the_class
 
         return decorator
+
+    @classmethod
+    def _extract_from_dict(cls, cose_key: dict, parameter: Type['KP'], default=b''):
+        if parameter in cose_key:
+            v = cose_key[parameter]
+        elif parameter.identifier in cose_key:
+            v = cose_key[parameter.identifier]
+        elif parameter.fullname in cose_key:
+            v = cose_key[parameter.fullname]
+        else:
+            v = default
+
+        return v
+
+    @classmethod
+    def _remove_from_dict(cls, cose_key: dict, parameter: Type['KP']):
+        cose_key.pop(parameter, None)
+        cose_key.pop(parameter.identifier, None)
+        cose_key.pop(parameter.fullname, None)
 
     @classmethod
     def from_dict(cls, received: dict) -> 'CK':

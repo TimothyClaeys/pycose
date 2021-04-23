@@ -27,76 +27,40 @@ class EC2Key(CoseKey):
         :param cose_key: Dict containing COSE Key parameters and there values.
         :return: an initialized EC2Key key
         """
+        _optional_params = {}
 
-        if EC2KpX in cose_key:
-            x = cose_key[EC2KpX]
-        elif EC2KpX.identifier in cose_key:
-            x = cose_key[EC2KpX.identifier]
-        elif EC2KpX.fullname in cose_key:
-            x = cose_key[EC2KpX.fullname]
-        else:
-            x = b''
+        x = CoseKey._extract_from_dict(cose_key, EC2KpX)
+        y = CoseKey._extract_from_dict(cose_key, EC2KpY)
+        d = CoseKey._extract_from_dict(cose_key, EC2KpD)
+        curve = CoseKey._extract_from_dict(cose_key, EC2KpCurve, None)
 
-        if EC2KpY in cose_key:
-            y = cose_key[EC2KpY]
-        elif EC2KpY.identifier in cose_key:
-            y = cose_key[EC2KpY.identifier]
-        elif EC2KpY.fullname in cose_key:
-            y = cose_key[EC2KpY.fullname]
-        else:
-            y = b''
+        _optional_params.update(cose_key)
+        CoseKey._remove_from_dict(_optional_params, EC2KpX)
+        CoseKey._remove_from_dict(_optional_params, EC2KpY)
+        CoseKey._remove_from_dict(_optional_params, EC2KpD)
+        CoseKey._remove_from_dict(_optional_params, EC2KpCurve)
 
-        if EC2KpD in cose_key:
-            d = cose_key[EC2KpD]
-        elif EC2KpD.identifier in cose_key:
-            d = cose_key[EC2KpD.identifier]
-        elif EC2KpD.fullname in cose_key:
-            d = cose_key[EC2KpD.fullname]
-        else:
-            d = b''
-
-        if EC2KpCurve in cose_key:
-            curve = cose_key[EC2KpCurve]
-        elif EC2KpCurve.identifier in cose_key:
-            curve = cose_key[EC2KpCurve.identifier]
-        elif EC2KpCurve.fullname in cose_key:
-            curve = cose_key[EC2KpCurve.fullname]
-        else:
-            raise CoseInvalidKey("COSE EC2 Key must have an EC2KpCurve attribute")
-
-        return cls(crv=curve, x=x, y=y, d=d, optional_params=cose_key, allow_unknown_key_attrs=True)
+        return cls(crv=curve, x=x, y=y, d=d, optional_params=_optional_params, allow_unknown_key_attrs=True)
 
     @staticmethod
     def _key_transform(key: Union[Type['EC2KeyParam'], Type['KeyParam'], str, int], allow_unknown_attrs: bool = False):
         return EC2KeyParam.from_id(key, allow_unknown_attrs)
 
-    def __init__(self, crv: Union[Type['CoseCurve'], str, int],
+    def __init__(self,
+                 crv: Union[Type['CoseCurve'], str, int],
                  x: bytes = b'',
                  y: bytes = b'',
                  d: bytes = b'',
                  optional_params: Optional[dict] = None,
                  allow_unknown_key_attrs: bool = True):
-        transformed_dict = {}
+        transformed_dict = {KpKty: KtyEC2}
 
-        if len(x) == 0 and len(y) == 0 and len(d) == 0:
-            raise CoseInvalidKey("Either the public values or the private value must be specified")
+        if optional_params is None:
+            optional_params = {}
 
-        if (len(x) == 0 and len(y) != 0) or (len(x) != 0 and len(y) == 0):
-            raise CoseInvalidKey("Missing public coordinate X/Y")
-
-        new_dict = dict({KpKty: KtyEC2, EC2KpCurve: crv})
-
-        if len(x) != 0 and len(y) != 0:
-            new_dict.update({EC2KpX: x, EC2KpY: y})
-        if len(d) != 0:
-            new_dict.update({EC2KpD: d})
-
-        if optional_params is not None:
-            new_dict.update(optional_params)
-
-        for _key_attribute, _value in new_dict.items():
+        for _key_attribute, _value in optional_params.items():
             try:
-                # translate the key_attribute
+                # transform the key_attribute
                 kp = EC2KeyParam.from_id(_key_attribute, allow_unknown_key_attrs)
 
                 # parse the value of the key attribute if possible
@@ -114,6 +78,24 @@ class EC2Key(CoseKey):
 
         super(EC2Key, self).__init__(transformed_dict)
 
+        if len(x) == 0 and len(y) == 0 and len(d) == 0:
+            raise CoseInvalidKey("Either the public values or the private value must be specified")
+
+        if (len(x) == 0 and len(y) != 0) or (len(x) != 0 and len(y) == 0):
+            raise CoseInvalidKey("Missing public coordinate X/Y")
+
+        if crv is not None:
+            self.crv = crv
+        else:
+            raise CoseInvalidKey("COSE curve cannot be None")
+
+        if x != b'':
+            self.x = x
+        if y != b'':
+            self.y = y
+        if d != b'':
+            self.d = d
+
     @property
     def crv(self) -> Optional[Type['CoseCurve']]:
         """
@@ -129,7 +111,7 @@ class EC2Key(CoseKey):
     def crv(self, crv: Union[Type['CoseCurve'], int, str]):
         supported_curves = {P256, P384, P521, SECP256K1}
         if not self._supported_by_key_type(crv, supported_curves):
-            raise CoseIllegalCurve("Invalid COSE curve attribute")
+            raise CoseIllegalCurve(f"Invalid COSE curve {crv} for key type {EC2Key.__name__}")
         else:
             self.store[EC2KpCurve] = CoseCurve.from_id(crv)
 

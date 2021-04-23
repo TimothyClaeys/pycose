@@ -128,7 +128,7 @@ class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
     @payload.setter
     def payload(self, new_payload: bytes) -> None:
         if type(new_payload) is not bytes:
-            raise TypeError("payload should be of type 'bytes'")
+            raise TypeError("payload should be of type 'bytes' not {}".format(type(new_payload)))
         self._payload = new_payload  # can be plaintext or ciphertext
 
     @abc.abstractmethod

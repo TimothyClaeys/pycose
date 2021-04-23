@@ -55,7 +55,7 @@ def test_symmetric_key_example2():
     # encode/serialize key
     serialized_key = cose_key.encode()
     assert str(serialized_key) == \
-           str(b'\xa3\x01\x04 P\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f\x03\x01')
+           str(b'\xa3\x01\x04\x03\x01 P\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f')
 
     assert str(CoseKey.decode(serialized_key)) == "<COSE_Key(Symmetric): " \
                                                   "{'SymKpK': \"b'\\\\x00\\\\x01\\\\x02\\\\x03\\\\x04' ... (16 B)\", " \

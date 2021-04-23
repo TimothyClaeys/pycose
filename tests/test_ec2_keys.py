@@ -4,7 +4,7 @@ import pytest
 
 from cose.algorithms import Es256
 from cose.curves import P521, P384, P256
-from cose.exceptions import CoseInvalidKey, CoseIllegalKeyType, CoseException
+from cose.exceptions import CoseInvalidKey, CoseIllegalKeyType, CoseException, CoseIllegalCurve
 from cose.keys import EC2Key, CoseKey
 from cose.keys.keyops import SignOp
 from cose.keys.keyparam import KpKty, EC2KpCurve, EC2KpX, EC2KpY, EC2KpD, KpAlg, KpKeyOps
@@ -148,7 +148,7 @@ def test_fail_on_missing_crv_attr():
     with pytest.raises(CoseInvalidKey) as excinfo:
         _ = CoseKey.from_dict(cose_key)
 
-    assert "COSE EC2 Key must have an EC2KpCurve attribute" in str(excinfo.value)
+    assert "COSE curve cannot be None" in str(excinfo.value)
 
 
 @pytest.mark.parametrize('crv', [P256, P384, P521])
@@ -156,6 +156,8 @@ def test_fail_on_missing_crv_attr():
 def test_fail_on_illegal_kty(crv, kty):
     params = {KpKty: kty}
 
+    # NOTE: the stuff in params will override the parameters of the function if they are specified twice
+    # Here the KpKty value which is set by the constructor gets overwritten by the params dict
     with pytest.raises(CoseIllegalKeyType) as excinfo:
         _ = EC2Key(crv=crv, x=os.urandom(32), y=os.urandom(32), d=os.urandom(32), optional_params=params)
 
@@ -254,15 +256,15 @@ def test_dict_invalid_deletion():
 
 
 def test_set_curve_in_key():
-    with pytest.raises(CoseException) as excinfo:
-        key = EC2Key(crv='P257', d=os.urandom(32))
+    with pytest.raises(CoseIllegalCurve) as excinfo:
+        _ = EC2Key(crv='P257', d=os.urandom(32))
 
-    assert "Unknown COSE header or key attribute" in str(excinfo)
+    assert "Invalid COSE curve" in str(excinfo)
 
-    with pytest.raises(CoseException) as excinfo:
-        key = EC2Key(crv='Ed25519', d=os.urandom(32))
+    with pytest.raises(CoseIllegalCurve) as excinfo:
+        _ = EC2Key(crv='Ed25519', d=os.urandom(32))
 
-    assert "Unknown COSE header or key attribute" in str(excinfo)
+    assert "Invalid COSE curve" in str(excinfo)
 
     key = EC2Key(crv='P_256', d=os.urandom(32))
     assert key.crv == P256

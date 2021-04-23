@@ -1,4 +1,6 @@
+import pprint
 from abc import ABC
+from typing import TypeVar, Union, Type
 
 from cose.algorithms import CoseAlgorithm
 from cose.keys.keyops import KeyOps
@@ -139,5 +141,23 @@ KpKty.value_parser = KTY.from_id
 KpKeyOps.value_parser = KeyOps.from_id
 KpAlg.value_parser = CoseAlgorithm.from_id
 
+KPBASE = TypeVar('KPBASE', bound=KeyParam)
+EC2KP = TypeVar('EC2KP', bound=EC2KeyParam)
+OKPKP = TypeVar('OKPKP', bound=OKPKeyParam)
+SYMKP = TypeVar('SYMKP', bound=SymmetricKeyParam)
+KP = Union[Type['KP'], Type['OKPKP'], Type['EC2KP'], Type['SYMKP']]
 if __name__ == '__main__':
-    print(KeyParam.get_registered_classes())
+    print("\nBASE KEY PARAMETERS:")
+    pprint.pprint(KeyParam.get_registered_classes())
+
+    print("\nRSA KEY PARAMETERS:")
+    pprint.pprint(RSAKeyParam.get_registered_classes())
+
+    print("\nEC2 KEY PARAMETERS:")
+    pprint.pprint(EC2KeyParam.get_registered_classes())
+
+    print("\nOKP KEY PARAMETERS:")
+    pprint.pprint(OKPKeyParam.get_registered_classes())
+
+    print("\nSYMMETRIC KEY PARAMETERS:")
+    pprint.pprint(SymmetricKeyParam.get_registered_classes())
