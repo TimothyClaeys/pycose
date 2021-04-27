@@ -8,6 +8,9 @@ from cose import headers, utils
 from cose.algorithms import \
     CoseAlgorithm, \
     Direct, \
+    RsaesOaepSha512, \
+    RsaesOaepSha256, \
+    RsaesOaepSha1, \
     A128KW, \
     A192KW, \
     A256KW, \
@@ -27,6 +30,7 @@ from cose.exceptions import CoseException, CoseMalformedMessage, CoseIllegalAlgo
 from cose.keys.ec2 import EC2Key, EC2KpD
 from cose.keys.keyops import DeriveKeyOp, EncryptOp, DecryptOp, WrapOp, UnwrapOp, DeriveBitsOp
 from cose.keys.keyparam import KpAlg, KpKeyOps
+from cose.keys.rsa import RSAKey
 from cose.keys.symmetric import SymmetricKey
 from cose.messages.context import CoseKDFContext, PartyInfo, SuppPubInfo
 from cose.messages.cosemessage import CoseMessage
@@ -225,11 +229,11 @@ class DirectEncryption(CoseRecipient):
         return recipient
 
     def compute_cek(self, target_alg: 'CoseAlgorithm') -> Optional['SK']:
-
-        if self.get_attr(headers.Algorithm) == Direct:
+        alg = self.get_attr(headers.Algorithm)
+        if alg == Direct:
             return None
         else:
-            self.key.verify(SymmetricKey, [DeriveKeyOp, DeriveBitsOp])
+            self.key.verify(SymmetricKey, algorithm=alg, key_ops=[DeriveKeyOp, DeriveBitsOp])
             _ = target_alg
             raise NotImplementedError()
 
@@ -239,7 +243,8 @@ class DirectEncryption(CoseRecipient):
         return f'<COSE_Recipient: [{phdr}, {uhdr}, {utils.truncate(self._payload)}, {str(self.recipients)}]>'
 
 
-@CoseRecipient.record_rc([A128KW, A192KW, A256KW])
+@CoseRecipient.record_rc([A128KW, A192KW, A256KW,
+                          RsaesOaepSha512, RsaesOaepSha256, RsaesOaepSha1])
 class KeyWrap(CoseRecipient):
     @classmethod
     def from_cose_obj(cls, cose_obj: list, *args, **kwargs) -> 'KeyWrap':
@@ -321,27 +326,39 @@ class KeyWrap(CoseRecipient):
     def encrypt(self, target_alg: '_EncAlg') -> bytes:
         alg = self.get_attr(headers.Algorithm)
 
-        if A128KW.identifier >= alg.identifier >= A256KW.identifier:
-            if len(self.phdr):
-                raise CoseException(f"Protected header must be empty when using an AE algorithm: {alg}")
+        if len(self.phdr):
+            raise CoseException(f"Protected header must be empty when using an AE algorithm: {alg}")
 
-            if alg is None:
-                raise CoseException("The algorithm parameter should at least be included in the unprotected header")
+        if alg is None:
+            raise CoseException("The algorithm parameter should at least be included in the unprotected header")
 
-            self.key = SymmetricKey(k=self._compute_kek(target_alg, ops='encrypt'),
-                                    optional_params={KpAlg: alg, KpKeyOps: [WrapOp, EncryptOp]})
-            self.key.verify(SymmetricKey, alg, [WrapOp, EncryptOp])
-
-            return alg.key_wrap(self.key, self.payload)
+        elif alg in {A128KW, A192KW, A256KW}:
+            key_ops = [WrapOp, EncryptOp]
+            kek = SymmetricKey(k=self._compute_kek(target_alg, ops='encrypt'),
+                               optional_params={KpAlg: alg, KpKeyOps: key_ops})
+            kek.verify(SymmetricKey, alg, [WrapOp, EncryptOp])
+        elif alg in {RsaesOaepSha512, RsaesOaepSha256, RsaesOaepSha1}:
+            kek = self.key
+            kek.verify(RSAKey, alg, [WrapOp, EncryptOp])
         else:
             raise CoseIllegalAlgorithm(f"Algorithm {alg} for {self.__name__}")
+
+        return alg.key_wrap(kek, self.payload)
 
     def decrypt(self, target_alg: '_EncAlg') -> bytes:
         alg = self.get_attr(headers.Algorithm)
 
-        kek = SymmetricKey(k=self._compute_kek(target_alg, 'decrypt'),
-                           optional_params={KpAlg: alg, KpKeyOps: [DecryptOp, UnwrapOp]})
-        kek.verify(SymmetricKey, alg, [UnwrapOp, DecryptOp])
+        key_ops = [DecryptOp, UnwrapOp]
+
+        if alg in {A128KW, A192KW, A256KW}:
+            kek = SymmetricKey(k=self._compute_kek(target_alg, 'decrypt'),
+                               optional_params={KpAlg: alg, KpKeyOps: key_ops})
+            kek.verify(SymmetricKey, alg, [UnwrapOp, DecryptOp])
+        elif alg in {RsaesOaepSha512, RsaesOaepSha256, RsaesOaepSha1}:
+            kek = self.key
+            kek.verify(RSAKey, alg, [UnwrapOp, DecryptOp])
+        else:
+            raise CoseException(f"Unsupported algorithm for key unwrapping: {alg}")
 
         return alg.key_unwrap(kek, self.payload)
 
