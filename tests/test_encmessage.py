@@ -3,6 +3,7 @@ import cbor2
 from cose import headers
 from cose.keys.cosekey import CoseKey
 from cose.keys.keyops import EncryptOp, DecryptOp
+from cose.keys.rsa import RSAKey
 from cose.messages.cosemessage import CoseMessage
 from cose.messages.encmessage import EncMessage
 from tests.conftest import _setup_direct_encryption_recipients, _setup_direct_kex_recipients, \
@@ -111,10 +112,23 @@ def test_encrypt_key_wrap_encoding(test_encrypt_key_wrap_files):
         assert r.phdr_encoded == r_output['protected']
         assert r.uhdr_encoded == r_output['unprotected']
         r.payload = test_encrypt_key_wrap_files['random_key'].k
-        assert r.encrypt(msg.get_attr(headers.Algorithm)) == test_output['recipients'][i]['ciphertext']
+        if not isinstance(r.key, RSAKey):
+            assert r.encrypt(msg.get_attr(headers.Algorithm)) == test_output['recipients'][i]['ciphertext']
 
     assert msg.encrypt() == test_output['ciphertext']
-    assert cbor2.loads(msg.encode()) == test_output['result']
+    # remove signature for probabilistic behavior
+    do_tag = test_encrypt_key_wrap_files.get('cbor_tag', True)
+    msg_dec = cbor2.loads(msg.encode(tag=do_tag))
+    test_dec = test_output['result']
+    if isinstance(r.key, RSAKey):
+        msg = msg_dec.value if do_tag else msg_dec
+        for recip in msg[3]:
+            recip[2] = b''
+
+        msg = test_dec.value if do_tag else test_dec
+        for recip in msg[3]:
+            recip[2] = b''
+    assert msg_dec == test_dec
 
 
 def test_encrypt_key_wrap_decoding(test_encrypt_key_wrap_files):
