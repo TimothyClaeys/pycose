@@ -134,6 +134,32 @@ class _RsaOaep(_Rsa, ABC):
     def get_pad_func(cls, hash_cls):
         return padding.OAEP(mgf=padding.MGF1(hash_cls()), algorithm=hash_cls(), label=None)
 
+    @classmethod
+    def key_wrap(cls, key: 'RSA', data: bytes) -> bytes:
+        pad = cls.get_pad_func(cls.get_hash_func())
+
+        public_nums = rsa.RSAPublicNumbers(e=int.from_bytes(key.e, 'big'), n=int.from_bytes(key.n, 'big'))
+        pk = public_nums.public_key()
+
+        return pk.encrypt(data, pad)
+
+    @classmethod
+    def key_unwrap(cls, key: 'RSA', data: bytes) -> bytes:
+        pad = cls.get_pad_func(cls.get_hash_func())
+
+        public_nums = rsa.RSAPublicNumbers(e=int.from_bytes(key.e, 'big'), n=int.from_bytes(key.n, 'big'))
+        private_nums = rsa.RSAPrivateNumbers(p=int.from_bytes(key.p, 'big'),
+                                             q=int.from_bytes(key.q, 'big'),
+                                             d=int.from_bytes(key.d, 'big'),
+                                             dmp1=int.from_bytes(key.dp, 'big'),
+                                             dmq1=int.from_bytes(key.dq, 'big'),
+                                             iqmp=int.from_bytes(key.qinv, 'big'),
+                                             public_numbers=public_nums)
+
+        sk = private_nums.private_key(default_backend())
+
+        return sk.decrypt(data, pad)
+
 
 class _RsaPkcs1(_Rsa, ABC):
     """ RSA with PKCS#1 padding. """
@@ -327,6 +353,81 @@ class _AesCcm(_EncAlg, ABC):
 ##################################################
 
 @CoseAlgorithm.register_attribute()
+class RsaPkcs1Sha1(_RsaPkcs1):
+    """
+    RSASSA-PKCS1-v1_5 using SHA-1
+
+    Attributes:
+        identifier     -65565
+
+        fullname       RS1
+    """
+
+    identifier = -65535
+    fullname = "RS1"
+
+    @classmethod
+    def get_hash_func(cls):
+        return SHA1
+
+
+@CoseAlgorithm.register_attribute()
+class RsaPkcs1Sha512(_RsaPkcs1):
+    """
+    RSASSA-PKCS1-v1_5 using SHA-512
+
+    Attributes:
+        identifier     -259
+
+        fullname       RS512
+    """
+
+    identifier = -259
+    fullname = "RS512"
+
+    @classmethod
+    def get_hash_func(cls):
+        return SHA512
+
+
+@CoseAlgorithm.register_attribute()
+class RsaPkcs1Sha384(_RsaPkcs1):
+    """
+    RSASSA-PKCS1-v1_5 using SHA-512
+
+    Attributes:
+        identifier     -258
+
+        fullname       RS384
+    """
+    identifier = -258
+    fullname = "RS384"
+
+    @classmethod
+    def get_hash_func(cls):
+        return SHA384
+
+
+@CoseAlgorithm.register_attribute()
+class RsaPkcs1Sha256(_RsaPkcs1):
+    """
+    RSASSA-PKCS1-v1_5 using SHA-512
+
+    Attributes:
+        identifier     -257
+
+        fullname       RS256
+    """
+
+    identifier = -257
+    fullname = "RS256"
+
+    @classmethod
+    def get_hash_func(cls):
+        return SHA256
+
+
+@CoseAlgorithm.register_attribute()
 class Shake256(_HashAlg):
     """
     SHAKE-256 512-bit Hash Value
@@ -373,6 +474,36 @@ class Sha384(_HashAlg):
     identifier = -43
     fullname = "SHA-384"
     hash_cls = SHA384
+
+
+@CoseAlgorithm.register_attribute()
+class RsaesOaepSha512(_RsaOaep):
+    identifier = -42
+    fullname = "RSAES_OAEP_SHA_512"
+
+    @classmethod
+    def get_hash_func(cls):
+        return SHA512
+
+
+@CoseAlgorithm.register_attribute()
+class RsaesOaepSha256(_RsaOaep):
+    identifier = -41
+    fullname = "RSAES_OAEP_SHA_256"
+
+    @classmethod
+    def get_hash_func(cls):
+        return SHA256
+
+
+@CoseAlgorithm.register_attribute()
+class RsaesOaepSha1(_RsaOaep):
+    identifier = -40
+    fullname = "RSAES_OAEP_SHA_1"
+
+    @classmethod
+    def get_hash_func(cls):
+        return SHA1
 
 
 @CoseAlgorithm.register_attribute()
