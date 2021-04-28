@@ -24,7 +24,7 @@ serialized and subsequently deserialized.
     >>> #encode/serialize key
     >>> serialized_key = cose_key.encode()
     >>> serialized_key
-    b'\xa3\x01\x04 P\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f\x03\x01'
+    b'\xa3\x01\x04\x03\x01 P\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f'
 
     >>> # deserialize key
     >>> CoseKey.decode(serialized_key)
@@ -48,7 +48,7 @@ serialized and subsequently deserialized.
     >>> #encode/serialize key
     >>> serialized_key = cose_key.encode()
     >>> serialized_key
-    b'\xa3\x01\x04 P\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f\x03\x01'
+    b'\xa3\x01\x04\x03\x01 P\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f'
 
     >>> # deserialize key
     >>> CoseKey.decode(serialized_key)

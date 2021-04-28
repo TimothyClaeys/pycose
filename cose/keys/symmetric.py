@@ -24,17 +24,14 @@ class SymmetricKey(CoseKey):
 
         :return: an initialized COSE SymmetricKey object
         """
+        _optional_params = {}
 
-        if SymKpK in cose_key:
-            key_bytes = cose_key[SymKpK]
-        elif SymKpK.identifier in cose_key:
-            key_bytes = cose_key[SymKpK.identifier]
-        elif SymKpK.fullname in cose_key:
-            key_bytes = cose_key[SymKpK.fullname]
-        else:
-            raise CoseInvalidKey("COSE Symmetric Key must have an SymKpK attribute")
+        k = CoseKey._extract_from_dict(cose_key, SymKpK)
 
-        return cls(k=key_bytes, optional_params=cose_key, allow_unknown_key_attrs=True)
+        _optional_params.update(cose_key)
+        CoseKey._remove_from_dict(_optional_params, SymKpK)
+
+        return cls(k=k, optional_params=_optional_params, allow_unknown_key_attrs=True)
 
     @staticmethod
     def _key_transform(key: Union[Type['SymmetricKeyParam'], Type['KeyParam'], str, int],
@@ -42,17 +39,12 @@ class SymmetricKey(CoseKey):
         return SymmetricKeyParam.from_id(key, allow_unknown_attrs)
 
     def __init__(self, k: bytes, optional_params: Optional[dict] = None, allow_unknown_key_attrs: bool = True):
-        transformed_dict = {}
+        transformed_dict = {KpKty: KtySymmetric}
 
-        if len(k) not in [16, 24, 32]:
-            raise CoseInvalidKey("Key length should be either 16, 24, or 32 bytes")
+        if optional_params is None:
+            optional_params = {}
 
-        new_dict = dict({KpKty: KtySymmetric, SymKpK: k})
-
-        if optional_params is not None:
-            new_dict.update(optional_params)
-
-        for _key_attribute, _value in new_dict.items():
+        for _key_attribute, _value in optional_params.items():
             try:
                 # translate the key_attribute
                 kp = SymmetricKeyParam.from_id(_key_attribute, allow_unknown_key_attrs)
@@ -72,6 +64,11 @@ class SymmetricKey(CoseKey):
 
         super(SymmetricKey, self).__init__(transformed_dict)
 
+        if k != b'':
+            self.k = k
+        else:
+            raise CoseInvalidKey("SymKpK parameter cannot be None")
+
     def __delitem__(self, key):
         if self._key_transform(key) != KpKty and self._key_transform(key) != SymKpK:
             super().__delitem__(key)
@@ -88,9 +85,10 @@ class SymmetricKey(CoseKey):
 
     @k.setter
     def k(self, k: bytes):
-
         if type(k) is not bytes:
-            raise ValueError("symmetric key must be of type 'bytes'")
+            raise ValueError("SymKpK parameter must be of type 'bytes'")
+        if len(k) not in [16, 24, 32]:
+            raise CoseInvalidKey("Key length should be either 16, 24, or 32 bytes")
         self.store[SymKpK] = k
 
     @property

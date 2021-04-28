@@ -28,42 +28,26 @@ class OKPKey(CoseKey):
 
         :return: an initialized OKPKey key
         """
+        _optional_params = {}
 
-        if OKPKpX in cose_key:
-            x = cose_key[OKPKpX]
-        elif OKPKpX.identifier in cose_key:
-            x = cose_key[OKPKpX.identifier]
-        elif OKPKpX.fullname in cose_key:
-            x = cose_key[OKPKpX.fullname]
-        else:
-            x = b''
+        x = CoseKey._extract_from_dict(cose_key, OKPKpX)
+        d = CoseKey._extract_from_dict(cose_key, OKPKpD)
+        curve = CoseKey._extract_from_dict(cose_key, OKPKpCurve, None)
 
-        if OKPKpD in cose_key:
-            d = cose_key[OKPKpD]
-        elif OKPKpD.identifier in cose_key:
-            d = cose_key[OKPKpD.identifier]
-        elif OKPKpD.fullname in cose_key:
-            d = cose_key[OKPKpD.fullname]
-        else:
-            d = b''
+        _optional_params.update(cose_key)
+        CoseKey._remove_from_dict(_optional_params, OKPKpX)
+        CoseKey._remove_from_dict(_optional_params, OKPKpD)
+        CoseKey._remove_from_dict(_optional_params, OKPKpCurve)
 
-        if OKPKpCurve in cose_key:
-            curve = cose_key[OKPKpCurve]
-        elif OKPKpCurve.identifier in cose_key:
-            curve = cose_key[OKPKpCurve.identifier]
-        elif OKPKpCurve.fullname in cose_key:
-            curve = cose_key[OKPKpCurve.fullname]
-        else:
-            raise CoseInvalidKey("COSE OKP Key must have an OKPKpCurve attribute")
-
-        return cls(crv=curve, x=x, d=d, optional_params=cose_key, allow_unknown_key_attrs=True)
+        return cls(crv=curve, x=x, d=d, optional_params=_optional_params, allow_unknown_key_attrs=True)
 
     @staticmethod
     def _key_transform(key: Union[Type['OKPKeyParam'], Type['KeyParam'], str, int],
                        allow_unknown_attrs: bool = False):
         return OKPKeyParam.from_id(key, allow_unknown_attrs)
 
-    def __init__(self, crv: Union[Type['CoseCurve'], str, int],
+    def __init__(self,
+                 crv: Union[Type['CoseCurve'], str, int],
                  x: bytes = b'',
                  d: bytes = b'',
                  optional_params: Optional[dict] = None,
@@ -78,22 +62,12 @@ class OKPKey(CoseKey):
         :param allow_unknown_key_attrs: Allow unknown key attributes (not registered at the IANA registry)
         """
 
-        transformed_dict = {}
+        transformed_dict = {KpKty: KtyOKP}
 
-        if len(x) == 0 and len(d) == 0:
-            raise CoseInvalidKey("Either the public values or the private value must be specified")
+        if optional_params is None:
+            optional_params = {}
 
-        new_dict = dict({KpKty: KtyOKP, OKPKpCurve: crv})
-
-        if len(x) != 0:
-            new_dict.update({OKPKpX: x})
-        if len(d) != 0:
-            new_dict.update({OKPKpD: d})
-
-        if optional_params is not None:
-            new_dict.update(optional_params)
-
-        for _key_attribute, _value in new_dict.items():
+        for _key_attribute, _value in optional_params.items():
             try:
                 # translate the key_attribute
                 kp = OKPKeyParam.from_id(_key_attribute, allow_unknown_key_attrs)
@@ -112,6 +86,18 @@ class OKPKey(CoseKey):
             raise CoseIllegalKeyType(f"Illegal key type in OKP COSE Key: {transformed_dict.get(KpKty)}")
 
         super(OKPKey, self).__init__(transformed_dict)
+
+        if len(x) == 0 and len(d) == 0:
+            raise CoseInvalidKey("Either the public values or the private value must be specified")
+
+        if crv is not None:
+            self.crv = crv
+        else:
+            raise CoseInvalidKey("COSE curve cannot be None")
+        if x != b'':
+            self.x = x
+        if d != b'':
+            self.d = d
 
     @property
     def crv(self) -> Optional[Type['CoseCurve']]:
@@ -143,7 +129,7 @@ class OKPKey(CoseKey):
     @x.setter
     def x(self, x: bytes):
         if type(x) is not bytes:
-            raise TypeError("public x coordinate must be of type 'bytes'")
+            raise TypeError("Public x-coordinate must be of type 'bytes'")
         self.store[OKPKpX] = x
 
     @property
@@ -157,7 +143,7 @@ class OKPKey(CoseKey):
     @d.setter
     def d(self, d: bytes):
         if type(d) is not bytes:
-            raise TypeError("private key must be of type 'bytes'")
+            raise TypeError("Private key must be of type 'bytes'")
         self.store[OKPKpD] = d
 
     @property

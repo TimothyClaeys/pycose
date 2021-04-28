@@ -1,4 +1,4 @@
-from binascii import unhexlify
+from binascii import hexlify, unhexlify
 
 import cbor2
 import pytest
@@ -24,10 +24,23 @@ def test_sign_encoding(test_sign):
     assert msg.uhdr == test_input['unprotected']
 
     for s, s_output in zip(msg.signers, test_output['signers']):
-        assert s._sig_structure == s_output['structure']
-        assert s.compute_signature() == s_output['signature']
+        assert hexlify(s._sig_structure) == hexlify(s_output['structure'])
+        if 'signature' in s_output:
+            assert s.compute_signature() == s_output['signature']
 
-    assert cbor2.loads(msg.encode(tag=test_sign['cbor_tag'])) == test_output['result']
+    # remove signature for probabilistic behavior
+    do_tag = test_sign['cbor_tag']
+    msg_dec = cbor2.loads(msg.encode(tag=do_tag))
+    test_dec = test_output['result']
+    if 'signature' not in s_output:
+        msg = msg_dec.value if do_tag else msg_dec
+        for signer in msg[3]:
+            signer[2] = b''
+
+        msg = test_dec.value if do_tag else test_dec
+        for signer in msg[3]:
+            signer[2] = b''
+    assert msg_dec == test_dec
 
 
 @pytest.mark.xfail(reason="Message not tagged", raises=AttributeError)
@@ -40,5 +53,5 @@ def test_sign1_decoding(test_sign):
     for s, s_input, s_output in zip(msg.signers, test_input['signers'], test_output['signers']):
         s.external_aad = unhexlify(s_input['external_aad'])
         s.key = s_input['signing_key']
-        assert s._sig_structure == s_output['structure']
+        assert hexlify(s._sig_structure) == hexlify(s_output['structure'])
         assert s.verify_signature()

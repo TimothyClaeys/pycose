@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Optional, TypeVar
 
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.asymmetric import ec, padding, rsa
 from cryptography.hazmat.primitives.asymmetric.ec import SECP256R1, SECP384R1, SECP521R1, ECDH
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
 from cryptography.hazmat.primitives.asymmetric.ed448 import Ed448PrivateKey, Ed448PublicKey
@@ -16,9 +16,9 @@ from cryptography.hazmat.primitives.hashes import Hash, HashAlgorithm, SHA1, SHA
 from cryptography.hazmat.primitives.hmac import HMAC
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.primitives.keywrap import aes_key_wrap, aes_key_unwrap
-from ecdsa.keys import SigningKey, VerifyingKey, BadSignatureError
 from ecdsa.curves import Curve, NIST521p, NIST384p, NIST256p
 from ecdsa.ellipticcurve import Point
+from ecdsa.keys import SigningKey, VerifyingKey, BadSignatureError
 
 from cose import curves
 from cose.exceptions import CoseIllegalCurve, CoseException
@@ -29,6 +29,7 @@ if TYPE_CHECKING:
     from cose.keys.symmetric import SK
     from cose.keys.ec2 import EC2
     from cose.keys.okp import OKP
+    from cose.keys.rsa import RSA
     from cose.curves import CoseCurve
     from cose.messages.context import CoseKDFContext
 
@@ -70,6 +71,102 @@ class _EncAlg(CoseAlgorithm, ABC):
     @abstractmethod
     def get_key_length(cls) -> int:
         raise NotImplementedError()
+
+
+class _Rsa(CoseAlgorithm, ABC):
+    """ RSA signing and (key-wrap) encryption. """
+
+    @classmethod
+    @abstractmethod
+    def get_hash_func(cls):
+        raise NotImplementedError()
+
+    @classmethod
+    @abstractmethod
+    def get_pad_func(cls, hash_cls):
+        raise NotImplementedError()
+
+    @classmethod
+    def sign(cls, key: 'RSA', data: bytes) -> bytes:
+        hash_cls = cls.get_hash_func()
+        pad = cls.get_pad_func(hash_cls)
+
+        public_nums = rsa.RSAPublicNumbers(e=int.from_bytes(key.e, 'big'), n=int.from_bytes(key.n, 'big'))
+        private_nums = rsa.RSAPrivateNumbers(p=int.from_bytes(key.p, 'big'),
+                                             q=int.from_bytes(key.q, 'big'),
+                                             d=int.from_bytes(key.d, 'big'),
+                                             dmp1=int.from_bytes(key.dp, 'big'),
+                                             dmq1=int.from_bytes(key.dq, 'big'),
+                                             iqmp=int.from_bytes(key.qinv, 'big'),
+                                             public_numbers=public_nums)
+
+        sk = private_nums.private_key(default_backend())
+
+        return sk.sign(data, pad, hash_cls())
+
+    @classmethod
+    def verify(cls, key: 'RSA', data: bytes, signature: bytes) -> bool:
+        hash_cls = cls.get_hash_func()
+        pad = cls.get_pad_func(hash_cls)
+
+        public_nums = rsa.RSAPublicNumbers(e=int.from_bytes(key.e, 'big'), n=int.from_bytes(key.n, 'big'))
+        pk = public_nums.public_key(default_backend())
+
+        try:
+            pk.verify(signature, data, pad, hash_cls())
+            return True
+        except InvalidSignature:
+            return False
+
+
+class _RsaPss(_Rsa, ABC):
+    """ RSA with PSS padding. """
+
+    @classmethod
+    def get_pad_func(cls, hash_cls):
+        return padding.PSS(mgf=padding.MGF1(hash_cls()), salt_length=hash_cls.digest_size)
+
+
+class _RsaOaep(_Rsa, ABC):
+    """ RSA with OAEP padding. """
+
+    @classmethod
+    def get_pad_func(cls, hash_cls):
+        return padding.OAEP(mgf=padding.MGF1(hash_cls()), algorithm=hash_cls(), label=None)
+
+    @classmethod
+    def key_wrap(cls, key: 'RSA', data: bytes) -> bytes:
+        pad = cls.get_pad_func(cls.get_hash_func())
+
+        public_nums = rsa.RSAPublicNumbers(e=int.from_bytes(key.e, 'big'), n=int.from_bytes(key.n, 'big'))
+        pk = public_nums.public_key()
+
+        return pk.encrypt(data, pad)
+
+    @classmethod
+    def key_unwrap(cls, key: 'RSA', data: bytes) -> bytes:
+        pad = cls.get_pad_func(cls.get_hash_func())
+
+        public_nums = rsa.RSAPublicNumbers(e=int.from_bytes(key.e, 'big'), n=int.from_bytes(key.n, 'big'))
+        private_nums = rsa.RSAPrivateNumbers(p=int.from_bytes(key.p, 'big'),
+                                             q=int.from_bytes(key.q, 'big'),
+                                             d=int.from_bytes(key.d, 'big'),
+                                             dmp1=int.from_bytes(key.dp, 'big'),
+                                             dmq1=int.from_bytes(key.dq, 'big'),
+                                             iqmp=int.from_bytes(key.qinv, 'big'),
+                                             public_numbers=public_nums)
+
+        sk = private_nums.private_key(default_backend())
+
+        return sk.decrypt(data, pad)
+
+
+class _RsaPkcs1(_Rsa, ABC):
+    """ RSA with PKCS#1 padding. """
+
+    @classmethod
+    def get_pad_func(cls, hash_cls):
+        return padding.PKCS1v15()
 
 
 class _Ecdsa(CoseAlgorithm, ABC):
@@ -256,6 +353,81 @@ class _AesCcm(_EncAlg, ABC):
 ##################################################
 
 @CoseAlgorithm.register_attribute()
+class RsaPkcs1Sha1(_RsaPkcs1):
+    """
+    RSASSA-PKCS1-v1_5 using SHA-1
+
+    Attributes:
+        identifier     -65565
+
+        fullname       RS1
+    """
+
+    identifier = -65535
+    fullname = "RS1"
+
+    @classmethod
+    def get_hash_func(cls):
+        return SHA1
+
+
+@CoseAlgorithm.register_attribute()
+class RsaPkcs1Sha512(_RsaPkcs1):
+    """
+    RSASSA-PKCS1-v1_5 using SHA-512
+
+    Attributes:
+        identifier     -259
+
+        fullname       RS512
+    """
+
+    identifier = -259
+    fullname = "RS512"
+
+    @classmethod
+    def get_hash_func(cls):
+        return SHA512
+
+
+@CoseAlgorithm.register_attribute()
+class RsaPkcs1Sha384(_RsaPkcs1):
+    """
+    RSASSA-PKCS1-v1_5 using SHA-512
+
+    Attributes:
+        identifier     -258
+
+        fullname       RS384
+    """
+    identifier = -258
+    fullname = "RS384"
+
+    @classmethod
+    def get_hash_func(cls):
+        return SHA384
+
+
+@CoseAlgorithm.register_attribute()
+class RsaPkcs1Sha256(_RsaPkcs1):
+    """
+    RSASSA-PKCS1-v1_5 using SHA-512
+
+    Attributes:
+        identifier     -257
+
+        fullname       RS256
+    """
+
+    identifier = -257
+    fullname = "RS256"
+
+    @classmethod
+    def get_hash_func(cls):
+        return SHA256
+
+
+@CoseAlgorithm.register_attribute()
 class Shake256(_HashAlg):
     """
     SHAKE-256 512-bit Hash Value
@@ -302,6 +474,66 @@ class Sha384(_HashAlg):
     identifier = -43
     fullname = "SHA-384"
     hash_cls = SHA384
+
+
+@CoseAlgorithm.register_attribute()
+class RsaesOaepSha512(_RsaOaep):
+    identifier = -42
+    fullname = "RSAES_OAEP_SHA_512"
+
+    @classmethod
+    def get_hash_func(cls):
+        return SHA512
+
+
+@CoseAlgorithm.register_attribute()
+class RsaesOaepSha256(_RsaOaep):
+    identifier = -41
+    fullname = "RSAES_OAEP_SHA_256"
+
+    @classmethod
+    def get_hash_func(cls):
+        return SHA256
+
+
+@CoseAlgorithm.register_attribute()
+class RsaesOaepSha1(_RsaOaep):
+    identifier = -40
+    fullname = "RSAES_OAEP_SHA_1"
+
+    @classmethod
+    def get_hash_func(cls):
+        return SHA1
+
+
+@CoseAlgorithm.register_attribute()
+class Ps512(_RsaPss):
+    identifier = -39
+    fullname = "PS512"
+
+    @classmethod
+    def get_hash_func(cls):
+        return SHA512
+
+
+@CoseAlgorithm.register_attribute()
+class Ps384(_RsaPss):
+    identifier = -38
+    fullname = "PS384"
+
+    @classmethod
+    def get_hash_func(cls):
+        return SHA384
+
+
+@CoseAlgorithm.register_attribute()
+class Ps256(_RsaPss):
+    identifier = -37
+    fullname = "PS256"
+
+    @classmethod
+    def get_hash_func(cls):
+        return SHA256
 
 
 @CoseAlgorithm.register_attribute()
@@ -960,7 +1192,7 @@ class A256GCM(_AesGcm):
 
         fullname       A256CM
     """
-    
+
     identifier = 3
     fullname = 'A256GCM'
 

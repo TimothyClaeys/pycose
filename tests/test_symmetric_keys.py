@@ -105,7 +105,7 @@ def test_fail_on_missing_symkpk():
     with pytest.raises(CoseInvalidKey) as excinfo:
         CoseKey.from_dict(cose_key)
 
-    assert "COSE Symmetric Key must have an SymKpK attribute" in str(excinfo.value)
+    assert "SymKpK parameter cannot be None" in str(excinfo.value)
 
 
 def test_remove_empty_keyops_list():

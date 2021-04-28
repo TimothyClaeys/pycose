@@ -105,7 +105,7 @@ def test_fail_on_missing_crv_attr():
     with pytest.raises(CoseInvalidKey) as excinfo:
         _ = CoseKey.from_dict(cose_key)
 
-    assert "COSE OKP Key must have an OKPKpCurve attribute" in str(excinfo.value)
+    assert "COSE curve cannot be None" in str(excinfo.value)
 
 
 @pytest.mark.parametrize('crv', [X25519, X448, Ed25519, Ed448])
@@ -191,10 +191,10 @@ def test_key_set_curve():
 
 
 def test_set_curve_in_key():
-    with pytest.raises(CoseException) as excinfo:
-        key = OKPKey(crv='Ed25519', d=os.urandom(32))
+    with pytest.raises(CoseIllegalCurve) as excinfo:
+        _ = OKPKey(crv='Ed25519', d=os.urandom(32))
 
-    assert "Unknown COSE header or key attribute" in str(excinfo)
+    assert "Invalid COSE curve" in str(excinfo)
 
     key = OKPKey(crv='ED25519', d=os.urandom(32))
     assert key.crv == Ed25519

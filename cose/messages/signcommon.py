@@ -5,6 +5,7 @@ from cose import headers
 from cose.keys.okp import OKPKey
 from cose.exceptions import CoseException
 from cose.keys.ec2 import EC2Key
+from cose.keys.rsa import RSAKey
 from cose.keys.keyops import VerifyOp, SignOp
 from cose.messages.cosemessage import CoseMessage
 
@@ -31,6 +32,8 @@ class SignCommon(CoseMessage, metaclass=abc.ABCMeta):
             self.key.verify(EC2Key, alg, [ops])
         elif isinstance(self.key, OKPKey):
             self.key.verify(OKPKey, alg, [ops])
+        elif isinstance(self.key, RSAKey):
+            self.key.verify(RSAKey, alg, [ops])
         else:
             raise CoseException('Wrong key type')
 

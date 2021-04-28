@@ -8,6 +8,7 @@ from cose.messages.signcommon import SignCommon
 if TYPE_CHECKING:
     from cose.keys.ec2 import EC2
     from cose.keys.okp import OKP
+    from cose.keys.rsa import RSA
 
 
 class CoseSignature(SignCommon):
@@ -24,7 +25,7 @@ class CoseSignature(SignCommon):
                  uhdr: Optional[dict] = None,
                  signature: bytes = b'',
                  external_aad: Optional[bytes] = b'',
-                 key: Optional[Union['EC2', 'OKP']] = None):
+                 key: Optional[Union['EC2', 'OKP', 'RSA']] = None):
 
         if phdr is None:
             phdr = {}

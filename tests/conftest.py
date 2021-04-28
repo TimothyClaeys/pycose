@@ -12,7 +12,7 @@ from cose.algorithms import CoseAlgorithm
 from cose.curves import CoseCurve
 from cose.headers import CoseHeaderAttribute, IV, EphemeralKey, Algorithm, KID, PartyUNonce, StaticKey, ContentType
 from cose.keys.keyparam import KpKty, SymKpK, OKPKpCurve, EC2KpCurve, KpKid, KpAlg, OKPKpD, EC2KpY, OKPKpX, EC2KpX, \
-    EC2KpD
+    EC2KpD, RSAKpE, RSAKpN, RSAKpD, RSAKpP, RSAKpQ, RSAKpDP, RSAKpDQ, RSAKpQInv
 from cose.keys.keytype import KTY
 from cose.messages.recipient import DirectEncryption, DirectKeyAgreement, KeyWrap, KeyAgreementWithKeyWrap
 from cose.messages.signer import CoseSignature
@@ -139,6 +139,23 @@ def type_conv(d: dict) -> dict:
             key[EC2KpD] = unhexlify(d['d'])
         if 'd' in d and d['kty'] == "OKP":
             key[OKPKpD] = unhexlify(d['d'])
+
+        if 'e' in d and d['kty'] == "RSA":
+            key[RSAKpE] = unhexlify(d['e'])
+        if 'n' in d and d['kty'] == "RSA":
+            key[RSAKpN] = unhexlify(d['n'])
+        if 'd' in d and d['kty'] == "RSA":
+            key[RSAKpD] = unhexlify(d['d'])
+        if 'p' in d and d['kty'] == "RSA":
+            key[RSAKpP] = unhexlify(d['p'])
+        if 'q' in d and d['kty'] == "RSA":
+            key[RSAKpQ] = unhexlify(d['q'])
+        if 'dP' in d and d['kty'] == "RSA":
+            key[RSAKpDP] = unhexlify(d['dP'])
+        if 'dQ' in d and d['kty'] == "RSA":
+            key[RSAKpDQ] = unhexlify(d['dQ'])
+        if 'qInv' in d and d['kty'] == "RSA":
+            key[RSAKpQInv] = unhexlify(d['qInv'])
 
         key = cosekey.CoseKey.from_dict(key)
         return key
