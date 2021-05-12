@@ -8,7 +8,7 @@ from cryptography.hazmat.primitives.asymmetric.x448 import X448PrivateKey
 from cryptography.hazmat.primitives.serialization import PrivateFormat, PublicFormat, Encoding
 
 from cose import utils
-from cose.curves import X448, X25519, Ed25519, Ed448, CoseCurve
+from cose.exceptions import CoseUnsupportedCurve, CoseInvalidKey, CoseIllegalKeyType, CoseIllegalKeyOps
 from cose.exceptions import CoseIllegalCurve, CoseInvalidKey, CoseIllegalKeyType, CoseIllegalKeyOps
 from cose.keys.cosekey import CoseKey, KpKty
 from cose.keys.keyops import KEYOPS, SignOp, VerifyOp, DeriveBitsOp, DeriveKeyOp
@@ -114,7 +114,7 @@ class OKPKey(CoseKey):
     def crv(self, crv: Union[Type['CoseCurve'], int, str]):
         supported_curves = {X25519, X448, Ed25519, Ed448}
         if not self._supported_by_key_type(crv, supported_curves):
-            raise CoseIllegalCurve(f"Invalid COSE curve {crv} for key type {OKPKey.__name__}")
+            raise CoseUnsupportedCurve(f"Invalid COSE curve {_crv} for key type {OKPKey.__name__}")
         else:
             self.store[OKPKpCurve] = CoseCurve.from_id(crv)
 
@@ -177,7 +177,7 @@ class OKPKey(CoseKey):
             crv = CoseCurve.from_id(crv)
 
         if crv == X25519:
-            private_key = X25519PrivateKey.generate()
+            raise CoseUnsupportedCurve(f'Unsupported COSE curve: {crv}')
         elif crv == Ed25519:
             private_key = Ed25519PrivateKey.generate()
         elif crv == Ed448:

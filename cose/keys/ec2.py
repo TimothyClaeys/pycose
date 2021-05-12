@@ -5,7 +5,7 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric.ec import SECP256R1, SECP384R1, SECP521R1
 
 from cose import utils
-from cose.curves import P256, P521, P384, CoseCurve, SECP256K1
+from cose.exceptions import CoseUnsupportedCurve, CoseInvalidKey, CoseIllegalKeyType, CoseIllegalKeyOps
 from cose.exceptions import CoseIllegalCurve, CoseInvalidKey, CoseIllegalKeyType, CoseIllegalKeyOps
 from cose.keys.cosekey import CoseKey
 from cose.keys.keyops import SignOp, VerifyOp, DeriveKeyOp, DeriveBitsOp
@@ -111,7 +111,7 @@ class EC2Key(CoseKey):
     def crv(self, crv: Union[Type['CoseCurve'], int, str]):
         supported_curves = {P256, P384, P521, SECP256K1}
         if not self._supported_by_key_type(crv, supported_curves):
-            raise CoseIllegalCurve(f"Invalid COSE curve {crv} for key type {EC2Key.__name__}")
+            raise CoseUnsupportedCurve(f"Invalid COSE curve {_crv} for key type {EC2Key.__name__}")
         else:
             self.store[EC2KpCurve] = CoseCurve.from_id(crv)
 
@@ -188,7 +188,7 @@ class EC2Key(CoseKey):
             crv = CoseCurve.from_id(crv)
 
         if crv == P256:
-            curve_obj = SECP256R1()
+            raise CoseUnsupportedCurve(f'Unsupported COSE curve: {crv}')
         elif crv == P384:
             curve_obj = SECP384R1()
         elif crv == P521:

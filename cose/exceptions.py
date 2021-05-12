@@ -2,7 +2,7 @@ class CoseIllegalAlgorithm(Exception):
     pass
 
 
-class CoseIllegalCurve(Exception):
+class CoseUnsupportedCurve(Exception):
     pass
 
 

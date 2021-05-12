@@ -4,7 +4,7 @@ import pytest
 
 from cose.algorithms import Es256
 from cose.curves import P521, P384, P256
-from cose.exceptions import CoseInvalidKey, CoseIllegalKeyType, CoseException, CoseIllegalCurve
+from cose.exceptions import CoseInvalidKey, CoseIllegalKeyType, CoseException, CoseUnsupportedCurve
 from cose.keys import EC2Key, CoseKey
 from cose.keys.keyops import SignOp
 from cose.keys.keyparam import KpKty, EC2KpCurve, EC2KpX, EC2KpY, EC2KpD, KpAlg, KpKeyOps
@@ -256,12 +256,12 @@ def test_dict_invalid_deletion():
 
 
 def test_set_curve_in_key():
-    with pytest.raises(CoseIllegalCurve) as excinfo:
+    with pytest.raises(CoseUnsupportedCurve) as excinfo:
         _ = EC2Key(crv='P257', d=os.urandom(32))
 
     assert "Invalid COSE curve" in str(excinfo)
 
-    with pytest.raises(CoseIllegalCurve) as excinfo:
+    with pytest.raises(CoseUnsupportedCurve) as excinfo:
         _ = EC2Key(crv='Ed25519', d=os.urandom(32))
 
     assert "Invalid COSE curve" in str(excinfo)

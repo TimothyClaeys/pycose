@@ -21,7 +21,7 @@ from ecdsa.ellipticcurve import Point
 from ecdsa.keys import SigningKey, VerifyingKey, BadSignatureError
 
 from cose import curves
-from cose.exceptions import CoseIllegalCurve, CoseException
+from cose.exceptions import CoseUnsupportedCurve, CoseException
 from cose.headers import Algorithm
 from cose.utils import _CoseAttribute
 
@@ -295,7 +295,7 @@ class _EcdhHkdf(CoseAlgorithm, ABC):
         elif curve == curves.P521():
             curve_instance = SECP521R1()
         else:
-            raise CoseIllegalCurve()
+            raise CoseUnsupportedCurve()
 
         d_value = int(hexlify(private_key.d), 16)
         x_value = int(hexlify(public_key.x), 16)
