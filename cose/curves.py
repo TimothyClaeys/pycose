@@ -35,6 +35,14 @@ class CoseCurve(_CoseAttribute, ABC):
         """
         raise NotImplementedError()
 
+    @property
+    @abstractmethod
+    def size(self) -> int:
+        """
+        Returns the size of the coordinates over the curve
+        """
+        raise NotImplementedError()
+
 
 ##################################################
 #            SUPPORTED COSE CURVES               #
@@ -54,12 +62,15 @@ class Reserved(CoseCurve):
         curve_obj      None
 
         key_type       None
+
+        size           0
     """
 
     identifier = 0
     fullname = "RESERVED"
     curve_obj = None
     key_type = None
+    size = 0
 
 
 @CoseCurve.register_attribute()
@@ -74,13 +85,16 @@ class P256(CoseCurve):
 
         curve_obj      :class:'~cryptography.hazmat.primitives.asymmetric.ec.SECP256R1'
 
-        key_type       :class:'~cose.keys.ec2.EC2Key'
+        key_type       :class:'~cose.keys.keytype.KtyEC2'
+
+        size           32
     """
 
     identifier = 1
     fullname = "P_256"
     curve_obj = SECP256R1
     key_type = KtyEC2
+    size = 32
 
 
 @CoseCurve.register_attribute()
@@ -95,13 +109,16 @@ class P384(CoseCurve):
 
         curve_obj      :class:'~cryptography.hazmat.primitives.asymmetric.ec.SECP384R1'
 
-        key_type       :class:'~cose.keys.ec2.EC2Key'
+        key_type       :class:'~cose.keys.keytype.KtyEC2'
+
+        size           48
     """
 
     identifier = 2
     fullname = "P_384"
     curve_obj = SECP384R1
     key_type = KtyEC2
+    size = 48
 
 
 @CoseCurve.register_attribute()
@@ -116,13 +133,16 @@ class P521(CoseCurve):
 
         curve_obj      :class:'~cryptography.hazmat.primitives.asymmetric.ec.SECP521R1'
 
-        key_type       :class:'~cose.keys.ec2.EC2Key'
+        key_type       :class:'~cose.keys.keytype.KtyEC2'
+
+        size           66
     """
 
     identifier = 3
     fullname = "P_521"
     curve_obj = SECP521R1
     key_type = KtyEC2
+    size = 66
 
 
 @CoseCurve.register_attribute()
@@ -137,13 +157,16 @@ class X25519(CoseCurve):
 
         curve_obj      :class:'~cryptography.hazmat.primitives.asymmetric.x25519'
 
-        key_type       :class:'~cose.keys.okp.OKPKey'
+        key_type       :class:'~cose.keys.keytype.KtyOKP'
+
+        size           32
     """
 
     identifier = 4
     fullname = "X25519"
     curve_obj = x25519.X25519PrivateKey
     key_type = KtyOKP
+    size = 32
 
 
 @CoseCurve.register_attribute()
@@ -158,13 +181,16 @@ class X448(CoseCurve):
 
         curve_obj      :class:'~cryptography.hazmat.primitives.asymmetric.x448'
 
-        key_type       :class:'~cose.keys.okp.OKPKey'
+        key_type       :class:'~cose.keys.keytype.KtyOKP'
+
+        size           57
     """
 
     identifier = 5
     fullname = "X448"
     curve_obj = x448.X448PrivateKey
     key_type = KtyOKP
+    size = 57
 
 
 @CoseCurve.register_attribute()
@@ -179,13 +205,16 @@ class Ed25519(CoseCurve):
 
         curve_obj      :class:'~cryptography.hazmat.primitives.asymmetric.ed25519'
 
-        key_type       :class:'~cose.keys.okp.OKPKey'
+        key_type       :class:'~cose.keys.keytype.KtyOKP'
+
+        size           32
     """
 
     identifier = 6
     fullname = "ED25519"
     curve_obj = ed25519.Ed25519PrivateKey
     key_type = KtyOKP
+    size = 32
 
 
 @CoseCurve.register_attribute()
@@ -200,13 +229,16 @@ class Ed448(CoseCurve):
 
         curve_obj      :class:'~cryptography.hazmat.primitives.asymmetric.ed448'
 
-        key_type       :class:'~cose.keys.okp.OKPKey'
+        key_type       :class:'~cose.keys.keytype.KtyOKP'
+
+        size           57
     """
 
     identifier = 7
     fullname = "ED448"
     curve_obj = ed448.Ed448PrivateKey
     key_type = KtyOKP
+    size = 57
 
 
 @CoseCurve.register_attribute()
@@ -221,13 +253,16 @@ class SECP256K1(CoseCurve):
 
         curve_obj      :class:'~cryptography.hazmat.primitives.asymmetric.ec.SECP256K1'
 
-        key_type       :class:'~cose.keys.ec2.EC2Key'
+        key_type       :class:'~cose.keys.keytype.KtyEC2'
+
+        size           32
     """
 
     identifier = 8
     fullname = "SECP256K1"
     curve_obj = SECP256K1
     key_type = KtyEC2
+    size = 32
 
 
 if __name__ == '__main__':

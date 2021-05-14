@@ -53,6 +53,13 @@ class EC2Key(CoseKey):
                  d: bytes = b'',
                  optional_params: Optional[dict] = None,
                  allow_unknown_key_attrs: bool = True):
+        """Initialize a COSE key from its components
+
+        Not passing a `y` component is accepted; in this case, one (of the two)
+        valid `y` will be found for the `x`. This is good enough for everything
+        that only operates on the `x` of any derived outputs (in "compact"
+        mode), as per RFC 6090 Section 4.2.
+        """
         transformed_dict = {KpKty: KtyEC2}
 
         if optional_params is None:
@@ -78,16 +85,42 @@ class EC2Key(CoseKey):
 
         super(EC2Key, self).__init__(transformed_dict)
 
-        if len(x) == 0 and len(y) == 0 and len(d) == 0:
-            raise CoseInvalidKey("Either the public values or the private value must be specified")
-
-        if (len(x) == 0 and len(y) != 0) or (len(x) != 0 and len(y) == 0):
-            raise CoseInvalidKey("Missing public coordinate X/Y")
-
         if crv is not None:
             self.crv = crv
         else:
             raise CoseInvalidKey("COSE curve cannot be None")
+
+        if not x and not y and not d:
+            raise CoseInvalidKey("Either the public values or the private value must be specified")
+
+        if not d and not x:
+            raise CoseInvalidKey("Missing public coordinate X")
+
+        if d:
+            public_nums = ec.derive_private_key(int.from_bytes(d, byteorder="big"),
+                                                curve=self.crv.curve_obj()).public_key().public_numbers()
+            if x:
+                assert x == public_nums.x.to_bytes(self.crv.size, 'big')
+            else:
+                x = public_nums.x.to_bytes(self.crv.size, 'big')
+
+            if y:
+                assert y == public_nums.y.to_bytes(self.crv.size, 'big')
+            else:
+                y = public_nums.y.to_bytes(self.crv.size, 'big')
+
+        if x and not y:
+            # try to derive y from x
+            key = ec.EllipticCurvePublicKey.from_encoded_point(self.crv.curve_obj(),
+                                                               # don't care which of the two possible Y values we get
+                                                               b'\x03' +
+                                                               x  # or [::-1]?
+                                                               )
+            # Just to check the endianness of the conversions -- if we get the
+            # right X back out, then the X and Y are consistent, and anyway the
+            # crypto backend will check whether the point is on the curve
+            assert x == key.public_numbers().x.to_bytes(self.crv.size, 'big')
+            y = key.public_numbers().y.to_bytes(self.crv.size, 'big')
 
         if x != b'':
             self.x = x
@@ -194,12 +227,11 @@ class EC2Key(CoseKey):
         x_coor = private_key.public_key().public_numbers().x
         y_coor = private_key.public_key().public_numbers().y
 
-        return EC2Key(
-            crv=crv,
-            d=d_value.to_bytes((d_value.bit_length() + 7) // 8, byteorder="big"),
-            x=x_coor.to_bytes((x_coor.bit_length() + 7) // 8, byteorder="big"),
-            y=y_coor.to_bytes((y_coor.bit_length() + 7) // 8, byteorder="big"),
-            optional_params=optional_params)
+        return EC2Key(crv=crv,
+                      d=d_value.to_bytes(crv.size, "big"),
+                      x=x_coor.to_bytes(crv.size, "big"),
+                      y=y_coor.to_bytes(crv.size, "big"),
+                      optional_params=optional_params)
 
     def __delitem__(self, key):
         if self._key_transform(key) != KpKty and self._key_transform(key) != EC2KpCurve:
