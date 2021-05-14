@@ -161,8 +161,8 @@ class OKPKey(CoseKey):
             else:
                 CoseKey.key_ops.fset(self, new_key_ops)
 
-    @staticmethod
-    def generate_key(crv: Union[Type['CoseCurve'], str, int], optional_params: dict = None) -> 'OKPKey':
+    @classmethod
+    def generate_key(cls, crv: Union[Type['CoseCurve'], str, int], optional_params: dict = None) -> 'OKPKey':
         """
         Generate a random OKPKey COSE key object.
 

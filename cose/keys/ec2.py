@@ -172,8 +172,8 @@ class EC2Key(CoseKey):
             else:
                 CoseKey.key_ops.fset(self, new_key_ops)
 
-    @staticmethod
-    def generate_key(crv: Union[Type['CoseCurve'], str, int], optional_params: dict = None) -> 'EC2Key':
+    @classmethod
+    def generate_key(cls, crv: Union[Type['CoseCurve'], str, int], optional_params: dict = None) -> 'EC2Key':
         """
         Generate a random EC2Key COSE key object.
 
