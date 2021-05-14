@@ -1,14 +1,32 @@
 import os
+from binascii import unhexlify
 
 import pytest
 
 from cose.algorithms import Es256
 from cose.curves import P521, P384, P256
-from cose.exceptions import CoseInvalidKey, CoseIllegalKeyType, CoseException, CoseIllegalCurve
+from cose.exceptions import CoseInvalidKey, CoseIllegalKeyType, CoseException
 from cose.keys import EC2Key, CoseKey
 from cose.keys.keyops import SignOp
 from cose.keys.keyparam import KpKty, EC2KpCurve, EC2KpX, EC2KpY, EC2KpD, KpAlg, KpKeyOps
 from cose.keys.keytype import KtyEC2, KtyOKP, KtySymmetric
+
+p256_d = unhexlify(b'57c92077664146e876760c9520d054aa93c3afb04e306705db6090308507b4d3')
+p256_x = unhexlify(b'bac5b11cad8f99f9c72b05cf4b9e26d244dc189f745228255a219a86d6a09eff')
+p256_y = unhexlify(b'20138bf82dc1b6d562be0fa54ab7804a3a64b6d72ccfed6b6fb6ed28bbfc117e')
+
+p384_d = unhexlify(b'bc8e754b8305df8fec9bfbf7fc257810d43a94a8b76947a8d528ede4337654c6526aec4260070b97966958da4bf97f25')
+p384_x = unhexlify(b'9e5584a68345d7d7e5474ce79966b6b1dbc6496cd7fcdccf772effa961ab71812101db158114e58d898bba29d96b6323')
+p384_y = unhexlify(b'650b3b83c1251aa745625048253fcc33255e522c5cf965637de3100075e51999443db22a9588e1c9dd8a23861043149f')
+
+p521_y = unhexlify(b'01dca6947bce88bc5790485ac97427342bc35f887d86d65a089377e247e60baa55e4e8501e2ada5724ac51d69090080'
+                   b'33ebc10ac999b9d7f5cc2519f3fe1ea1d9475')
+p521_d = unhexlify(
+    b'00085138ddabf5ca975f5860f91a08e91d6d5f9a76ad4018766a476680b55cd339e8ab6c72b5facdb2a2a50ac25bd086647dd3e2e6e99e'
+    b'84ca2c3609fdf177feb26d')
+p521_x = unhexlify(
+    b'0072992cb3ac08ecf3e5c63dedec0d51a8c1f79ef2f82f94f3c737bf5de7986671eac625fe8257bbd0394644caaa3aaf8f27a4585fbbca'
+    b'd0f2457620085e5c8f42ad')
 
 
 ###############################################################
@@ -29,41 +47,32 @@ def _is_valid_ec2_key(key: EC2Key):
                           ('KTY', KtyEC2), ('KTY', 2),
                           (1, KtyEC2), (1, 'EC2')])
 @pytest.mark.parametrize('crv_attr, crv_value', [(EC2KpCurve, P256), ('CURVE', P256), (-1, P256)])
-@pytest.mark.parametrize('x_attr, x_value', [(EC2KpX, os.urandom(32)), ('X', os.urandom(32)), (-2, os.urandom(32))])
-@pytest.mark.parametrize('y_attr, y_value', [(EC2KpY, os.urandom(32)), ('Y', os.urandom(32)), (-3, os.urandom(32))])
-@pytest.mark.parametrize('d_attr, d_value', [(EC2KpD, os.urandom(32)), ('D', os.urandom(32)), (-4, os.urandom(32))])
+@pytest.mark.parametrize('x_attr, x_value', [(EC2KpX, p256_x), ('X', p256_x), (-2, p256_x)])
+@pytest.mark.parametrize('y_attr, y_value', [(EC2KpY, p256_y), ('Y', p256_y), (-3, p256_y)])
+@pytest.mark.parametrize('d_attr, d_value', [(EC2KpD, p256_d), ('D', p256_d), (-4, p256_d)])
 def test_ec2_keys_from_dicts(kty_attr, kty_value, crv_attr, crv_value, x_attr, x_value, y_attr, y_value, d_attr,
                              d_value):
-    # The public and private values used in this test do not form a valid elliptic curve key,
-    # but we don't care about that here
-
-    d = {kty_attr: kty_value, crv_attr: crv_value, x_attr: x_value, y_attr: y_value, d_attr: d_value}
-    cose_key = CoseKey.from_dict(d)
+    dct = {kty_attr: kty_value, crv_attr: crv_value, x_attr: x_value, y_attr: y_value, d_attr: d_value}
+    cose_key = CoseKey.from_dict(dct)
     assert _is_valid_ec2_key(cose_key)
 
 
 @pytest.mark.parametrize('kty_attr, kty_value', [(KpKty, KtyEC2), ('KTY', 'EC2'), (1, 2)])
-@pytest.mark.parametrize('crv_attr, crv_value', [(EC2KpCurve, P384)])
-@pytest.mark.parametrize('d_attr, d_value', [(EC2KpD, os.urandom(32)), ('D', os.urandom(32)), (-4, os.urandom(32))])
+@pytest.mark.parametrize('crv_attr, crv_value', [(EC2KpCurve, P256)])
+@pytest.mark.parametrize('d_attr, d_value', [(EC2KpD, p256_d), ('D', p256_d), (-4, p256_d)])
 def test_ec2_private_key_from_dicts(kty_attr, kty_value, crv_attr, crv_value, d_attr, d_value):
-    # The public and private values used in this test do not form a valid elliptic curve key,
-    # but we don't care about that here
-
-    d = {kty_attr: kty_value, crv_attr: crv_value, d_attr: d_value}
-    cose_key = CoseKey.from_dict(d)
+    dct = {kty_attr: kty_value, crv_attr: crv_value, d_attr: d_value}
+    cose_key = CoseKey.from_dict(dct)
     assert _is_valid_ec2_key(cose_key)
 
 
 @pytest.mark.parametrize('kty_attr, kty_value', [(KpKty, KtyEC2), ('KTY', 'EC2'), (1, 2)])
 @pytest.mark.parametrize('crv_attr, crv_value', [(EC2KpCurve, P521), ('CURVE', P521), (-1, P521)])
-@pytest.mark.parametrize('x_attr, x_value', [(EC2KpX, os.urandom(32)), ('X', os.urandom(32)), (-2, os.urandom(32))])
-@pytest.mark.parametrize('y_attr, y_value', [(EC2KpY, os.urandom(32)), ('Y', os.urandom(32)), (-3, os.urandom(32))])
+@pytest.mark.parametrize('x_attr, x_value', [(EC2KpX, p521_x), ('X', p521_x), (-2, p521_x)])
+@pytest.mark.parametrize('y_attr, y_value', [(EC2KpY, p521_y), ('Y', p521_y), (-3, p521_y)])
 def test_ec2_public_keys_from_dicts(kty_attr, kty_value, crv_attr, crv_value, x_attr, x_value, y_attr, y_value):
-    # The public and private values used in this test do not form a valid elliptic curve key,
-    # but we don't care about that here
-
-    d = {kty_attr: kty_value, crv_attr: crv_value, x_attr: x_value, y_attr: y_value}
-    cose_key = CoseKey.from_dict(d)
+    dct = {kty_attr: kty_value, crv_attr: crv_value, x_attr: x_value, y_attr: y_value}
+    cose_key = CoseKey.from_dict(dct)
     assert _is_valid_ec2_key(cose_key)
 
 
@@ -85,9 +94,17 @@ def test_ec2_key_generation(crv):
     assert _is_valid_ec2_key(key)
 
 
-@pytest.mark.parametrize('crv', [P256, P384, P521, 'P_256', 'P_384', 1, 2])
-def test_ec2_key_construction(crv):
-    key = EC2Key(crv=crv, x=os.urandom(32), y=os.urandom(32), d=os.urandom(32))
+@pytest.mark.parametrize('crv, x, y, d', [
+    (P256, p256_x, p256_y, p256_d),
+    (P384, p384_x, p384_y, p384_d),
+    (P521, p521_x, p521_y, p521_d),
+    ('P_256', p256_x, p256_y, p256_d),
+    ('P_384', p384_x, p384_y, p384_d),
+    (1, p256_x, p256_y, p256_d),
+    (2, p384_x, p384_y, p384_d)
+])
+def test_ec2_key_construction(crv, x, y, d):
+    key = EC2Key(crv=crv, x=x, y=y, d=d)
 
     assert _is_valid_ec2_key(key)
 
@@ -110,40 +127,37 @@ def test_fail_on_missing_key_values_from_dict(crv):
     assert "Either the public values or the private value must be specified" in str(excinfo.value)
 
 
-@pytest.mark.parametrize('crv', [P256, P384, P521])
-def test_fail_on_missing_public_y_values(crv):
+@pytest.mark.parametrize('crv, y', [(P256, p256_y), (P384, p384_y), (P521, p521_y)])
+def test_fail_on_missing_public_x_values(crv, y):
     with pytest.raises(CoseInvalidKey) as excinfo:
-        _ = EC2Key(crv=crv, x=os.urandom(32))
+        _ = EC2Key(crv=crv, y=y)
 
-    assert "Missing public coordinate X/Y" in str(excinfo.value)
-
-
-@pytest.mark.parametrize('crv', [P256, P384, P521])
-def test_fail_on_missing_public_x_values(crv):
-    with pytest.raises(CoseInvalidKey) as excinfo:
-        _ = EC2Key(crv=crv, y=os.urandom(32))
-
-    assert "Missing public coordinate X/Y" in str(excinfo.value)
+    assert "Missing public coordinate X" in str(excinfo.value)
 
 
-@pytest.mark.parametrize('crv', [P256, P384, P521])
-def test_fail_with_d_and_missing_public_x_values(crv):
-    with pytest.raises(CoseInvalidKey) as excinfo:
-        _ = EC2Key(crv=crv, y=os.urandom(32), d=os.urandom(32))
+@pytest.mark.parametrize('crv, x', [(P256, p256_x), (P384, p384_x), (P521, p521_x)])
+def test_on_missing_public_y_values(crv, x):
+    key = EC2Key(crv=crv, x=x)
 
-    assert "Missing public coordinate X/Y" in str(excinfo.value)
+    assert key.y
 
 
-@pytest.mark.parametrize('crv', [P256, P384, P521])
-def test_fail_with_d_and_missing_public_y_values(crv):
-    with pytest.raises(CoseInvalidKey) as excinfo:
-        _ = EC2Key(crv=crv, x=os.urandom(32), d=os.urandom(32))
+@pytest.mark.parametrize('crv, y, d', [(P256, p256_y, p256_d), (P384, p384_y, p384_d), (P521, p521_y, p521_d)])
+def test_with_d_and_missing_public_x_values(crv, y, d):
+    key = EC2Key(crv=crv, y=y, d=d)
 
-    assert "Missing public coordinate X/Y" in str(excinfo.value)
+    assert key.x
+
+
+@pytest.mark.parametrize('crv, x, d', [(P256, p256_x, p256_d), (P521, p521_x, p521_d)])
+def test_fail_with_d_and_missing_public_y_values(crv, x, d):
+    key = EC2Key(crv=crv, x=x, d=d)
+
+    assert key.y
 
 
 def test_fail_on_missing_crv_attr():
-    cose_key = {KpKty: KtyEC2, EC2KpX: os.urandom(32), EC2KpY: os.urandom(32)}
+    cose_key = {KpKty: KtyEC2, EC2KpX: p256_x, EC2KpY: p256_y}
 
     with pytest.raises(CoseInvalidKey) as excinfo:
         _ = CoseKey.from_dict(cose_key)
@@ -151,7 +165,7 @@ def test_fail_on_missing_crv_attr():
     assert "COSE curve cannot be None" in str(excinfo.value)
 
 
-@pytest.mark.parametrize('crv', [P256, P384, P521])
+@pytest.mark.parametrize('crv', [P256])
 @pytest.mark.parametrize('kty', [KtyOKP, KtySymmetric, 1, 4])
 def test_fail_on_illegal_kty(crv, kty):
     params = {KpKty: kty}
@@ -159,13 +173,13 @@ def test_fail_on_illegal_kty(crv, kty):
     # NOTE: the stuff in params will override the parameters of the function if they are specified twice
     # Here the KpKty value which is set by the constructor gets overwritten by the params dict
     with pytest.raises(CoseIllegalKeyType) as excinfo:
-        _ = EC2Key(crv=crv, x=os.urandom(32), y=os.urandom(32), d=os.urandom(32), optional_params=params)
+        _ = EC2Key(crv=crv, x=p256_x, y=p256_y, d=p256_d, optional_params=params)
 
     assert "Illegal key type in EC2 COSE Key" in str(excinfo.value)
 
 
 def test_remove_empty_keyops_list():
-    cose_key = {KpKty: KtyEC2, EC2KpD: os.urandom(32), KpAlg: Es256, EC2KpCurve: P256, KpKeyOps: []}
+    cose_key = {KpKty: KtyEC2, EC2KpD: p384_d, KpAlg: Es256, EC2KpCurve: P256, KpKeyOps: []}
 
     key = CoseKey.from_dict(cose_key)
 
@@ -173,7 +187,7 @@ def test_remove_empty_keyops_list():
 
 
 def test_existing_non_empty_keyops_list():
-    cose_key = {KpKty: KtyEC2, EC2KpD: os.urandom(32), KpAlg: Es256, EC2KpCurve: P256, KpKeyOps: [SignOp]}
+    cose_key = {KpKty: KtyEC2, EC2KpD: p256_d, KpAlg: Es256, EC2KpCurve: P256, KpKeyOps: [SignOp]}
 
     key = CoseKey.from_dict(cose_key)
 
@@ -181,13 +195,13 @@ def test_existing_non_empty_keyops_list():
 
 
 def test_dict_operations_on_ec2_key():
-    cose_key = {KpKty: KtyEC2, EC2KpD: os.urandom(32), KpAlg: Es256, EC2KpCurve: P256, KpKeyOps: [SignOp]}
+    cose_key = {KpKty: KtyEC2, EC2KpX: p256_x, KpAlg: Es256, EC2KpCurve: P256, KpKeyOps: [SignOp]}
 
     key = CoseKey.from_dict(cose_key)
 
     assert KpKty in key
-    assert EC2KpD in key
-    assert EC2KpX not in key
+    assert EC2KpD not in key
+    assert EC2KpY in key
     assert 1 in key
     assert 3 in key
     assert KpAlg in key
@@ -204,9 +218,9 @@ def test_dict_operations_on_ec2_key():
 def test_dict_valid_deletion():
     cose_key = {
         KpKty: KtyEC2,
-        EC2KpD: os.urandom(32),
-        EC2KpX: os.urandom(32),
-        EC2KpY: os.urandom(32),
+        EC2KpD: p256_d,
+        EC2KpX: p256_x,
+        EC2KpY: p256_y,
         KpAlg: Es256,
         EC2KpCurve: P256,
         KpKeyOps: [SignOp]}
@@ -236,9 +250,9 @@ def test_dict_valid_deletion():
 def test_dict_invalid_deletion():
     cose_key = {
         KpKty: KtyEC2,
-        EC2KpD: os.urandom(32),
-        EC2KpX: os.urandom(32),
-        EC2KpY: os.urandom(32),
+        EC2KpD: p256_d,
+        EC2KpX: p256_x,
+        EC2KpY: p256_y,
         KpAlg: Es256,
         EC2KpCurve: P256,
         KpKeyOps: [SignOp]}
@@ -256,22 +270,22 @@ def test_dict_invalid_deletion():
 
 
 def test_set_curve_in_key():
-    with pytest.raises(CoseIllegalCurve) as excinfo:
-        _ = EC2Key(crv='P257', d=os.urandom(32))
+    with pytest.raises(CoseException) as excinfo:
+        _ = EC2Key(crv='P257', d=p256_d)
 
-    assert "Invalid COSE curve" in str(excinfo)
+    assert "Unknown COSE attribute with value: [CoseCurve - P257]" in str(excinfo)
 
-    with pytest.raises(CoseIllegalCurve) as excinfo:
-        _ = EC2Key(crv='Ed25519', d=os.urandom(32))
+    with pytest.raises(CoseException) as excinfo:
+        _ = EC2Key(crv='Ed25519', d=p256_d)
 
-    assert "Invalid COSE curve" in str(excinfo)
+    assert "Unknown COSE attribute with value: [CoseCurve - Ed25519]" in str(excinfo)
 
-    key = EC2Key(crv='P_256', d=os.urandom(32))
+    key = EC2Key(crv='P_256', d=p256_d)
     assert key.crv == P256
 
 
 def test_unknown_key_attribute():
-    key = EC2Key(crv='P_256', d=os.urandom(32), optional_params={"subject_name": "signing key"})
+    key = EC2Key(crv='P_256', d=p256_d, optional_params={"subject_name": "signing key"})
 
     assert "subject_name" in key
     assert key['subject_name'] == "signing key"

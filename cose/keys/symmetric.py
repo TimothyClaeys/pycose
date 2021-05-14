@@ -106,8 +106,8 @@ class SymmetricKey(CoseKey):
             else:
                 CoseKey.key_ops.fset(self, new_key_ops)
 
-    @staticmethod
-    def generate_key(key_len: int, optional_params: dict = None) -> 'SymmetricKey':
+    @classmethod
+    def generate_key(cls, key_len: int, optional_params: dict = None) -> 'SymmetricKey':
         """
         Generate a random Symmetric COSE key object.
 

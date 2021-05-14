@@ -40,7 +40,7 @@ class _CoseAttribute(ABC):
             if allow_unknown_attributes:
                 return attribute
             else:
-                raise CoseException(f"Unknown COSE header or key attribute with value: [{cls.__name__} - {attribute}]")
+                raise CoseException(f"Unknown COSE attribute with value: [{cls.__name__} - {attribute}]")
 
     @property
     @abstractmethod

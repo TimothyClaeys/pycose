@@ -2,11 +2,9 @@ from typing import Optional, Type, Union, List, TYPE_CHECKING
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives.asymmetric.ec import SECP256R1, SECP384R1, SECP521R1
 
 from cose import utils
-from cose.curves import P256, P521, P384, CoseCurve, SECP256K1
-from cose.exceptions import CoseIllegalCurve, CoseInvalidKey, CoseIllegalKeyType, CoseIllegalKeyOps
+from cose.exceptions import CoseUnsupportedCurve, CoseInvalidKey, CoseIllegalKeyType, CoseIllegalKeyOps
 from cose.keys.cosekey import CoseKey
 from cose.keys.keyops import SignOp, VerifyOp, DeriveKeyOp, DeriveBitsOp
 from cose.keys.keyparam import EC2KeyParam, EC2KpCurve, EC2KpX, EC2KpY, EC2KpD, KpKty, KeyParam
@@ -14,6 +12,7 @@ from cose.keys.keytype import KtyEC2
 
 if TYPE_CHECKING:
     from cose.keys.keyops import KEYOPS
+    from cose.curves import CoseCurve
 
 
 @CoseKey.record_kty(KtyEC2)
@@ -29,6 +28,7 @@ class EC2Key(CoseKey):
         """
         _optional_params = {}
 
+        # extract and remove items from dict, if not found return default value
         x = CoseKey._extract_from_dict(cose_key, EC2KpX)
         y = CoseKey._extract_from_dict(cose_key, EC2KpY)
         d = CoseKey._extract_from_dict(cose_key, EC2KpD)
@@ -53,6 +53,13 @@ class EC2Key(CoseKey):
                  d: bytes = b'',
                  optional_params: Optional[dict] = None,
                  allow_unknown_key_attrs: bool = True):
+        """Initialize a COSE key from its components
+
+        Not passing a `y` component is accepted; in this case, one (of the two)
+        valid `y` will be found for the `x`. This is good enough for everything
+        that only operates on the `x` of any derived outputs (in "compact"
+        mode), as per RFC 6090 Section 4.2.
+        """
         transformed_dict = {KpKty: KtyEC2}
 
         if optional_params is None:
@@ -78,16 +85,42 @@ class EC2Key(CoseKey):
 
         super(EC2Key, self).__init__(transformed_dict)
 
-        if len(x) == 0 and len(y) == 0 and len(d) == 0:
-            raise CoseInvalidKey("Either the public values or the private value must be specified")
-
-        if (len(x) == 0 and len(y) != 0) or (len(x) != 0 and len(y) == 0):
-            raise CoseInvalidKey("Missing public coordinate X/Y")
-
         if crv is not None:
             self.crv = crv
         else:
             raise CoseInvalidKey("COSE curve cannot be None")
+
+        if not x and not y and not d:
+            raise CoseInvalidKey("Either the public values or the private value must be specified")
+
+        if not d and not x:
+            raise CoseInvalidKey("Missing public coordinate X")
+
+        if d:
+            public_nums = ec.derive_private_key(int.from_bytes(d, byteorder="big"),
+                                                curve=self.crv.curve_obj()).public_key().public_numbers()
+            if x:
+                assert x == public_nums.x.to_bytes(self.crv.size, 'big')
+            else:
+                x = public_nums.x.to_bytes(self.crv.size, 'big')
+
+            if y:
+                assert y == public_nums.y.to_bytes(self.crv.size, 'big')
+            else:
+                y = public_nums.y.to_bytes(self.crv.size, 'big')
+
+        if x and not y:
+            # try to derive y from x
+            key = ec.EllipticCurvePublicKey.from_encoded_point(self.crv.curve_obj(),
+                                                               # don't care which of the two possible Y values we get
+                                                               b'\x03' +
+                                                               x  # or [::-1]?
+                                                               )
+            # Just to check the endianness of the conversions -- if we get the
+            # right X back out, then the X and Y are consistent, and anyway the
+            # crypto backend will check whether the point is on the curve
+            assert x == key.public_numbers().x.to_bytes(self.crv.size, 'big')
+            y = key.public_numbers().y.to_bytes(self.crv.size, 'big')
 
         if x != b'':
             self.x = x
@@ -109,11 +142,11 @@ class EC2Key(CoseKey):
 
     @crv.setter
     def crv(self, crv: Union[Type['CoseCurve'], int, str]):
-        supported_curves = {P256, P384, P521, SECP256K1}
-        if not self._supported_by_key_type(crv, supported_curves):
-            raise CoseIllegalCurve(f"Invalid COSE curve {crv} for key type {EC2Key.__name__}")
+        crv = EC2KpCurve.value_parser(crv)
+        if crv.key_type != KtyEC2:
+            raise CoseUnsupportedCurve(f"Invalid COSE curve {crv} for key type {EC2Key.__name__}")
         else:
-            self.store[EC2KpCurve] = CoseCurve.from_id(crv)
+            self.store[EC2KpCurve] = crv
 
     @property
     def x(self) -> bytes:
@@ -164,7 +197,7 @@ class EC2Key(CoseKey):
         return CoseKey.key_ops.fget(self)
 
     @key_ops.setter
-    def key_ops(self, new_key_ops: List[Type['KEYOPS']]) -> None:
+    def key_ops(self, new_key_ops: List[Union[Type['KEYOPS'], str, int]]) -> None:
         supported = {SignOp, VerifyOp, DeriveKeyOp, DeriveBitsOp}
         for ops in new_key_ops:
             if not self._supported_by_key_type(ops, supported):
@@ -172,8 +205,8 @@ class EC2Key(CoseKey):
             else:
                 CoseKey.key_ops.fset(self, new_key_ops)
 
-    @staticmethod
-    def generate_key(crv: Union[Type['CoseCurve'], str, int], optional_params: dict = None) -> 'EC2Key':
+    @classmethod
+    def generate_key(cls, crv: Union[Type['CoseCurve'], str, int], optional_params: dict = None) -> 'EC2Key':
         """
         Generate a random EC2Key COSE key object.
 
@@ -184,29 +217,21 @@ class EC2Key(CoseKey):
         :return: An COSE `EC2Key` key.
         """
 
-        if type(crv) == str or type(crv) == int:
-            crv = CoseCurve.from_id(crv)
+        crv = EC2KpCurve.value_parser(crv)
 
-        if crv == P256:
-            curve_obj = SECP256R1()
-        elif crv == P384:
-            curve_obj = SECP384R1()
-        elif crv == P521:
-            curve_obj = SECP521R1()
-        else:
-            raise CoseIllegalCurve(f'Illegal COSE curve: {crv}')
+        if crv.key_type != KtyEC2:
+            raise CoseUnsupportedCurve(f'Unsupported COSE curve: {crv}')
 
-        private_key = ec.generate_private_key(curve_obj, backend=default_backend())
+        private_key = ec.generate_private_key(crv.curve_obj, backend=default_backend())
         d_value = private_key.private_numbers().private_value
         x_coor = private_key.public_key().public_numbers().x
         y_coor = private_key.public_key().public_numbers().y
 
-        return EC2Key(
-            crv=crv,
-            d=d_value.to_bytes((d_value.bit_length() + 7) // 8, byteorder="big"),
-            x=x_coor.to_bytes((x_coor.bit_length() + 7) // 8, byteorder="big"),
-            y=y_coor.to_bytes((y_coor.bit_length() + 7) // 8, byteorder="big"),
-            optional_params=optional_params)
+        return EC2Key(crv=crv,
+                      d=d_value.to_bytes(crv.size, "big"),
+                      x=x_coor.to_bytes(crv.size, "big"),
+                      y=y_coor.to_bytes(crv.size, "big"),
+                      optional_params=optional_params)
 
     def __delitem__(self, key):
         if self._key_transform(key) != KpKty and self._key_transform(key) != EC2KpCurve:
@@ -236,8 +261,6 @@ class EC2Key(CoseKey):
         hdr = f'<COSE_Key(EC2Key): {_key}>'
         return hdr
 
-
-EC2KpCurve.value_parser = CoseCurve.from_id
 
 EC2 = EC2Key
 

@@ -5,7 +5,7 @@ import pytest
 
 from cose.algorithms import EdDSA
 from cose.curves import Ed448, Ed25519, X448, X25519
-from cose.exceptions import CoseInvalidKey, CoseIllegalKeyType, CoseIllegalCurve, CoseException, CoseIllegalKeyOps
+from cose.exceptions import CoseInvalidKey, CoseIllegalKeyType, CoseUnsupportedCurve, CoseException, CoseIllegalKeyOps
 from cose.keys import OKPKey, CoseKey
 from cose.keys.keyops import SignOp, MacVerifyOp
 from cose.keys.keyparam import KpKty, OKPKpCurve, OKPKpX, OKPKpD, KpAlg, KpKeyOps
@@ -180,7 +180,7 @@ def test_key_set_curve():
 
     assert key.crv == X25519
 
-    with pytest.raises(CoseIllegalCurve) as excinfo:
+    with pytest.raises(CoseUnsupportedCurve) as excinfo:
         key.crv = 3  # P-521
 
     assert "Invalid COSE curve" in str(excinfo.value)
@@ -191,10 +191,10 @@ def test_key_set_curve():
 
 
 def test_set_curve_in_key():
-    with pytest.raises(CoseIllegalCurve) as excinfo:
+    with pytest.raises(CoseException) as excinfo:
         _ = OKPKey(crv='Ed25519', d=os.urandom(32))
 
-    assert "Invalid COSE curve" in str(excinfo)
+    assert "Unknown COSE attribute with value: [CoseCurve - Ed25519]" in str(excinfo)
 
     key = OKPKey(crv='ED25519', d=os.urandom(32))
     assert key.crv == Ed25519

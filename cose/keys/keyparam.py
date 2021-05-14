@@ -3,6 +3,7 @@ from abc import ABC
 from typing import TypeVar, Union, Type
 
 from cose.algorithms import CoseAlgorithm
+from cose.curves import CoseCurve
 from cose.keys.keyops import KeyOps
 from cose.keys.keytype import KTY
 from cose.utils import _CoseAttribute
@@ -225,6 +226,8 @@ class SymKpK(SymmetricKeyParam):
 KpKty.value_parser = KTY.from_id
 KpKeyOps.value_parser = KeyOps.from_id
 KpAlg.value_parser = CoseAlgorithm.from_id
+OKPKpCurve.value_parser = CoseCurve.from_id
+EC2KpCurve.value_parser = CoseCurve.from_id
 
 KPBASE = TypeVar('KPBASE', bound=KeyParam)
 EC2KP = TypeVar('EC2KP', bound=EC2KeyParam)
