@@ -1,19 +1,18 @@
-from typing import Optional, Type, Union, List
+from typing import Optional, Type, Union, List, TYPE_CHECKING
 
 from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-from cryptography.hazmat.primitives.asymmetric.ed448 import Ed448PrivateKey
-from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
-from cryptography.hazmat.primitives.asymmetric.x448 import X448PrivateKey
 from cryptography.hazmat.primitives.serialization import PrivateFormat, PublicFormat, Encoding
 
 from cose import utils
 from cose.exceptions import CoseUnsupportedCurve, CoseInvalidKey, CoseIllegalKeyType, CoseIllegalKeyOps
-from cose.exceptions import CoseIllegalCurve, CoseInvalidKey, CoseIllegalKeyType, CoseIllegalKeyOps
 from cose.keys.cosekey import CoseKey, KpKty
 from cose.keys.keyops import KEYOPS, SignOp, VerifyOp, DeriveBitsOp, DeriveKeyOp
 from cose.keys.keyparam import OKPKeyParam, OKPKpCurve, OKPKpX, OKPKpD, KeyParam
 from cose.keys.keytype import KtyOKP
+
+if TYPE_CHECKING:
+    from cose.keys.keyops import KEYOPS
+    from cose.curves import CoseCurve
 
 
 @CoseKey.record_kty(KtyOKP)
@@ -30,6 +29,7 @@ class OKPKey(CoseKey):
         """
         _optional_params = {}
 
+        # extract and remove items from dict, if not found return default value
         x = CoseKey._extract_from_dict(cose_key, OKPKpX)
         d = CoseKey._extract_from_dict(cose_key, OKPKpD)
         curve = CoseKey._extract_from_dict(cose_key, OKPKpCurve, None)
@@ -112,11 +112,11 @@ class OKPKey(CoseKey):
 
     @crv.setter
     def crv(self, crv: Union[Type['CoseCurve'], int, str]):
-        supported_curves = {X25519, X448, Ed25519, Ed448}
-        if not self._supported_by_key_type(crv, supported_curves):
-            raise CoseUnsupportedCurve(f"Invalid COSE curve {_crv} for key type {OKPKey.__name__}")
+        crv = OKPKpCurve.value_parser(crv)
+        if crv.key_type != KtyOKP:
+            raise CoseUnsupportedCurve(f"Invalid COSE curve {crv} for key type {OKPKey.__name__}")
         else:
-            self.store[OKPKpCurve] = CoseCurve.from_id(crv)
+            self.store[OKPKpCurve] = crv
 
     @property
     def x(self) -> bytes:
@@ -153,7 +153,7 @@ class OKPKey(CoseKey):
         return CoseKey.key_ops.fget(self)
 
     @key_ops.setter
-    def key_ops(self, new_key_ops: List[Type['KEYOPS']]) -> None:
+    def key_ops(self, new_key_ops: List[Union[Type['KEYOPS'], str, int]]) -> None:
         supported = {SignOp, VerifyOp, DeriveKeyOp, DeriveBitsOp}
         for ops in new_key_ops:
             if not self._supported_by_key_type(ops, supported):
@@ -173,24 +173,17 @@ class OKPKey(CoseKey):
         :returns: A COSE `OKPKey` key.
         """
 
-        if type(crv) == str or type(crv) == int:
-            crv = CoseCurve.from_id(crv)
+        crv = OKPKpCurve.value_parser(crv)
 
-        if crv == X25519:
+        if crv.key_type != KtyOKP:
             raise CoseUnsupportedCurve(f'Unsupported COSE curve: {crv}')
-        elif crv == Ed25519:
-            private_key = Ed25519PrivateKey.generate()
-        elif crv == Ed448:
-            private_key = Ed448PrivateKey.generate()
-        elif crv == X448:
-            private_key = X448PrivateKey.generate()
-        else:
-            raise CoseIllegalCurve(f"Curve must be of type {X25519}, {X448}, {Ed25519}, or {Ed448}")
 
         encoding = Encoding(serialization.Encoding.Raw)
         private_format = PrivateFormat(serialization.PrivateFormat.Raw)
         public_format = PublicFormat(serialization.PublicFormat.Raw)
         encryption = serialization.NoEncryption()
+
+        private_key = crv.curve_obj.generate()
 
         return OKPKey(
             crv=crv,
@@ -222,8 +215,6 @@ class OKPKey(CoseKey):
         hdr = f'<COSE_Key(OKPKey): {_key}>'
         return hdr
 
-
-OKPKpCurve.value_parser = CoseCurve.from_id
 
 OKP = OKPKey
 

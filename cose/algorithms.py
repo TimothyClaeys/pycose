@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Optional, TypeVar
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec, padding, rsa
-from cryptography.hazmat.primitives.asymmetric.ec import SECP256R1, SECP384R1, SECP521R1, ECDH
+from cryptography.hazmat.primitives.asymmetric.ec import ECDH
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
 from cryptography.hazmat.primitives.asymmetric.ed448 import Ed448PrivateKey, Ed448PublicKey
 from cryptography.hazmat.primitives.ciphers import modes, Cipher
@@ -20,8 +20,7 @@ from ecdsa.curves import Curve, NIST521p, NIST384p, NIST256p
 from ecdsa.ellipticcurve import Point
 from ecdsa.keys import SigningKey, VerifyingKey, BadSignatureError
 
-from cose import curves
-from cose.exceptions import CoseUnsupportedCurve, CoseException
+from cose.exceptions import CoseException
 from cose.headers import Algorithm
 from cose.utils import _CoseAttribute
 
@@ -288,21 +287,13 @@ class _EcdhHkdf(CoseAlgorithm, ABC):
 
     @classmethod
     def _ecdh(cls, curve: 'CoseCurve', private_key: 'EC2', public_key: 'EC2') -> bytes:
-        if curve == curves.P256():
-            curve_instance = SECP256R1()
-        elif curve == curves.P384():
-            curve_instance = SECP384R1()
-        elif curve == curves.P521():
-            curve_instance = SECP521R1()
-        else:
-            raise CoseUnsupportedCurve()
 
         d_value = int(hexlify(private_key.d), 16)
         x_value = int(hexlify(public_key.x), 16)
         y_value = int(hexlify(public_key.y), 16)
 
-        d = ec.derive_private_key(d_value, curve_instance, default_backend())
-        p = ec.EllipticCurvePublicNumbers(x_value, y_value, curve_instance)
+        d = ec.derive_private_key(d_value, curve.curve_obj(), default_backend())
+        p = ec.EllipticCurvePublicNumbers(x_value, y_value, curve.curve_obj())
         p = p.public_key(default_backend())
 
         shared_key = d.exchange(ECDH(), p)
