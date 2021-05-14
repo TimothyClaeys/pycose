@@ -13,11 +13,6 @@ COSE EC2 keys can be created using the :class:`~cose.keys.ec2.EC2Key` class or f
 dictionary. The following two examples shows how to create COSE EC2 keys using both methods. The keys are
 serialized and subsequently deserialized.
 
-.. warning::
-    The private keys in the following examples are not valid for the given curves. Since we are not using the COSE EC2
-    Keys in the examples for signing, verifying or key agreement, this is not a problem. If you wish to create a COSE
-    EC2 key with valid private and public values, you should use the :meth:`~cose.keys.ec2.EC2Key.generate_key` method.
-
 .. doctest::
     :pyversion: >= 3.6
 
@@ -26,17 +21,16 @@ serialized and subsequently deserialized.
     >>> from cose.keys import EC2Key, CoseKey
 
     >>> # get 32 random bytes as private key (potentially not a valid key for curve P_256)
-    >>> private_key = unhexlify(b'000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f')
+    >>> private_key = unhexlify(b'57c92077664146e876760c9520d054aa93c3afb04e306705db6090308507b4d3')
     >>> cose_key = EC2Key(crv='P_256', d=private_key, optional_params={'ALG': 'ES256'})
 
     >>> #encode/serialize key
     >>> serialized_key = cose_key.encode()
     >>> serialized_key
-    b'\xa4\x01\x02\x03& \x01#X \x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f'
-
+    b'\xa6\x01\x02\x03& \x01!X \xba\xc5\xb1\x1c\xad\x8f\x99\xf9\xc7+\x05\xcfK\x9e&\xd2D\xdc\x18\x9ftR(%Z!\x9a\x86\xd6\xa0\x9e\xff"X  \x13\x8b\xf8-\xc1\xb6\xd5b\xbe\x0f\xa5J\xb7\x80J:d\xb6\xd7,\xcf\xedko\xb6\xed(\xbb\xfc\x11~#X W\xc9 wfAF\xe8vv\x0c\x95 \xd0T\xaa\x93\xc3\xaf\xb0N0g\x05\xdb`\x900\x85\x07\xb4\xd3'
     >>> # deserialize key
     >>> CoseKey.decode(serialized_key)
-    <COSE_Key(EC2Key): {'EC2KpD': "b'\\x00\\x01\\x02\\x03\\x04' ... (32 B)", 'EC2KpCurve': 'P256', 'KpKty': 'KtyEC2', 'KpAlg': 'Es256'}>
+    <COSE_Key(EC2Key): {'EC2KpD': "b'W\\xc9 wf' ... (32 B)", 'EC2KpY': "b' \\x13\\x8b\\xf8-' ... (32 B)", 'EC2KpX': "b'\\xba\\xc5\\xb1\\x1c\\xad' ... (32 B)", 'EC2KpCurve': 'P256', 'KpKty': 'KtyEC2', 'KpAlg': 'Es256'}>
 
 
 .. doctest::
@@ -50,18 +44,18 @@ serialized and subsequently deserialized.
     ...     'KTY': 'EC2',
     ...     'CURVE': 'P_256',
     ...     'ALG': 'ES256',
-    ...     'D': unhexlify(b'000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f')}
+    ...     'D': unhexlify(b'57c92077664146e876760c9520d054aa93c3afb04e306705db6090308507b4d3')}
 
     >>> cose_key = CoseKey.from_dict(key_attribute_dict)
 
     >>> #encode/serialize key
     >>> serialized_key = cose_key.encode()
     >>> serialized_key
-    b'\xa4\x01\x02\x03& \x01#X \x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f'
+    b'\xa6\x01\x02\x03& \x01!X \xba\xc5\xb1\x1c\xad\x8f\x99\xf9\xc7+\x05\xcfK\x9e&\xd2D\xdc\x18\x9ftR(%Z!\x9a\x86\xd6\xa0\x9e\xff"X  \x13\x8b\xf8-\xc1\xb6\xd5b\xbe\x0f\xa5J\xb7\x80J:d\xb6\xd7,\xcf\xedko\xb6\xed(\xbb\xfc\x11~#X W\xc9 wfAF\xe8vv\x0c\x95 \xd0T\xaa\x93\xc3\xaf\xb0N0g\x05\xdb`\x900\x85\x07\xb4\xd3'
 
     >>> # deserialize key
     >>> CoseKey.decode(serialized_key)
-    <COSE_Key(EC2Key): {'EC2KpD': "b'\\x00\\x01\\x02\\x03\\x04' ... (32 B)", 'EC2KpCurve': 'P256', 'KpKty': 'KtyEC2', 'KpAlg': 'Es256'}>
+    <COSE_Key(EC2Key): {'EC2KpD': "b'W\\xc9 wf' ... (32 B)", 'EC2KpY': "b' \\x13\\x8b\\xf8-' ... (32 B)", 'EC2KpX': "b'\\xba\\xc5\\xb1\\x1c\\xad' ... (32 B)", 'EC2KpCurve': 'P256', 'KpKty': 'KtyEC2', 'KpAlg': 'Es256'}>
 
 Alternatively you can use the :meth:`~cose.keys.ec2.EC2Key.generate_key` method. It generates a random
 COSE EC2 Key for a given curve. Valid curves are :class:`~cose.curves.P256`, :class:`~cose.curves.P384`, and
@@ -122,7 +116,7 @@ corresponding python class.
     ...     'KTY': 'EC2',
     ...     'CURVE': 'P_256',
     ...     'ALG': 'ES256',
-    ...     'D': unhexlify(b'000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f')}
+    ...     'D': unhexlify(b'57c92077664146e876760c9520d054aa93c3afb04e306705db6090308507b4d3')}
 
     >>> cose_key1 = CoseKey.from_dict(key_attribute_dict1)
 
@@ -131,7 +125,7 @@ corresponding python class.
     ...     1: 2,
     ...     -1: 1,
     ...     3: -7,
-    ...     -4: unhexlify(b'000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f')}
+    ...     -4: unhexlify(b'57c92077664146e876760c9520d054aa93c3afb04e306705db6090308507b4d3')}
 
     >>> cose_key2 = CoseKey.from_dict(key_attribute_dict2)
 
@@ -140,7 +134,7 @@ corresponding python class.
     ...     KpKty: KtyEC2,
     ...     EC2KpCurve: P256,
     ...     KpAlg: Es256,
-    ...     EC2KpD: unhexlify(b'000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f')}
+    ...     EC2KpD: unhexlify(b'57c92077664146e876760c9520d054aa93c3afb04e306705db6090308507b4d3')}
 
     >>> cose_key3 = CoseKey.from_dict(key_attribute_dict3)
 
@@ -149,7 +143,7 @@ corresponding python class.
     ...     1: 'EC2',
     ...     EC2KpCurve: 1,
     ...     'ALG': Es256,
-    ...     EC2KpD: unhexlify(b'000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f')}
+    ...     EC2KpD: unhexlify(b'57c92077664146e876760c9520d054aa93c3afb04e306705db6090308507b4d3')}
 
     >>> cose_key4 = CoseKey.from_dict(key_attribute_dict4)
 

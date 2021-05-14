@@ -4,7 +4,7 @@ COSE Curves
 Overview
 --------
 
-All :class:`~cose.curves.CoseCurve` classes have a `fullname` and `identifier` attribute. The full list with COSE
+All :class:`~cose.curves.CoseCurve` classes have a `fullname`, `identifier`, `curve_obj`, `key_type`, and `size` attribute. The full list with COSE
 curves and their identifiers can be found at the IANA registry.
 
 .. doctest::
@@ -24,24 +24,3 @@ curves and their identifiers can be found at the IANA registry.
 
 API
 ---
-
-.. module:: cose.curves
-
-.. autoclass:: Reserved
-
-.. autoclass:: P256
-
-.. autoclass:: P384
-
-.. autoclass:: P521
-
-.. autoclass:: X25519
-
-.. autoclass:: X448
-
-.. autoclass:: Ed448
-
-.. autoclass:: Ed25519
-
-.. autoclass:: SECP256K1
-
