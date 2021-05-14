@@ -256,15 +256,15 @@ def test_dict_invalid_deletion():
 
 
 def test_set_curve_in_key():
-    with pytest.raises(CoseUnsupportedCurve) as excinfo:
+    with pytest.raises(CoseException) as excinfo:
         _ = EC2Key(crv='P257', d=os.urandom(32))
 
-    assert "Invalid COSE curve" in str(excinfo)
+    assert "Unknown COSE attribute with value: [CoseCurve - P257]" in str(excinfo)
 
-    with pytest.raises(CoseUnsupportedCurve) as excinfo:
+    with pytest.raises(CoseException) as excinfo:
         _ = EC2Key(crv='Ed25519', d=os.urandom(32))
 
-    assert "Invalid COSE curve" in str(excinfo)
+    assert "Unknown COSE attribute with value: [CoseCurve - Ed25519]" in str(excinfo)
 
     key = EC2Key(crv='P_256', d=os.urandom(32))
     assert key.crv == P256

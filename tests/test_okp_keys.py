@@ -191,10 +191,10 @@ def test_key_set_curve():
 
 
 def test_set_curve_in_key():
-    with pytest.raises(CoseUnsupportedCurve) as excinfo:
+    with pytest.raises(CoseException) as excinfo:
         _ = OKPKey(crv='Ed25519', d=os.urandom(32))
 
-    assert "Invalid COSE curve" in str(excinfo)
+    assert "Unknown COSE attribute with value: [CoseCurve - Ed25519]" in str(excinfo)
 
     key = OKPKey(crv='ED25519', d=os.urandom(32))
     assert key.crv == Ed25519
