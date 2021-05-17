@@ -4,7 +4,7 @@ import pytest
 
 from cose.algorithms import Es256
 from cose.keys.curves import P521, P384, P256
-from cose.exceptions import CoseInvalidKey, CoseIllegalKeyType, CoseException
+from cose.exceptions import CoseInvalidKey, CoseIllegalKeyType, CoseException, CoseUnsupportedCurve
 from cose.keys import EC2Key, CoseKey
 from cose.keys.keyops import SignOp
 from cose.keys.keyparam import KpKty, EC2KpCurve, EC2KpX, EC2KpY, EC2KpD, KpAlg, KpKeyOps
@@ -274,10 +274,10 @@ def test_set_curve_in_key():
 
     assert "Unknown COSE attribute with value: [CoseCurve - P257]" in str(excinfo)
 
-    with pytest.raises(CoseException) as excinfo:
+    with pytest.raises(CoseUnsupportedCurve) as excinfo:
         _ = EC2Key(crv='Ed25519', d=p256_d)
 
-    assert "Unknown COSE attribute with value: [CoseCurve - Ed25519]" in str(excinfo)
+    assert "Invalid COSE curve <class 'cose.keys.curves.Ed25519'> for key type EC2Key" in str(excinfo)
 
     key = EC2Key(crv='P_256', d=p256_d)
     assert key.crv == P256
@@ -288,3 +288,5 @@ def test_unknown_key_attribute():
 
     assert "subject_name" in key
     assert key['subject_name'] == "signing key"
+
+

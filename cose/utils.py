@@ -20,7 +20,7 @@ class _CoseAttribute(ABC):
     def register_attribute(cls) -> Callable:
         def decorator(the_class: '_CoseAttribute'):
             cls.get_registered_classes()[the_class.identifier] = the_class
-            cls.get_registered_classes()[the_class.fullname] = the_class
+            cls.get_registered_classes()[the_class.fullname.upper()] = the_class
             return the_class
 
         return decorator
@@ -29,7 +29,7 @@ class _CoseAttribute(ABC):
     def from_id(cls, attribute: Any, allow_unknown_attributes: bool = False) -> Any:
         if isinstance(attribute, int) and attribute in cls.get_registered_classes():
             return cls.get_registered_classes()[attribute]
-        elif isinstance(attribute, str) and attribute in cls.get_registered_classes():
+        elif isinstance(attribute, str) and attribute.upper() in cls.get_registered_classes():
             return cls.get_registered_classes()[attribute.upper()]
         elif isinstance(attribute, list):
             translated_list = [cls.from_id(attr) for attr in attribute]

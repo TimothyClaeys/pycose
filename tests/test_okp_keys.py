@@ -190,11 +190,5 @@ def test_key_set_curve():
     assert key.crv == X448
 
 
-def test_set_curve_in_key():
-    with pytest.raises(CoseException) as excinfo:
-        _ = OKPKey(crv='Ed25519', d=os.urandom(32))
-
-    assert "Unknown COSE attribute with value: [CoseCurve - Ed25519]" in str(excinfo)
-
-    key = OKPKey(crv='ED25519', d=os.urandom(32))
-    assert key.crv == Ed25519
+def test_key_generation_with_optional_parameters():
+    key = OKPKey.generate_key(crv='ED25519', optional_params={'KpKid': 4})
