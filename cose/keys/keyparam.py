@@ -3,14 +3,14 @@ from abc import ABC
 from typing import TypeVar, Union, Type
 
 from cose.algorithms import CoseAlgorithm
-from cose.curves import CoseCurve
+from cose.keys.curves import CoseCurve
 from cose.keys.keyops import KeyOps
 from cose.keys.keytype import KTY
 from cose.utils import _CoseAttribute
 
 
 #########################################
-# Base Key Parameters
+# Common Key Parameters
 #########################################
 
 class KeyParam(_CoseAttribute, ABC):

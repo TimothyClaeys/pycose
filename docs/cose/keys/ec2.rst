@@ -58,8 +58,8 @@ serialized and subsequently deserialized.
     <COSE_Key(EC2Key): {'EC2KpD': "b'W\\xc9 wf' ... (32 B)", 'EC2KpY': "b' \\x13\\x8b\\xf8-' ... (32 B)", 'EC2KpX': "b'\\xba\\xc5\\xb1\\x1c\\xad' ... (32 B)", 'EC2KpCurve': 'P256', 'KpKty': 'KtyEC2', 'KpAlg': 'Es256'}>
 
 Alternatively you can use the :meth:`~cose.keys.ec2.EC2Key.generate_key` method. It generates a random
-COSE EC2 Key for a given curve. Valid curves are :class:`~cose.curves.P256`, :class:`~cose.curves.P384`, and
-:class:`~cose.curves.P521`.
+COSE EC2 Key for a given curve. Valid curves are :class:`~cose.keys.curves.P256`, :class:`~cose.keys.curves.P384`, and
+:class:`~cose.keys.curves.P521`.
 
 .. doctest::
     :pyversion: >= 3.6
@@ -108,7 +108,7 @@ corresponding python class.
     >>> from cose.keys import EC2Key, CoseKey
     >>> from cose.keys.keytype import KtyEC2
     >>> from cose.algorithms import Es256
-    >>> from cose.curves import P256
+    >>> from cose.keys.curves import P256
     >>> from cose.keys.keyparam import KpKty, KpAlg, EC2KpD, EC2KpCurve
 
     >>> # key attribute dict using string representations

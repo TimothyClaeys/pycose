@@ -53,7 +53,6 @@ Table of Contents
    cose/messages/index.rst
    cose/keys/index.rst
    cose/algorithms.rst
-   cose/curves.rst
 
 .. toctree::
    :maxdepth: 2

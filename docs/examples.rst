@@ -71,7 +71,7 @@ The example creates a COSE Sign1 message. The message is signed with EdDSA.
     >>> from cose.keys import CoseKey
     >>> from cose.headers import Algorithm, KID
     >>> from cose.algorithms import EdDSA
-    >>> from cose.curves import Ed25519
+    >>> from cose.keys.curves import Ed25519
     >>> from cose.keys.keyparam import KpKty, OKPKpD, OKPKpX, KpKeyOps, OKPKpCurve
     >>> from cose.keys.keytype import KtyOKP
     >>> from cose.keys.keyops import SignOp, VerifyOp
@@ -189,7 +189,7 @@ direct key agreement method. The sender is using an ephemeral key.
     >>> from cose.algorithms import EcdhEsHKDF256, A128GCM
     >>> from cose.keys.keyparam import KpKty, EC2KpD, EC2KpX, KpKeyOps, EC2KpCurve, EC2KpY, KpKid
     >>> from cose.keys.keytype import KtyEC2
-    >>> from cose.curves import P256
+    >>> from cose.keys.curves import P256
     >>> from cose.keys.keyops import DeriveKeyOp
 
     >>> # ephemeral sender key is generated

@@ -29,7 +29,7 @@ The :class:`~cose.keys.cosekey.CoseKey` class can be used to decode serialized C
 
     # Check the curve type of this key
     >>> cosekey.crv
-    <class 'cose.curves.Ed25519'>
+    <class 'cose.keys.curves.Ed25519'>
 
     # Check the private bytes of this key
     >>> cosekey.d

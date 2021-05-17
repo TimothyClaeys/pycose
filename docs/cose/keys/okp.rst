@@ -59,8 +59,8 @@ serialized and subsequently deserialized.
     <COSE_Key(OKPKey): {'OKPKpD': "b'\\x00\\x01\\x02\\x03\\x04' ... (32 B)", 'OKPKpCurve': 'Ed25519', 'KpKty': 'KtyOKP', 'KpAlg': 'EdDSA'}>
 
 Alternatively you can use the :meth:`~cose.keys.okp.OKPKey.generate_key` method. It generates a random
-COSE OKP Key for a given curve. Valid curves are :class:`~cose.curves.X22519`, :class:`~cose.curves.X448`,
-:class:`~cose.curves.ED25519`, and :class:`~cose.curves.ED448`.
+COSE OKP Key for a given curve. Valid curves are :class:`~cose.keys.curves.X22519`, :class:`~cose.keys.curves.X448`,
+:class:`~cose.keys.curves.ED25519`, and :class:`~cose.keys.curves.ED448`.
 
 .. doctest::
     :pyversion: >= 3.6
@@ -109,7 +109,7 @@ corresponding python class.
     >>> from cose.keys import OKPKey, CoseKey
     >>> from cose.keys.keytype import KtyOKP
     >>> from cose.algorithms import EdDSA
-    >>> from cose.curves import Ed25519
+    >>> from cose.keys.curves import Ed25519
     >>> from cose.keys.keyparam import KpKty, KpAlg, OKPKpD, OKPKpCurve
 
     >>> # key attribute dict using string representations

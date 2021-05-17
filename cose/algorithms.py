@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from cose.keys.ec2 import EC2
     from cose.keys.okp import OKP
     from cose.keys.rsa import RSA
-    from cose.curves import CoseCurve
+    from cose.keys.curves import CoseCurve
     from cose.messages.context import CoseKDFContext
 
 

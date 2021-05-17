@@ -1,6 +1,6 @@
 from binascii import unhexlify, hexlify
 
-from cose.curves import Ed25519
+from cose.keys.curves import Ed25519
 from cose.messages import Enc0Message, CoseMessage, Sign1Message, Mac0Message
 from cose.keys import CoseKey
 from cose.algorithms import A128GCM, EdDSA, HMAC256

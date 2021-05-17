@@ -1,10 +1,9 @@
-import os
 from binascii import unhexlify
 
 import pytest
 
 from cose.algorithms import Es256
-from cose.curves import P521, P384, P256
+from cose.keys.curves import P521, P384, P256
 from cose.exceptions import CoseInvalidKey, CoseIllegalKeyType, CoseException
 from cose.keys import EC2Key, CoseKey
 from cose.keys.keyops import SignOp

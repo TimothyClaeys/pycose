@@ -9,3 +9,5 @@ COSE Keys
    okp.rst
    symmetric.rst
    keyparam.rst
+   curves.rst
+   keytype.rst

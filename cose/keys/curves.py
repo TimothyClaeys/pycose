@@ -55,15 +55,15 @@ class Reserved(CoseCurve):
     Reserved
 
     Attributes:
-        identifier     0
+        **identifier**     *0*
 
-        fullname       RESERVED
+        **fullname**       *RESERVED*
 
-        curve_obj      None
+        **curve_obj**      *None*
 
-        key_type       None
+        **key_type**       *None*
 
-        size           0
+        **size**           *0*
     """
 
     identifier = 0
@@ -79,15 +79,15 @@ class P256(CoseCurve):
     Curve NIST P-256
 
     Attributes:
-        identifier     1
+        **identifier**     *1*
 
-        fullname       P_256
+        **fullname**       *P_256*
 
-        curve_obj      :class:'~cryptography.hazmat.primitives.asymmetric.ec.SECP256R1'
+        **curve_obj**      *SECP256R1 from the cryptography package*
 
-        key_type       :class:'~cose.keys.keytype.KtyEC2'
+        **key_type**       *KtyEC2*
 
-        size           32
+        **size**           *32*
     """
 
     identifier = 1
@@ -103,15 +103,15 @@ class P384(CoseCurve):
     Curve NIST P-384
 
     Attributes:
-        identifier     2
+        **identifier**     *2*
 
-        fullname       P_384
+        **fullname**       *P_384*
 
-        curve_obj      :class:'~cryptography.hazmat.primitives.asymmetric.ec.SECP384R1'
+        **curve_obj**      *SECP384R1 from the cryptography package*
 
-        key_type       :class:'~cose.keys.keytype.KtyEC2'
+        **key_type**       *KtyEC2*
 
-        size           48
+        **size**           *48*
     """
 
     identifier = 2
@@ -127,15 +127,15 @@ class P521(CoseCurve):
     Curve NIST P-521
 
     Attributes:
-        identifier     3
+        **identifier**     *3*
 
-        fullname       P_521
+        **fullname**       *P_521*
 
-        curve_obj      :class:'~cryptography.hazmat.primitives.asymmetric.ec.SECP521R1'
+        **curve_obj**      *SECP521R1 from the cryptography package*
 
-        key_type       :class:'~cose.keys.keytype.KtyEC2'
+        **key_type**       *KtyEC2*
 
-        size           66
+        **size**           *66*
     """
 
     identifier = 3
@@ -151,15 +151,15 @@ class X25519(CoseCurve):
     Curve25519 for the Diffie-Hellman function (X25519)
 
     Attributes:
-        identifier     4
+        **identifier**     *4*
 
-        fullname       X25519
+        **fullname**       *X25519*
 
-        curve_obj      :class:'~cryptography.hazmat.primitives.asymmetric.x25519'
+        **curve_obj**      *X25519PrivateKey from the cryptography package*
 
-        key_type       :class:'~cose.keys.keytype.KtyOKP'
+        **key_type**       *KtyOKP*
 
-        size           32
+        **size**           *32*
     """
 
     identifier = 4
@@ -175,15 +175,15 @@ class X448(CoseCurve):
     Curve448 for the Diffie-Hellman function (X448)
 
     Attributes:
-        identifier     5
+        **identifier**     *5*
 
-        fullname       X448
+        **fullname**       *X448*
 
-        curve_obj      :class:'~cryptography.hazmat.primitives.asymmetric.x448'
+        **curve_obj**      *X25519PrivateKey from the cryptography package*
 
-        key_type       :class:'~cose.keys.keytype.KtyOKP'
+        **key_type**       *KtyOKP*
 
-        size           57
+        **size**           *57*
     """
 
     identifier = 5
@@ -199,15 +199,15 @@ class Ed25519(CoseCurve):
     Curve25519 for the EdDSA algorithm (Ed25519)
 
     Attributes:
-        identifier     6
+        **identifier**     *6*
 
-        fullname       ED25519
+        **fullname**       *ED25519*
 
-        curve_obj      :class:'~cryptography.hazmat.primitives.asymmetric.ed25519'
+        **curve_obj**      *Ed25519PrivateKey from the cryptography package*
 
-        key_type       :class:'~cose.keys.keytype.KtyOKP'
+        **key_type**       *KtyOKP*
 
-        size           32
+        **size**           *32*
     """
 
     identifier = 6
@@ -223,15 +223,15 @@ class Ed448(CoseCurve):
     Curve448 for the EdDSA algorithm (Ed448)
 
     Attributes:
-        identifier     7
+        **identifier**     *7*
 
-        fullname       ED448
+        **fullname**       *ED448*
 
-        curve_obj      :class:'~cryptography.hazmat.primitives.asymmetric.ed448'
+        **curve_obj**      *Ed448PrivateKey from the cryptography package*
 
-        key_type       :class:'~cose.keys.keytype.KtyOKP'
+        **key_type**       *KtyOKP*
 
-        size           57
+        **size**           *57*
     """
 
     identifier = 7
@@ -247,15 +247,15 @@ class SECP256K1(CoseCurve):
     Curve secp256k1
 
     Attributes:
-        identifier     8
+        **identifier**     *8*
 
-        fullname       SECP256K1
+        **fullname**       *SECP256K1*
 
-        curve_obj      :class:'~cryptography.hazmat.primitives.asymmetric.ec.SECP256K1'
+        **curve_obj**      *SECP256K1 from the cryptography package*
 
-        key_type       :class:'~cose.keys.keytype.KtyEC2'
+        **key_type**       *KtyEC2*
 
-        size           32
+        **size**           *32*
     """
 
     identifier = 8

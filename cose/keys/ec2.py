@@ -12,7 +12,7 @@ from cose.keys.keytype import KtyEC2
 
 if TYPE_CHECKING:
     from cose.keys.keyops import KEYOPS
-    from cose.curves import CoseCurve
+    from cose.keys.curves import CoseCurve
 
 
 @CoseKey.record_kty(KtyEC2)

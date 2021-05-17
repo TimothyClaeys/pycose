@@ -9,7 +9,7 @@ import cbor2
 
 from cose.keys import cosekey
 from cose.algorithms import CoseAlgorithm
-from cose.curves import CoseCurve
+from cose.keys.curves import CoseCurve
 from cose.headers import CoseHeaderAttribute, IV, EphemeralKey, Algorithm, KID, PartyUNonce, StaticKey, ContentType
 from cose.keys.keyparam import KpKty, SymKpK, OKPKpCurve, EC2KpCurve, KpKid, KpAlg, OKPKpD, EC2KpY, OKPKpX, EC2KpX, \
     EC2KpD, RSAKpE, RSAKpN, RSAKpD, RSAKpP, RSAKpQ, RSAKpDP, RSAKpDQ, RSAKpQInv
