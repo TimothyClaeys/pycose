@@ -195,13 +195,13 @@ class CoseKey(MutableMapping, ABC):
     def kid(self) -> bytes:
         """ Returns the value of the :class:`~cose.keys.keyparam.KpKid` key parameter """
 
-        return self.store.get(KpKid, b'')
+        return self.store.get('KpKid', b'')
 
     @kid.setter
     def kid(self, kid: bytes) -> None:
         if type(kid) is not bytes:
             raise TypeError(f"kid must be of type 'bytes'")
-        self.store[KpKid] = kid
+        self.store['KpKid'] = kid
 
     @property
     def key_ops(self) -> List[Type['KEYOPS']]:
