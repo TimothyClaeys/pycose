@@ -32,7 +32,8 @@ class Enc0Message(enccommon.EncCommon):
                  uhdr: Optional[dict] = None,
                  payload: bytes = b'',
                  external_aad: bytes = b'',
-                 key: Optional['SK'] = None):
+                 key: Optional['SK'] = None,
+                 allow_unknown_attributes: bool = True):
 
         """
         Create a COSE_encrypt0 message.
@@ -51,7 +52,7 @@ class Enc0Message(enccommon.EncCommon):
         if uhdr is None:
             uhdr = {}
 
-        super().__init__(phdr, uhdr, payload, external_aad, key)
+        super().__init__(phdr, uhdr, payload, external_aad, key, allow_unknown_attributes=allow_unknown_attributes)
 
     def encode(self, tag: bool = True, encrypt: bool = True, *args, **kwargs) -> CBOR:
         """

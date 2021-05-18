@@ -38,7 +38,8 @@ class EncMessage(enccommon.EncCommon):
                  payload: bytes = b'',
                  external_aad: bytes = b'',
                  key: Optional['SK'] = None,
-                 recipients: Optional[List['Recipient']] = None):
+                 recipients: Optional[List['Recipient']] = None,
+                 allow_unknown_attributes: bool = True):
         """
         Create a COSE_Encrypt message.
 
@@ -54,7 +55,7 @@ class EncMessage(enccommon.EncCommon):
         if uhdr is None:
             uhdr = {}
 
-        super().__init__(phdr, uhdr, payload, external_aad, key)
+        super().__init__(phdr, uhdr, payload, external_aad, key, allow_unknown_attributes=allow_unknown_attributes)
 
         self._recipients = []
         self.recipients = recipients

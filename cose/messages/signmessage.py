@@ -42,14 +42,16 @@ class _SignMessage(CoseMessage, metaclass=abc.ABCMeta):
                  phdr: Optional[dict] = None,
                  uhdr: Optional[dict] = None,
                  payload: bytes = b'',
-                 signers: Optional[List['Signer']] = None):
+                 signers: Optional[List['Signer']] = None,
+                 allow_unknown_attributes: bool = True):
 
         if phdr is None:
             phdr = {}
         if uhdr is None:
             uhdr = {}
 
-        super(_SignMessage, self).__init__(phdr, uhdr, payload, external_aad=b'', key=None)
+        super(_SignMessage, self).__init__(phdr, uhdr, payload, external_aad=b'', key=None,
+                                           allow_unknown_attributes=allow_unknown_attributes)
 
         if signers is None:
             self._signers = list()
@@ -94,6 +96,3 @@ class _SignMessage(CoseMessage, metaclass=abc.ABCMeta):
 class SignMessage(_SignMessage):
     cbor_tag = 98
     context = "Signature"
-
-
-

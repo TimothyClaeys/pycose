@@ -47,7 +47,7 @@ class CoseRecipient(CoseMessage, metaclass=abc.ABCMeta):
 
     @classmethod
     def record_rc(cls, supported_algorithms: List[Type['CoseAlgorithm']]):
-        """ Decorator to record all recipient class dynamically. """
+        """ Decorator to record all recipient classes dynamically. """
 
         def decorator(the_class):
             if not issubclass(the_class, CoseRecipient):
@@ -105,7 +105,8 @@ class CoseRecipient(CoseMessage, metaclass=abc.ABCMeta):
                  payload: bytes = b'',
                  external_aad: bytes = b'',
                  key: Optional['SK'] = None,
-                 recipients: Optional[List['Recipient']] = None):
+                 recipients: Optional[List['Recipient']] = None,
+                 allow_unknown_attributes: bool = True):
         """
         Create a COSE_Encrypt message.
 
@@ -121,7 +122,7 @@ class CoseRecipient(CoseMessage, metaclass=abc.ABCMeta):
         if uhdr is None:
             uhdr = {}
 
-        super().__init__(phdr, uhdr, payload, external_aad, key)
+        super().__init__(phdr, uhdr, payload, external_aad, key, allow_unknown_attributes=allow_unknown_attributes)
 
         self._context = ''
         self._recipients = []

@@ -33,13 +33,14 @@ class Mac0Message(maccommon.MacCommon):
                  uhdr: Optional[dict] = None,
                  payload: bytes = b'',
                  external_aad: bytes = b'',
-                 key: Optional['SK'] = None):
+                 key: Optional['SK'] = None,
+                 allow_unknown_attributes: bool = True):
         if phdr is None:
             phdr = {}
         if uhdr is None:
             uhdr = {}
 
-        super().__init__(phdr, uhdr, payload, external_aad, key)
+        super().__init__(phdr, uhdr, payload, external_aad, key, allow_unknown_attributes=allow_unknown_attributes)
 
     def encode(self, tag: bool = True, mac: bool = True, *args, **kwargs) -> bytes:
         """ Encode and protect the COSE_Mac0 message. """

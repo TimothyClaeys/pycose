@@ -48,13 +48,14 @@ class MacMessage(maccommon.MacCommon):
                  payload: bytes = b'',
                  external_aad: bytes = b'',
                  key: Optional['SK'] = None,
-                 recipients: Optional[List[CoseRecipient]] = None):
+                 recipients: Optional[List[CoseRecipient]] = None,
+                 allow_unknown_attributes: bool = True):
         if phdr is None:
             phdr = {}
         if uhdr is None:
             uhdr = {}
 
-        super().__init__(phdr, uhdr, payload, external_aad, key)
+        super().__init__(phdr, uhdr, payload, external_aad, key, allow_unknown_attributes=allow_unknown_attributes)
 
         self._recipients = []
         self.recipients = recipients
