@@ -98,7 +98,8 @@ class EC2Key(CoseKey):
 
         if d:
             public_nums = ec.derive_private_key(int.from_bytes(d, byteorder="big"),
-                                                curve=self.crv.curve_obj()).public_key().public_numbers()
+                                                curve=self.crv.curve_obj(),
+                                                backend=default_backend()).public_key().public_numbers()
             if x:
                 assert x == public_nums.x.to_bytes(self.crv.size, 'big')
             else:

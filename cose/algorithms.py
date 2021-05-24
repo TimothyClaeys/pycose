@@ -138,7 +138,7 @@ class _RsaOaep(_Rsa, ABC):
         pad = cls.get_pad_func(cls.get_hash_func())
 
         public_nums = rsa.RSAPublicNumbers(e=int.from_bytes(key.e, 'big'), n=int.from_bytes(key.n, 'big'))
-        pk = public_nums.public_key()
+        pk = public_nums.public_key(default_backend())
 
         return pk.encrypt(data, pad)
 
@@ -304,7 +304,8 @@ class _EcdhHkdf(CoseAlgorithm, ABC):
         shared_secret = cls._ecdh(curve, private_key, public_key)
 
         kdf = HKDF(algorithm=cls.get_hash_func(), length=context.supp_pub_info.key_data_length, salt=None,
-                   info=context.encode())
+                   info=context.encode(),
+                   backend=default_backend())
         return kdf.derive(shared_secret)
 
 
