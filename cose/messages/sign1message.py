@@ -30,13 +30,14 @@ class Sign1Message(SignCommon):
                  uhdr: Optional[dict] = None,
                  payload: bytes = b'',
                  external_aad: bytes = b'',
-                 key: Optional[Union['EC2', 'OKP', 'RSA']] = None):
+                 key: Optional[Union['EC2', 'OKP', 'RSA']] = None,
+                 allow_unknown_attributes: bool = True):
         if phdr is None:
             phdr = {}
         if uhdr is None:
             uhdr = {}
 
-        super().__init__(phdr, uhdr, payload, external_aad, key)
+        super().__init__(phdr, uhdr, payload, external_aad, key, allow_unknown_attributes=allow_unknown_attributes)
 
         self._signature = b''
 
@@ -78,5 +79,3 @@ class Sign1Message(SignCommon):
 
         return f'<COSE_Sign1: [{phdr}, {uhdr}, {utils.truncate(self._payload)}, ' \
                f'{utils.truncate(self._signature)}]>'
-
-

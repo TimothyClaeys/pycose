@@ -289,4 +289,10 @@ def test_unknown_key_attribute():
     assert "subject_name" in key
     assert key['subject_name'] == "signing key"
 
+    k = key.encode()
+
+    decoded_key = CoseKey.decode(k)
+
+    assert decoded_key['subject_name'] == "signing key"
+
 
