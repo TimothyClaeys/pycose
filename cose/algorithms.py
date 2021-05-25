@@ -99,7 +99,7 @@ class _Rsa(CoseAlgorithm, ABC):
                                              iqmp=int.from_bytes(key.qinv, 'big'),
                                              public_numbers=public_nums)
 
-        sk = private_nums.private_key(default_backend())
+        sk = private_nums.private_key(backend=default_backend())
 
         return sk.sign(data, pad, hash_cls())
 
@@ -109,7 +109,7 @@ class _Rsa(CoseAlgorithm, ABC):
         pad = cls.get_pad_func(hash_cls)
 
         public_nums = rsa.RSAPublicNumbers(e=int.from_bytes(key.e, 'big'), n=int.from_bytes(key.n, 'big'))
-        pk = public_nums.public_key(default_backend())
+        pk = public_nums.public_key(backend=default_backend())
 
         try:
             pk.verify(signature, data, pad, hash_cls())
@@ -138,7 +138,7 @@ class _RsaOaep(_Rsa, ABC):
         pad = cls.get_pad_func(cls.get_hash_func())
 
         public_nums = rsa.RSAPublicNumbers(e=int.from_bytes(key.e, 'big'), n=int.from_bytes(key.n, 'big'))
-        pk = public_nums.public_key(default_backend())
+        pk = public_nums.public_key(backend=default_backend())
 
         return pk.encrypt(data, pad)
 
@@ -155,7 +155,7 @@ class _RsaOaep(_Rsa, ABC):
                                              iqmp=int.from_bytes(key.qinv, 'big'),
                                              public_numbers=public_nums)
 
-        sk = private_nums.private_key(default_backend())
+        sk = private_nums.private_key(backend=default_backend())
 
         return sk.decrypt(data, pad)
 
@@ -205,7 +205,9 @@ class _AesMac(CoseAlgorithm, ABC):
 
     @classmethod
     def compute_tag(cls, key: 'SK', data: bytes):
-        encryptor = Cipher(AES(key.k), modes.CBC(unhexlify(b''.join([b'00'] * 16))), default_backend()).encryptor()
+        encryptor = Cipher(AES(key.k),
+                           modes.CBC(unhexlify(b''.join([b'00'] * 16))),
+                           backend=default_backend()).encryptor()
 
         while len(data) % 16 != 0:
             data += unhexlify(b"00")
@@ -287,14 +289,13 @@ class _EcdhHkdf(CoseAlgorithm, ABC):
 
     @classmethod
     def _ecdh(cls, curve: 'CoseCurve', private_key: 'EC2', public_key: 'EC2') -> bytes:
-
         d_value = int(hexlify(private_key.d), 16)
         x_value = int(hexlify(public_key.x), 16)
         y_value = int(hexlify(public_key.y), 16)
 
-        d = ec.derive_private_key(d_value, curve.curve_obj(), default_backend())
+        d = ec.derive_private_key(d_value, curve.curve_obj(), backend=default_backend())
         p = ec.EllipticCurvePublicNumbers(x_value, y_value, curve.curve_obj())
-        p = p.public_key(default_backend())
+        p = p.public_key(backend=default_backend())
 
         shared_key = d.exchange(ECDH(), p)
         return shared_key
@@ -751,7 +752,7 @@ class EcdhEsA128KW(_EcdhHkdf):
     @classmethod
     def get_key_wrap_func(cls):
         """ Returns a key wrap function used with this algorithm """
-        return A128KW
+        return A128KW()
 
     @classmethod
     def get_key_length(cls) -> int:
