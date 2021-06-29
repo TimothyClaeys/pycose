@@ -24,8 +24,8 @@ class Enc0Message(enccommon.EncCommon):
     cbor_tag = 16
 
     @classmethod
-    def from_cose_obj(cls, cose_obj: list, *args, **kwargs) -> 'Enc0Message':
-        return super().from_cose_obj(cose_obj)
+    def from_cose_obj(cls, cose_obj: list, allow_unknown_attributes: bool) -> 'Enc0Message':
+        return super().from_cose_obj(cose_obj, allow_unknown_attributes)
 
     def __init__(self,
                  phdr: Optional[dict] = None,
@@ -33,7 +33,8 @@ class Enc0Message(enccommon.EncCommon):
                  payload: bytes = b'',
                  external_aad: bytes = b'',
                  key: Optional['SK'] = None,
-                 allow_unknown_attributes: bool = True):
+                 *args,
+                 **kwargs):
 
         """
         Create a COSE_encrypt0 message.
@@ -52,7 +53,7 @@ class Enc0Message(enccommon.EncCommon):
         if uhdr is None:
             uhdr = {}
 
-        super().__init__(phdr, uhdr, payload, external_aad, key, allow_unknown_attributes=allow_unknown_attributes)
+        super().__init__(phdr, uhdr, payload, external_aad, key, *args, **kwargs)
 
     def encode(self, tag: bool = True, encrypt: bool = True, *args, **kwargs) -> CBOR:
         """

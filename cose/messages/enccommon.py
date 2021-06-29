@@ -27,8 +27,9 @@ class EncCommon(CoseMessage, metaclass=abc.ABCMeta):
                  payload: bytes = b'',
                  external_aad: bytes = b'',
                  key: Optional['SK'] = None,
-                 allow_unknown_attributes: bool = True):
-        super().__init__(phdr, uhdr, payload, external_aad, key, allow_unknown_attributes=allow_unknown_attributes)
+                 *args,
+                 **kwargs):
+        super().__init__(phdr, uhdr, payload, external_aad, key, *args, **kwargs)
 
     def decrypt(self, *args, **kwargs) -> bytes:
         """

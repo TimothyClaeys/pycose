@@ -23,11 +23,12 @@ class EncMessage(enccommon.EncCommon):
     cbor_tag = 96
 
     @classmethod
-    def from_cose_obj(cls, cose_obj: list, *args, **kwargs) -> 'EncMessage':
-        msg = super().from_cose_obj(cose_obj)
+    def from_cose_obj(cls, cose_obj: list, allow_unknown_attributes: bool) -> 'EncMessage':
+        msg = super().from_cose_obj(cose_obj, allow_unknown_attributes)
 
         try:
-            msg.recipients = [CoseRecipient.create_recipient(r, context='Enc_Recipient') for r in cose_obj.pop(0)]
+            msg.recipients = [CoseRecipient.create_recipient(r, allow_unknown_attributes, context='Enc_Recipient') for r
+                              in cose_obj.pop(0)]
         except (IndexError, ValueError):
             msg.recipients = []
         return msg
@@ -39,7 +40,8 @@ class EncMessage(enccommon.EncCommon):
                  external_aad: bytes = b'',
                  key: Optional['SK'] = None,
                  recipients: Optional[List['Recipient']] = None,
-                 allow_unknown_attributes: bool = True):
+                 *args,
+                 **kwargs):
         """
         Create a COSE_Encrypt message.
 
@@ -55,7 +57,7 @@ class EncMessage(enccommon.EncCommon):
         if uhdr is None:
             uhdr = {}
 
-        super().__init__(phdr, uhdr, payload, external_aad, key, allow_unknown_attributes=allow_unknown_attributes)
+        super().__init__(phdr, uhdr, payload, external_aad, key, *args, **kwargs)
 
         self._recipients = []
         self.recipients = recipients

@@ -60,14 +60,18 @@ class CoseRecipient(CoseMessage, metaclass=abc.ABCMeta):
         return decorator
 
     @classmethod
-    def create_recipient(cls, recipient: list, context: str):
-        p_alg = cls._parse_header(cbor2.loads(recipient[0])).get(headers.Algorithm) if recipient[0] != b'' else None
-        u_alg = cls._parse_header(recipient[1]).get(headers.Algorithm)
+    def create_recipient(cls, recipient: list, allow_unknown_attributes: bool, context: str):
+        if recipient[0] != b'':
+            p_alg = cls._parse_header(cbor2.loads(recipient[0]), allow_unknown_attributes).get(headers.Algorithm)
+        else:
+            p_alg = None
+
+        u_alg = cls._parse_header(recipient[1], allow_unknown_attributes).get(headers.Algorithm)
 
         if p_alg is not None:
-            return cls._RCPT_CLASSES[p_alg].from_cose_obj(recipient, context)
+            return cls._RCPT_CLASSES[p_alg].from_cose_obj(recipient, allow_unknown_attributes, context=context)
         elif u_alg is not None:
-            return cls._RCPT_CLASSES[u_alg].from_cose_obj(recipient, context)
+            return cls._RCPT_CLASSES[u_alg].from_cose_obj(recipient, allow_unknown_attributes, context=context)
         else:
             raise CoseException("No algorithm specified in recipient structure")
 
@@ -106,7 +110,8 @@ class CoseRecipient(CoseMessage, metaclass=abc.ABCMeta):
                  external_aad: bytes = b'',
                  key: Optional['SK'] = None,
                  recipients: Optional[List['Recipient']] = None,
-                 allow_unknown_attributes: bool = True):
+                 *args,
+                 **kwargs):
         """
         Create a COSE_Encrypt message.
 
@@ -122,7 +127,7 @@ class CoseRecipient(CoseMessage, metaclass=abc.ABCMeta):
         if uhdr is None:
             uhdr = {}
 
-        super().__init__(phdr, uhdr, payload, external_aad, key, allow_unknown_attributes=allow_unknown_attributes)
+        super().__init__(phdr, uhdr, payload, external_aad, key, *args, *kwargs)
 
         self._context = ''
         self._recipients = []
@@ -189,8 +194,8 @@ class CoseRecipient(CoseMessage, metaclass=abc.ABCMeta):
 class DirectEncryption(CoseRecipient):
 
     @classmethod
-    def from_cose_obj(cls, cose_obj: list, *args, **kwargs) -> 'DirectEncryption':
-        msg = super().from_cose_obj(cose_obj)
+    def from_cose_obj(cls, cose_obj: list, allow_unknown_attributes: bool, *args, **kwargs) -> 'DirectEncryption':
+        msg = super().from_cose_obj(cose_obj, allow_unknown_attributes)
         msg.context = kwargs.get("context")
 
         if msg.payload != b"":
@@ -248,8 +253,8 @@ class DirectEncryption(CoseRecipient):
                           RsaesOaepSha512, RsaesOaepSha256, RsaesOaepSha1])
 class KeyWrap(CoseRecipient):
     @classmethod
-    def from_cose_obj(cls, cose_obj: list, *args, **kwargs) -> 'KeyWrap':
-        msg = super().from_cose_obj(cose_obj)
+    def from_cose_obj(cls, cose_obj: list, allow_unknown_attributes: bool, *args, **kwargs) -> 'KeyWrap':
+        msg = super().from_cose_obj(cose_obj, allow_unknown_attributes)
         msg.context = kwargs.get('context')
 
         # only AE algorithms supported thus the protected header must be empty
@@ -261,7 +266,8 @@ class KeyWrap(CoseRecipient):
         if msg.payload == b'':
             raise CoseMalformedMessage(f'Recipient class KEY_WRAP must carry the encrypted CEK in its payload')
 
-        msg.recipients = [CoseRecipient.create_recipient(r, context='Rec_Recipient') for r in msg.recipients]
+        msg.recipients = [CoseRecipient.create_recipient(r, allow_unknown_attributes, context='Rec_Recipient') for r in
+                          msg.recipients]
 
         return msg
 
@@ -373,8 +379,8 @@ class KeyWrap(CoseRecipient):
 class DirectKeyAgreement(CoseRecipient):
 
     @classmethod
-    def from_cose_obj(cls, cose_obj: list, *args, **kwargs) -> 'DirectKeyAgreement':
-        msg = super().from_cose_obj(cose_obj)
+    def from_cose_obj(cls, cose_obj: list, allow_unknown_attributes: bool, *args, **kwargs) -> 'DirectKeyAgreement':
+        msg = super().from_cose_obj(cose_obj, allow_unknown_attributes)
         msg.context = kwargs.get('context')
 
         alg = msg.get_attr(headers.Algorithm)
@@ -467,15 +473,21 @@ class DirectKeyAgreement(CoseRecipient):
 class KeyAgreementWithKeyWrap(CoseRecipient):
 
     @classmethod
-    def from_cose_obj(cls, cose_obj: list, *args, **kwargs) -> 'KeyAgreementWithKeyWrap':
-        msg = super().from_cose_obj(cose_obj)
+    def from_cose_obj(cls,
+                      cose_obj: list,
+                      allow_unknown_attributes: bool,
+                      *args,
+                      **kwargs) -> 'KeyAgreementWithKeyWrap':
+
+        msg = super().from_cose_obj(cose_obj, allow_unknown_attributes)
         msg.context = kwargs.get('context')
 
         if msg.payload == b'':
             raise CoseMalformedMessage(
                 f'Recipient class KEY_AGREEMENT_WITH_KEY_WRAP must carry the encrypted CEK in its payload')
 
-        msg.recipients = [CoseRecipient.create_recipient(r, context='Rec_Recipient') for r in msg.recipients]
+        msg.recipients = [CoseRecipient.create_recipient(r, allow_unknown_attributes, context='Rec_Recipient') for r in
+                          msg.recipients]
 
         return msg
 

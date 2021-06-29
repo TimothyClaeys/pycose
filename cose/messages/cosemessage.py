@@ -35,12 +35,11 @@ class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
         return decorator
 
     @classmethod
-    def decode(cls, received: bytes, allow_unknown_attributes: bool = True) -> 'CM':
+    def decode(cls, received: bytes, *args, **kwargs) -> 'CM':
         """
         Decode received COSE message based on the CBOR tag.
 
         :param received: COSE messages encoded as bytes
-        :param allow_unknown_attributes: Allows unknown COSE header attributes (i.e., not registered at IANA)
 
         :raises AttributeError: When the COSE message, it cannot be decoded properly
         :raises ValueError: The received parameter must be bytes
@@ -59,18 +58,17 @@ class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
 
         if isinstance(cose_obj, list):
             try:
-                return cls._COSE_MSG_ID[cbor_tag].from_cose_obj(cose_obj,
-                                                                allow_unknown_attributes=allow_unknown_attributes)
+                return cls._COSE_MSG_ID[cbor_tag].from_cose_obj(cose_obj, kwargs.get("allow_unknown_attributes", True))
             except KeyError as e:
                 raise KeyError("CBOR tag is not recognized", e)
         else:
             raise TypeError("Bytes cannot be decoded as COSE message")
 
     @classmethod
-    def from_cose_obj(cls, cose_obj: list, allow_unknown_attributes: bool = True, *args, **kwargs):
-        """ Returns an initialized COSE message object. """
+    def from_cose_obj(cls, cose_obj: list, allow_unknown_attributes: bool):
+        """ Internal function that returns an initialized COSE message object. """
 
-        msg = super().from_cose_obj(cose_obj, allow_unknown_attributes=allow_unknown_attributes)
+        msg = super().from_cose_obj(cose_obj, allow_unknown_attributes)
         msg.payload = cose_obj.pop(0)
         return msg
 
@@ -80,9 +78,10 @@ class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
                  payload: bytes = b'',
                  external_aad: bytes = b'',
                  key: Optional['CK'] = None,
-                 allow_unknown_attributes: bool = True):
+                 *args,
+                 **kwargs):
 
-        super().__init__(phdr, uhdr, allow_unknown_attributes=allow_unknown_attributes)
+        super().__init__(phdr, uhdr, *args, **kwargs)
 
         self.payload = payload
         self.external_aad = external_aad

@@ -20,8 +20,8 @@ class Sign1Message(SignCommon):
     cbor_tag = 18
 
     @classmethod
-    def from_cose_obj(cls, cose_obj, *args, **kwargs) -> 'Sign1Message':
-        msg = super().from_cose_obj(cose_obj)
+    def from_cose_obj(cls, cose_obj, allow_unknown_attributes: bool) -> 'Sign1Message':
+        msg = super().from_cose_obj(cose_obj, allow_unknown_attributes)
         msg._signature = cose_obj.pop(0)
         return msg
 
@@ -31,13 +31,14 @@ class Sign1Message(SignCommon):
                  payload: bytes = b'',
                  external_aad: bytes = b'',
                  key: Optional[Union['EC2', 'OKP', 'RSA']] = None,
-                 allow_unknown_attributes: bool = True):
+                 *args,
+                 **kwargs):
         if phdr is None:
             phdr = {}
         if uhdr is None:
             uhdr = {}
 
-        super().__init__(phdr, uhdr, payload, external_aad, key, allow_unknown_attributes=allow_unknown_attributes)
+        super().__init__(phdr, uhdr, payload, external_aad, key, *args, **kwargs)
 
         self._signature = b''
 

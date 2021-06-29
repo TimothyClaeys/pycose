@@ -31,12 +31,13 @@ class MacMessage(maccommon.MacCommon):
     cbor_tag = 97
 
     @classmethod
-    def from_cose_obj(cls, cose_obj: list, *args, **kwargs) -> 'MacMessage':
-        msg = super().from_cose_obj(cose_obj)
+    def from_cose_obj(cls, cose_obj: list, allow_unknown_attributes: bool) -> 'MacMessage':
+        msg = super().from_cose_obj(cose_obj, allow_unknown_attributes)
         msg.auth_tag = cose_obj.pop(0)
 
         try:
-            msg.recipients = [CoseRecipient.create_recipient(r, context='Mac_Recipient') for r in cose_obj.pop(0)]
+            msg.recipients = [CoseRecipient.create_recipient(r, allow_unknown_attributes, context='Mac_Recipient') for r
+                              in cose_obj.pop(0)]
         except (IndexError, ValueError):
             msg.recipients = None
 
@@ -49,13 +50,14 @@ class MacMessage(maccommon.MacCommon):
                  external_aad: bytes = b'',
                  key: Optional['SK'] = None,
                  recipients: Optional[List[CoseRecipient]] = None,
-                 allow_unknown_attributes: bool = True):
+                 *args,
+                 **kwargs):
         if phdr is None:
             phdr = {}
         if uhdr is None:
             uhdr = {}
 
-        super().__init__(phdr, uhdr, payload, external_aad, key, allow_unknown_attributes=allow_unknown_attributes)
+        super().__init__(phdr, uhdr, payload, external_aad, key, *args, **kwargs)
 
         self._recipients = []
         self.recipients = recipients

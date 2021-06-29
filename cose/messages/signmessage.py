@@ -26,14 +26,14 @@ class _SignMessage(CoseMessage, metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @classmethod
-    def from_cose_obj(cls, cose_obj, *args, **kwargs) -> '_SignMessage':
+    def from_cose_obj(cls, cose_obj, allow_unknown_attributes: bool) -> '_SignMessage':
         """ Parses COSE_Sign messages. """
 
-        msg: '_SignMessage' = super().from_cose_obj(cose_obj)
+        msg: '_SignMessage' = super().from_cose_obj(cose_obj, allow_unknown_attributes)
 
         signers = []
         for r in cose_obj.pop(0):
-            signers.append(CoseSignature.from_cose_obj(r))
+            signers.append(CoseSignature.from_cose_obj(r, allow_unknown_attributes))
 
         msg.signers = signers
         return msg
@@ -43,15 +43,15 @@ class _SignMessage(CoseMessage, metaclass=abc.ABCMeta):
                  uhdr: Optional[dict] = None,
                  payload: bytes = b'',
                  signers: Optional[List['Signer']] = None,
-                 allow_unknown_attributes: bool = True):
+                 *args,
+                 **kwargs):
 
         if phdr is None:
             phdr = {}
         if uhdr is None:
             uhdr = {}
 
-        super(_SignMessage, self).__init__(phdr, uhdr, payload, external_aad=b'', key=None,
-                                           allow_unknown_attributes=allow_unknown_attributes)
+        super(_SignMessage, self).__init__(phdr, uhdr, payload, external_aad=b'', key=None, *args, **kwargs)
 
         if signers is None:
             self._signers = list()

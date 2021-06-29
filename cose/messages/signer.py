@@ -13,10 +13,10 @@ if TYPE_CHECKING:
 
 class CoseSignature(SignCommon):
     @classmethod
-    def from_cose_obj(cls, cose_obj: list, *args, **kwargs) -> 'CoseSignature':
+    def from_cose_obj(cls, cose_obj: list, allow_unknown_attributes: bool) -> 'CoseSignature':
         """ Parses COSE_Signature objects. """
 
-        msg: 'CoseSignature' = super().from_cose_obj(cose_obj)
+        msg: 'CoseSignature' = super().from_cose_obj(cose_obj, allow_unknown_attributes)
 
         return msg
 
@@ -25,14 +25,16 @@ class CoseSignature(SignCommon):
                  uhdr: Optional[dict] = None,
                  signature: bytes = b'',
                  external_aad: Optional[bytes] = b'',
-                 key: Optional[Union['EC2', 'OKP', 'RSA']] = None):
+                 key: Optional[Union['EC2', 'OKP', 'RSA']] = None,
+                 *args,
+                 **kwargs):
 
         if phdr is None:
             phdr = {}
         if uhdr is None:
             uhdr = {}
 
-        super().__init__(phdr, uhdr, payload=signature, external_aad=external_aad, key=key)
+        super().__init__(phdr, uhdr, payload=signature, external_aad=external_aad, key=key, *args, **kwargs)
 
         self._parent = None
 
