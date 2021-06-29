@@ -1,4 +1,5 @@
 from abc import ABC
+from typing import Any
 
 from cose.utils import _CoseAttribute
 
@@ -166,6 +167,37 @@ class SuppPrivOther(CoseHeaderAttribute):
     identifier = -999
     fullname = "SUPP_PRIV_OTHER"
 
+
+def is_bstr(value: Any):
+    if not isinstance(value, bytes):
+        raise ValueError("KID should be a byte string")
+
+    return value
+
+
+def crit_is_array(value: Any):
+    if not isinstance(value, list) or len(value) < 1 or not all(isinstance(x, int) for x in value):
+        raise ValueError("CRITICAL should be a list with at least one integer element")
+
+    return value
+
+
+def content_type_is_uint_or_tstr(value: Any):
+    if (not isinstance(value, int) and not isinstance(value, str)) or (
+            True if isinstance(value, int) and value < 0 else False):
+        raise ValueError("CONTENT TYPE should be an unsigned integer or string")
+
+    return value
+
+
+# set parser
+Critical.value_parser = crit_is_array
+ContentType.value_parser = content_type_is_uint_or_tstr
+KID.value_parser = is_bstr
+IV.value_parser = is_bstr
+PartialIV.value_parser = is_bstr
+CounterSignature0.value_parser = is_bstr
+KIDContext.value_parser = is_bstr
 
 if __name__ == '__main__':
     print(CoseHeaderAttribute.get_registered_classes())

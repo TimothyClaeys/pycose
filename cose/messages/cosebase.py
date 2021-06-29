@@ -5,8 +5,9 @@ from typing import Optional, Any, Dict, Type, Tuple
 import cbor2
 
 from cose import utils
+from cose.algorithms import CoseAlgorithm
 from cose.exceptions import CoseException
-from cose.headers import CoseHeaderAttribute
+from cose.headers import CoseHeaderAttribute, Algorithm
 from cose.keys.cosekey import CoseKey
 from cose.keys.cosekey import KpKeyOps
 
@@ -46,6 +47,8 @@ class CoseBase(metaclass=abc.ABCMeta):
         self._local_attrs = {}
         self._phdr = {}
         self._uhdr = {}
+
+        self.alg_tstr_encoding = kwargs.get("alg_tstr_encoding", False)
 
         CoseBase._transform_header_buckets(self._phdr, phdr, kwargs.get("allow_unknown_attributes", True))
         CoseBase._transform_header_buckets(self._uhdr, uhdr, kwargs.get("allow_unknown_attributes", True))
@@ -141,13 +144,14 @@ class CoseBase(metaclass=abc.ABCMeta):
         # TODO: check if not double header parameters in header buckets
         return self._uhdr
 
-    @classmethod
-    def _custom_cbor_encoder(cls, encoder, cose_attribute: Type['CoseHeaderAttribute']):
+    def _custom_cbor_encoder(self, encoder, cose_attribute: Type['CoseHeaderAttribute']):
         if isinstance(cose_attribute, CoseKey):
             new_dict = dict(cose_attribute)
             if KpKeyOps in new_dict and not len(new_dict[KpKeyOps]):
                 del new_dict[KpKeyOps]
             encoder.encode(new_dict)
+        elif issubclass(cose_attribute, CoseAlgorithm) and self.alg_tstr_encoding:
+            encoder.encode(cose_attribute.fullname)
         else:
             encoder.encode(cose_attribute.identifier)
 
