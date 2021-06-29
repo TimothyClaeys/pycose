@@ -48,8 +48,8 @@ class CoseBase(metaclass=abc.ABCMeta):
         self._phdr = {}
         self._uhdr = {}
 
-        CoseBase._transform_headers(self._phdr, phdr, allow_unknown_attributes)
-        CoseBase._transform_headers(self._uhdr, uhdr, allow_unknown_attributes)
+        CoseBase._transform_header_buckets(self._phdr, phdr, allow_unknown_attributes)
+        CoseBase._transform_header_buckets(self._uhdr, uhdr, allow_unknown_attributes)
 
         # can be plaintext or ciphertext
         if type(payload) is not bytes:
@@ -153,20 +153,17 @@ class CoseBase(metaclass=abc.ABCMeta):
             encoder.encode(cose_attribute.identifier)
 
     @staticmethod
-    def _transform_headers(output_header, base_header: dict, allow_unknown_attributes: bool = False):
+    def _transform_header_buckets(output_header, base_header: dict, allow_unknown_attributes: bool = False):
         for _header_attribute, _value in base_header.items():
-            try:
-                # translate the header attribute
-                hp = CoseHeaderAttribute.from_id(_header_attribute, allow_unknown_attributes)
+            # translate the header attribute
+            hp = CoseHeaderAttribute.from_id(_header_attribute, allow_unknown_attributes)
 
-                # parse the value of the key attribute if possible
-                if hasattr(hp, 'value_parser') and hasattr(hp.value_parser, '__call__'):
-                    _value = hp.value_parser(_value)
+            # parse the value of the key attribute if possible
+            if hasattr(hp, 'value_parser') and hasattr(hp.value_parser, '__call__'):
+                _value = hp.value_parser(_value)
 
-                # store in new dict
-                output_header[hp] = _value
-            except ValueError:
-                output_header[_header_attribute] = _value
+            # store in new dict
+            output_header[hp] = _value
 
     @classmethod
     def _parse_header(cls, hdr, allow_unknown_attributes: bool = True) -> dict:

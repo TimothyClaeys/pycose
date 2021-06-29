@@ -1,6 +1,9 @@
 from binascii import unhexlify
 
+import pytest
+
 from cose.algorithms import CoseAlgorithm, Direct, A128GCM, AESCCM1664128, HMAC256, Es256
+from cose.exceptions import CoseException
 from cose.headers import Algorithm, KID, IV
 from cose.keys import SymmetricKey, EC2Key
 from cose.keys.curves import P256
@@ -38,7 +41,21 @@ def test_parsing():
     assert Direct == attr.value_parser(-6)
 
 
-def test_unknown_header_attribute_encoding_decoding():
+def test_disallow_unknown_headeer_attribute_encoding_decoding():
+    with pytest.raises(CoseException) as excinfo:
+        _ = Enc0Message(phdr={Algorithm: AESCCM1664128, "Custom-Header-Attr1": 7879},
+                        allow_unknown_attributes=False)
+
+    assert "Unknown COSE attribute with value" in str(excinfo.value)
+
+    with pytest.raises(CoseException) as excinfo:
+        _ = Enc0Message(uhdr={Algorithm: AESCCM1664128, "Custom-Header-Attr1": 7879},
+                        allow_unknown_attributes=False)
+
+    assert "Unknown COSE attribute with value" in str(excinfo.value)
+
+
+def test_allow_unknown_header_attribute_encoding_decoding():
     msg = Enc0Message(phdr={Algorithm: AESCCM1664128, "Custom-Header-Attr1": 7879},
                       uhdr={KID: 8, IV: unhexlify(b'00000000000000000000000000'), "Custom-Header-Attr2": 879})
     msg.key = SymmetricKey.generate_key(key_len=16)

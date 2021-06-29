@@ -68,18 +68,15 @@ class OKPKey(CoseKey):
             optional_params = {}
 
         for _key_attribute, _value in optional_params.items():
-            try:
-                # translate the key_attribute
-                kp = OKPKeyParam.from_id(_key_attribute, allow_unknown_key_attrs)
+            # translate the key_attribute
+            kp = OKPKeyParam.from_id(_key_attribute, allow_unknown_key_attrs)
 
-                # parse the value of the key attribute if possible
-                if hasattr(kp, 'value_parser') and hasattr(kp.value_parser, '__call__'):
-                    _value = kp.value_parser(_value)
+            # parse the value of the key attribute if possible
+            if hasattr(kp, 'value_parser') and hasattr(kp.value_parser, '__call__'):
+                _value = kp.value_parser(_value)
 
-                # store in new dict
-                transformed_dict[kp] = _value
-            except ValueError:
-                transformed_dict[_key_attribute] = _value
+            # store in new dict
+            transformed_dict[kp] = _value
 
         # final check if key type is correct
         if transformed_dict.get(KpKty) != KtyOKP:
