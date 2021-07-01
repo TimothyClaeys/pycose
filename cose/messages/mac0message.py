@@ -22,8 +22,8 @@ class Mac0Message(maccommon.MacCommon):
     cbor_tag = 17
 
     @classmethod
-    def from_cose_obj(cls, cose_obj: list, *args, **kwargs) -> 'Mac0Message':
-        msg = super().from_cose_obj(cose_obj)
+    def from_cose_obj(cls, cose_obj: list, allow_unknown_attributes: bool) -> 'Mac0Message':
+        msg = super().from_cose_obj(cose_obj, allow_unknown_attributes)
         msg.auth_tag = cose_obj.pop(0)
 
         return msg
@@ -34,13 +34,14 @@ class Mac0Message(maccommon.MacCommon):
                  payload: bytes = b'',
                  external_aad: bytes = b'',
                  key: Optional['SK'] = None,
-                 allow_unknown_attributes: bool = True):
+                 *args,
+                 **kwargs):
         if phdr is None:
             phdr = {}
         if uhdr is None:
             uhdr = {}
 
-        super().__init__(phdr, uhdr, payload, external_aad, key, allow_unknown_attributes=allow_unknown_attributes)
+        super().__init__(phdr, uhdr, payload, external_aad, key, *args, **kwargs)
 
     def encode(self, tag: bool = True, mac: bool = True, *args, **kwargs) -> bytes:
         """ Encode and protect the COSE_Mac0 message. """

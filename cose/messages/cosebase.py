@@ -5,9 +5,10 @@ from typing import Optional, Any, Dict, Type, Tuple
 import cbor2
 
 from cose import utils
-from cose.keys.cosekey import CoseKey
-from cose.headers import CoseHeaderAttribute
+from cose.algorithms import CoseAlgorithm
 from cose.exceptions import CoseException
+from cose.headers import CoseHeaderAttribute, Algorithm
+from cose.keys.cosekey import CoseKey
 from cose.keys.cosekey import KpKeyOps
 
 CBOR = bytes
@@ -17,21 +18,20 @@ class CoseBase(metaclass=abc.ABCMeta):
     """ Basic COSE information buckets. """
 
     @classmethod
-    def from_cose_obj(cls, cose_obj: list, allow_unknown_attributes: bool = True, *args, **kwargs):
+    def from_cose_obj(cls, cose_obj: list, allow_unknown_attributes: bool):
         try:
-            phdr = cls._parse_header(cbor2.loads(cose_obj.pop(0)), allow_unknown_attributes=allow_unknown_attributes)
+            phdr = cls._parse_header(cbor2.loads(cose_obj.pop(0)), allow_unknown_attributes)
         except (ValueError, EOFError):
             phdr = {}
 
         try:
-            uhdr = cls._parse_header(cose_obj.pop(0), allow_unknown_attributes=allow_unknown_attributes)
+            uhdr = cls._parse_header(cose_obj.pop(0), allow_unknown_attributes)
         except ValueError:
             uhdr = {}
 
         return cls(phdr, uhdr)
 
-    def __init__(self, phdr: Optional[dict] = None, uhdr: Optional[dict] = None, payload: bytes = b'',
-                 allow_unknown_attributes: bool = True):
+    def __init__(self, phdr: Optional[dict] = None, uhdr: Optional[dict] = None, payload: bytes = b'', *args, **kwargs):
         if phdr is None:
             phdr = {}
 
@@ -48,8 +48,10 @@ class CoseBase(metaclass=abc.ABCMeta):
         self._phdr = {}
         self._uhdr = {}
 
-        CoseBase._transform_headers(self._phdr, phdr, allow_unknown_attributes)
-        CoseBase._transform_headers(self._uhdr, uhdr, allow_unknown_attributes)
+        self.alg_tstr_encoding = kwargs.get("alg_tstr_encoding", False)
+
+        CoseBase._transform_header_buckets(self._phdr, phdr, kwargs.get("allow_unknown_attributes", True))
+        CoseBase._transform_header_buckets(self._uhdr, uhdr, kwargs.get("allow_unknown_attributes", True))
 
         # can be plaintext or ciphertext
         if type(payload) is not bytes:
@@ -142,37 +144,35 @@ class CoseBase(metaclass=abc.ABCMeta):
         # TODO: check if not double header parameters in header buckets
         return self._uhdr
 
-    @classmethod
-    def _custom_cbor_encoder(cls, encoder, cose_attribute: 'CoseHeaderAttribute'):
+    def _custom_cbor_encoder(self, encoder, cose_attribute: Type['CoseHeaderAttribute']):
         if isinstance(cose_attribute, CoseKey):
             new_dict = dict(cose_attribute)
             if KpKeyOps in new_dict and not len(new_dict[KpKeyOps]):
                 del new_dict[KpKeyOps]
             encoder.encode(new_dict)
+        elif issubclass(cose_attribute, CoseAlgorithm) and self.alg_tstr_encoding:
+            encoder.encode(cose_attribute.fullname)
         else:
             encoder.encode(cose_attribute.identifier)
 
     @staticmethod
-    def _transform_headers(output_header, base_header: dict, allow_unknown_attributes: bool = False):
+    def _transform_header_buckets(output_header, base_header: dict, allow_unknown_attributes: bool):
         for _header_attribute, _value in base_header.items():
-            try:
-                # translate the header attribute
-                hp = CoseHeaderAttribute.from_id(_header_attribute, allow_unknown_attributes)
+            # translate the header attribute
+            hp = CoseHeaderAttribute.from_id(_header_attribute, allow_unknown_attributes)
 
-                # parse the value of the key attribute if possible
-                if hasattr(hp, 'value_parser') and hasattr(hp.value_parser, '__call__'):
-                    _value = hp.value_parser(_value)
+            # parse the value of the key attribute if possible
+            if hasattr(hp, 'value_parser') and hasattr(hp.value_parser, '__call__'):
+                _value = hp.value_parser(_value)
 
-                # store in new dict
-                output_header[hp] = _value
-            except ValueError:
-                output_header[_header_attribute] = _value
+            # store in new dict
+            output_header[hp] = _value
 
     @classmethod
-    def _parse_header(cls, hdr, allow_unknown_attributes: bool = True) -> dict:
+    def _parse_header(cls, hdr, allow_unknown_attributes: bool) -> dict:
         decoded_hdr = {}
         for k, v in hdr.items():
-            attr = CoseHeaderAttribute.from_id(k, allow_unknown_attributes=allow_unknown_attributes)
+            attr = CoseHeaderAttribute.from_id(k, allow_unknown_attributes)
 
             if hasattr(attr, 'value_parser'):
                 decoded_hdr[attr] = attr.value_parser(v)

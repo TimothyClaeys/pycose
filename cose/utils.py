@@ -52,12 +52,6 @@ class _CoseAttribute(ABC):
     def fullname(self) -> str:
         raise NotImplementedError()
 
-    def __int__(self):
-        return self.identifier
-
-    def __str__(self):
-        return self.fullname
-
     def __eq__(self, other: '_CoseAttribute'):
         return self.identifier == other.identifier
 

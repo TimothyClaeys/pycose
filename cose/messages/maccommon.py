@@ -26,9 +26,10 @@ class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):
                  payload: bytes = b'',
                  external_aad: bytes = b'',
                  key: Optional['SK'] = None,
-                 allow_unknown_attributes: bool = True):
+                 *args,
+                 **kwargs):
 
-        super().__init__(phdr, uhdr, payload, external_aad, key, allow_unknown_attributes=allow_unknown_attributes)
+        super().__init__(phdr, uhdr, payload, external_aad, key, *args, **kwargs)
 
         self.auth_tag = b''
 

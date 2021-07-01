@@ -4,9 +4,9 @@ from binascii import unhexlify
 import pytest
 
 from cose.algorithms import EdDSA
-from cose.keys.curves import Ed448, Ed25519, X448, X25519
-from cose.exceptions import CoseInvalidKey, CoseIllegalKeyType, CoseUnsupportedCurve, CoseException, CoseIllegalKeyOps
+from cose.exceptions import CoseInvalidKey, CoseIllegalKeyType, CoseUnsupportedCurve, CoseIllegalKeyOps
 from cose.keys import OKPKey, CoseKey
+from cose.keys.curves import Ed448, Ed25519, X448, X25519
 from cose.keys.keyops import SignOp, MacVerifyOp
 from cose.keys.keyparam import KpKty, OKPKpCurve, OKPKpX, OKPKpD, KpAlg, KpKeyOps
 ###############################################################
