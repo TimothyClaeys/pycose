@@ -49,8 +49,9 @@ class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
         """
 
         try:
-            cbor_tag = cbor2.loads(received).tag
-            cose_obj = cbor2.loads(received).value
+            cbor_msg = cbor2.loads(received)
+            cbor_tag = cbor_msg.tag
+            cose_obj = cbor_msg.value
         except AttributeError:
             raise AttributeError("Message was not tagged.")
         except ValueError:
