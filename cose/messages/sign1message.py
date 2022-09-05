@@ -65,6 +65,8 @@ class Sign1Message(SignCommon):
 
         if sign:
             message = [self.phdr_encoded, self.uhdr_encoded, self.payload, self.compute_signature()]
+        elif self.signature:
+            message = [self.phdr_encoded, self.uhdr_encoded, self.payload, self.signature]
         else:
             message = [self.phdr_encoded, self.uhdr_encoded, self.payload]
 
