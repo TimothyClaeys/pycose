@@ -4,12 +4,12 @@ EC2 Key
 Overview
 --------
 
-COSE EC2 keys can be used for signing and verifying :class:`cose.messages.sign1message.Sign1Message` and
-:class:`cose.messages.signmessage.SignMessage` COSE messages, and also for key agreement in
-:class:`~cose.messages.recipient.KeyAgreementWithKeyWrap` and :class:`~cose.messages.recipient.DirectKeyAgreement` COSE
+COSE EC2 keys can be used for signing and verifying :class:`pycose.messages.sign1message.Sign1Message` and
+:class:`pycose.messages.signmessage.SignMessage` COSE messages, and also for key agreement in
+:class:`~pycose.messages.recipient.KeyAgreementWithKeyWrap` and :class:`~pycose.messages.recipient.DirectKeyAgreement` COSE
 recipient structures.
 
-COSE EC2 keys can be created using the :class:`~cose.keys.ec2.EC2Key` class or from a standard Python
+COSE EC2 keys can be created using the :class:`~pycose.keys.ec2.EC2Key` class or from a standard Python
 dictionary. The following two examples shows how to create COSE EC2 keys using both methods. The keys are
 serialized and subsequently deserialized.
 
@@ -18,7 +18,7 @@ serialized and subsequently deserialized.
 
     >>> import os
     >>> from binascii import unhexlify
-    >>> from cose.keys import EC2Key, CoseKey
+    >>> from pycose.keys import EC2Key, CoseKey
 
     >>> # get 32 random bytes as private key (potentially not a valid key for curve P_256)
     >>> private_key = unhexlify(b'57c92077664146e876760c9520d054aa93c3afb04e306705db6090308507b4d3')
@@ -37,7 +37,7 @@ serialized and subsequently deserialized.
     :pyversion: >= 3.6
 
     >>> from binascii import unhexlify
-    >>> from cose.keys import EC2Key, CoseKey
+    >>> from pycose.keys import EC2Key, CoseKey
 
     >>> # create key object from a dict, both the key type and key bytes (KTY and K) are mandatory attributes.
     >>> key_attribute_dict = {
@@ -57,28 +57,28 @@ serialized and subsequently deserialized.
     >>> CoseKey.decode(serialized_key)
     <COSE_Key(EC2Key): {'EC2KpD': "b'W\\xc9 wf' ... (32 B)", 'EC2KpY': "b' \\x13\\x8b\\xf8-' ... (32 B)", 'EC2KpX': "b'\\xba\\xc5\\xb1\\x1c\\xad' ... (32 B)", 'EC2KpCurve': 'P256', 'KpKty': 'KtyEC2', 'KpAlg': 'Es256'}>
 
-Alternatively you can use the :meth:`~cose.keys.ec2.EC2Key.generate_key` method. It generates a random
-COSE EC2 Key for a given curve. Valid curves are :class:`~cose.keys.curves.P256`, :class:`~cose.keys.curves.P384`, and
-:class:`~cose.keys.curves.P521`.
+Alternatively you can use the :meth:`~pycose.keys.ec2.EC2Key.generate_key` method. It generates a random
+COSE EC2 Key for a given curve. Valid curves are :class:`~pycose.keys.curves.P256`, :class:`~pycose.keys.curves.P384`, and
+:class:`~pycose.keys.curves.P521`.
 
 .. doctest::
     :pyversion: >= 3.6
 
-    >>> from cose.keys import EC2Key
+    >>> from pycose.keys import EC2Key
 
     >>> # generate a random key
     >>> cose_key = EC2Key.generate_key(crv='P_521')
 
 When creating a COSE EC2 Key from a dictionary, you have to make sure that the dictionary holds the
-:class:`~cose.keys.keyparam.KpKty`, :class:`~cose.keys.keyparam.EC2KpCurve`, and either
-:class:`~cose.keys.keyparam.EC2KpD` (for private COSE EC2 keys) or :class:`~cose.keys.keyparam.EC2KpX` and
-:class:`~cose.keys.keyparam.EC2KpY` (for public COSE EC2 keys) key attributes. These attributes are mandatory for a
-valid COSE EC2 Key. If you don't specify them, the :meth:`~cose.keys.cosekey.CoseKey.from_dict` will throw an exception.
+:class:`~pycose.keys.keyparam.KpKty`, :class:`~pycose.keys.keyparam.EC2KpCurve`, and either
+:class:`~pycose.keys.keyparam.EC2KpD` (for private COSE EC2 keys) or :class:`~pycose.keys.keyparam.EC2KpX` and
+:class:`~pycose.keys.keyparam.EC2KpY` (for public COSE EC2 keys) key attributes. These attributes are mandatory for a
+valid COSE EC2 Key. If you don't specify them, the :meth:`~pycose.keys.cosekey.CoseKey.from_dict` will throw an exception.
 
 .. doctest::
     :pyversion: >= 3.6
 
-    >>> from cose.keys import EC2Key, CoseKey
+    >>> from pycose.keys import EC2Key, CoseKey
 
     >>> key_attribute_dict = {
     ...     'KTY': 'EC2',
@@ -90,13 +90,13 @@ valid COSE EC2 Key. If you don't specify them, the :meth:`~cose.keys.cosekey.Cos
         compileflags, 1), test.globs)
       File "<doctest default[2]>", line 1, in <module>
         CoseKey.from_dict(key_attribute_dict)
-      File "/home/timothy/Projects/pycose/cose/keys/cosekey.py", line 69, in from_dict
+      File "/home/timothy/Projects/pycose/pycose/keys/pycosekey.py", line 69, in from_dict
         key_obj = cls._key_types[received[KpKty.fullname]].from_dict(received)
-      File "/home/timothy/Projects/pycose/cose/keys/ec2.py", line 63, in from_dict
+      File "/home/timothy/Projects/pycose/pycose/keys/ec2.py", line 63, in from_dict
         return cls(crv=curve, x=x, y=y, d=d, optional_params=cose_key)
-      File "/home/timothy/Projects/pycose/cose/keys/ec2.py", line 74, in __init__
+      File "/home/timothy/Projects/pycose/pycose/keys/ec2.py", line 74, in __init__
         raise CoseInvalidKey("Either the public values or the private value must be specified")
-    cose.exceptions.CoseInvalidKey: Either the public values or the private value must be specified
+    pycose.exceptions.CoseInvalidKey: Either the public values or the private value must be specified
 
 The key attributes of the COSE EC2 Key can be represented by their string label, the integer identifier or the
 corresponding python class.
@@ -105,11 +105,11 @@ corresponding python class.
     :pyversion: >= 3.6
 
     >>> from binascii import unhexlify
-    >>> from cose.keys import EC2Key, CoseKey
-    >>> from cose.keys.keytype import KtyEC2
-    >>> from cose.algorithms import Es256
-    >>> from cose.keys.curves import P256
-    >>> from cose.keys.keyparam import KpKty, KpAlg, EC2KpD, EC2KpCurve
+    >>> from pycose.keys import EC2Key, CoseKey
+    >>> from pycose.keys.keytype import KtyEC2
+    >>> from pycose.algorithms import Es256
+    >>> from pycose.keys.curves import P256
+    >>> from pycose.keys.keyparam import KpKty, KpAlg, EC2KpD, EC2KpCurve
 
     >>> # key attribute dict using string representations
     >>> key_attribute_dict1 = {
@@ -154,7 +154,7 @@ corresponding python class.
 API
 ---
 
-.. module:: cose.keys.ec2
+.. module:: pycose.keys.ec2
 
 .. autoclass:: EC2Key
     :members:

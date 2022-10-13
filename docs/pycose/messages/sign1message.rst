@@ -1,7 +1,7 @@
 Sign1
 =====
 
-:class:`~cose.messages.sign1message.Sign1Message` messages are used when there is single signature attached to the basic
+:class:`~pycose.messages.sign1message.Sign1Message` messages are used when there is single signature attached to the basic
 COSE structure, consisting of headers and payload. Receivers must implicitly know the public key to verify the message
 since no additional key information is transported.
 
@@ -9,7 +9,7 @@ since no additional key information is transported.
     :width: 650px
     :align: center
 
-.. module:: cose.messages.sign1message
+.. module:: pycose.messages.sign1message
 
 .. autoclass:: Sign1Message
     :members:

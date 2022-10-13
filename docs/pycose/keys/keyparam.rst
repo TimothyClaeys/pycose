@@ -9,7 +9,7 @@ API
 
 **Common COSE key parameters**
 
-.. module:: cose.keys.keyparam
+.. module:: pycose.keys.keyparam
 
 .. autoclass:: KpKty
     :members:

@@ -4,14 +4,14 @@ COSE Curves
 Overview
 --------
 
-All :class:`~cose.curves.CoseCurve` classes have a `fullname`, `identifier`, `curve_obj`, `key_type`, and `size` attribute. The full list with COSE
+All :class:`~pycose.curves.CoseCurve` classes have a `fullname`, `identifier`, `curve_obj`, `key_type`, and `size` attribute. The full list with COSE
 curves and their identifiers can be found at the IANA registry.
 
 .. doctest::
     :pyversion: >= 3.6
 
-    >>> from cose.keys.curves import Ed25519
-    >>> from cose.keys import OKPKey
+    >>> from pycose.keys.curves import Ed25519
+    >>> from pycose.keys import OKPKey
 
     >>> key = OKPKey.generate_key(crv=Ed25519)
     >>> key.crv.fullname
@@ -24,7 +24,7 @@ curves and their identifiers can be found at the IANA registry.
     <class 'cryptography.hazmat.primitives.asymmetric.ed25519.Ed25519PrivateKey'>
 
     >>> key.crv.key_type
-    <class 'cose.keys.keytype.KtyOKP'>
+    <class 'pycose.keys.keytype.KtyOKP'>
 
     >>> key.crv.size
     32
@@ -33,7 +33,7 @@ curves and their identifiers can be found at the IANA registry.
 API
 ---
 
-.. module:: cose.keys.curves
+.. module:: pycose.keys.curves
 
 .. autoclass:: Reserved
 

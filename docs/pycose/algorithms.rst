@@ -4,14 +4,14 @@ COSE Algorithms
 Overview
 --------
 
-All :class:`~cose.algorithms.CoseAlgorithm` have a `fullname` and `identifier` attribute. Both attributes can be used in
+All :class:`~pycose.algorithms.CoseAlgorithm` have a `fullname` and `identifier` attribute. Both attributes can be used in
 COSE headers and COSE keys.
 
 .. doctest::
     :pyversion: >= 3.6
 
-    >>> from cose.messages import Enc0Message
-    >>> from cose.algorithms import A128GCM
+    >>> from pycose.messages import Enc0Message
+    >>> from pycose.algorithms import A128GCM
 
     >>> msg1 = Enc0Message(phdr={'ALG': A128GCM})
     >>> msg2 = Enc0Message(phdr={'ALG': 'A128GCM'})
@@ -30,7 +30,7 @@ The full list with COSE algorithms and their identifiers can be found at the
 API
 ---
 
-.. module:: cose.algorithms
+.. module:: pycose.algorithms
 
 .. autoclass:: Shake256
 

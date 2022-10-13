@@ -5,11 +5,11 @@ Overview
 --------
 
 To encode/encrypt/authenticate or decode/decrypt/verify the payload of COSE messages
-:class:`~cose.messages.enc0message.Enc0Message` , :class:`~cose.messages.mac0message.Mac0Message`,
-:class:`~cose.messages.encmessage.EncMessage`, and :class:`~cose.messages.macmessage.Mac0Message`
-the COSE message object requires a COSE key of type :class:`~cose.keys.symmetric.SymmetricKey`.
+:class:`~pycose.messages.enc0message.Enc0Message` , :class:`~pycose.messages.mac0message.Mac0Message`,
+:class:`~pycose.messages.encmessage.EncMessage`, and :class:`~pycose.messages.macmessage.Mac0Message`
+the COSE message object requires a COSE key of type :class:`~pycose.keys.symmetric.SymmetricKey`.
 
-COSE Symmetric keys can be created using the :class:`~cose.keys.symmetric.SymmetricKey` class or from a standard Python
+COSE Symmetric keys can be created using the :class:`~pycose.keys.symmetric.SymmetricKey` class or from a standard Python
 dictionary. The following two examples shows how to create COSE Symmetric keys using both methods. The keys are
 serialized and subsequently deserialized.
 
@@ -17,7 +17,7 @@ serialized and subsequently deserialized.
     :pyversion: >= 3.6
 
     >>> from binascii import unhexlify
-    >>> from cose.keys import SymmetricKey, CoseKey
+    >>> from pycose.keys import SymmetricKey, CoseKey
 
     >>> cose_key = SymmetricKey(k=unhexlify(b'000102030405060708090a0b0c0d0e0f'), optional_params={'ALG': 'A128GCM'})
 
@@ -35,7 +35,7 @@ serialized and subsequently deserialized.
     :pyversion: >= 3.6
 
     >>> from binascii import unhexlify
-    >>> from cose.keys import SymmetricKey, CoseKey
+    >>> from pycose.keys import SymmetricKey, CoseKey
 
     >>> # create key object from a dict, both the key type and key bytes (KTY and K) are mandatory attributes.
     >>> key_attribute_dict = {
@@ -54,26 +54,26 @@ serialized and subsequently deserialized.
     >>> CoseKey.decode(serialized_key)
     <COSE_Key(Symmetric): {'SymKpK': "b'\\x00\\x01\\x02\\x03\\x04' ... (16 B)", 'KpKty': 'KtySymmetric', 'KpAlg': 'A128GCM'}>
 
-Alternatively you can use the :meth:`~cose.keys.symmetric.SymmetricKey.generate_key` method. It generates a random
+Alternatively you can use the :meth:`~pycose.keys.symmetric.SymmetricKey.generate_key` method. It generates a random
 COSE Symmetric Key with a given key length. Valid key lengths are 16, 24 and 32.
 
 .. doctest::
     :pyversion: >= 3.6
 
-    >>> from cose.keys import SymmetricKey
+    >>> from pycose.keys import SymmetricKey
 
     >>> # generate a random key
     >>> cose_key = SymmetricKey.generate_key(key_len=16)
 
 When creating a COSE Symmetric Key from a dictionary, you have to make sure that the dictionary holds the
-:class:`~cose.keys.keyparam.KpKty` and :class:`~cose.keys.keyparam.SymKpK` key attributes. These attributes are mandatory
-for a valid COSE Symmetric Key. If you don't specify them, the :meth:`~cose.keys.cosekey.CoseKey.from_dict` will throw an
+:class:`~pycose.keys.keyparam.KpKty` and :class:`~pycose.keys.keyparam.SymKpK` key attributes. These attributes are mandatory
+for a valid COSE Symmetric Key. If you don't specify them, the :meth:`~pycose.keys.cosekey.CoseKey.from_dict` will throw an
 exception.
 
 .. doctest::
     :pyversion: >= 3.6
 
-    >>> from cose.keys import SymmetricKey, CoseKey
+    >>> from pycose.keys import SymmetricKey, CoseKey
 
     >>> key_attribute_dict = {
     ...     'ALG': 'A128GCM',
@@ -85,9 +85,9 @@ exception.
         compileflags, 1), test.globs)
       File "<doctest default[2]>", line 1, in <module>
         cose_key = CoseKey.from_dict(key_attribute_dict)
-      File "/home/timothy/Projects/pycose/cose/keys/cosekey.py", line 69, in from_dict
+      File "/home/timothy/Projects/pycose/pycose/keys/cosekey.py", line 69, in from_dict
         raise CoseIllegalKeyType("Could not decode CoseKey type, KpKty not set or unknown.")
-    cose.exceptions.CoseIllegalKeyType: Could not decode CoseKey type, KpKty not set or unknown.
+    pycose.exceptions.CoseIllegalKeyType: Could not decode CoseKey type, KpKty not set or unknown.
 
 The key attributes of the COSE Symmetric Key can be represented by their string label, the integer identifier or the
 corresponding python class.
@@ -96,10 +96,10 @@ corresponding python class.
     :pyversion: >= 3.6
 
     >>> from binascii import unhexlify
-    >>> from cose.keys import SymmetricKey, CoseKey
-    >>> from cose.keys.keytype import KtySymmetric
-    >>> from cose.algorithms import A128GCM
-    >>> from cose.keys.keyparam import KpKty, KpAlg, SymKpK
+    >>> from pycose.keys import SymmetricKey, CoseKey
+    >>> from pycose.keys.keytype import KtySymmetric
+    >>> from pycose.algorithms import A128GCM
+    >>> from pycose.keys.keyparam import KpKty, KpAlg, SymKpK
 
     >>> # key attribute dict using string representations
     >>> key_attribute_dict1 = {
@@ -141,7 +141,7 @@ corresponding python class.
 API
 ---
 
-.. module:: cose.keys.symmetric
+.. module:: pycose.keys.symmetric
 
 .. autoclass:: SymmetricKey
     :members:

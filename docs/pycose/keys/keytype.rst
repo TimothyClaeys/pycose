@@ -7,7 +7,7 @@ Overview
 API
 ---
 
-.. module:: cose.keys.keytype
+.. module:: pycose.keys.keytype
 
 .. autoclass:: KtyReserved
     :members:

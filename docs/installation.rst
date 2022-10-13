@@ -1,9 +1,9 @@
-Installing ``cose``
-===================
+Installing ``pycose``
+=====================
 
 .. note::
 
-  The commands here will install ``cose`` in your current environment.
+  The commands here will install ``pycose`` in your current environment.
   By default, that is your platform's user install directory.
 
   To keep that clean, or to use different sets or versions of libraries for different purposes,
@@ -18,14 +18,14 @@ Installing ``cose``
   There is package on PyPI which holds the name ``pycose``. This package contains old code from this project.
   Since I am not the maintainer of that PyPI project, I cannot update its code or delete the package.
 
-It is recommended to install the latest released version of ``cose``::
+It is recommended to install the latest released version of ``pycose``::
 
-    $ pip3 install cose --upgrade
+    $ pip3 install pycose --upgrade
 
 Development version
 -------------------
 
-If you want to explore cose's internals or consider contributing to the
+If you want to explore pycose's internals or consider contributing to the
 project, the suggested way of operation is getting a Git checkout of the
 project::
 
