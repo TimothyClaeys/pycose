@@ -96,10 +96,10 @@ class CoseRecipient(CoseMessage, metaclass=abc.ABCMeta):
             r_types.add(r.__class__)
 
         if DirectEncryption in r_types and len(r_types) > 1:
-            CoseException('When using DIRECT_ENCRYPTION mode, it must be the only mode used on the message')
+            raise CoseException('When using DIRECT_ENCRYPTION mode, it must be the only mode used on the message')
 
         if DirectKeyAgreement in r_types and len(recipients) > 1:
-            CoseException('When using DIRECT_KEY_AGREEMENT, it must be only one recipient in the message.')
+            raise CoseException('When using DIRECT_KEY_AGREEMENT, it must be only one recipient in the message.')
 
         return r_types
 

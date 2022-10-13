@@ -49,7 +49,7 @@ class CoseSignature(SignCommon):
     @signature.setter
     def signature(self, value):
         if not isinstance(value, bytes):
-            TypeError("Signature must be of type 'bytes'")
+            raise TypeError("Signature must be of type 'bytes'")
 
         self._payload = value
 
