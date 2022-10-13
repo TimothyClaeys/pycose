@@ -9,13 +9,13 @@ from typing import Optional, List, TYPE_CHECKING
 
 import cbor2
 
-from cose import utils
-from cose.exceptions import CoseException
-from cose.messages.cosemessage import CoseMessage
-from cose.messages.signer import CoseSignature
+from pycose import utils
+from pycose.exceptions import CoseException
+from pycose.messages.cosemessage import CoseMessage
+from pycose.messages.signer import CoseSignature
 
 if TYPE_CHECKING:
-    from cose.messages.signer import Signer
+    from pycose.messages.signer import Signer
 
 
 class _SignMessage(CoseMessage, metaclass=abc.ABCMeta):

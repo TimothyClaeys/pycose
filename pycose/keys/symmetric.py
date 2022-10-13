@@ -1,15 +1,15 @@
 import os
 from typing import Optional, Union, Type, List, TYPE_CHECKING
 
-from cose import utils
-from cose.exceptions import CoseInvalidKey, CoseIllegalKeyType, CoseIllegalKeyOps
-from cose.keys.cosekey import CoseKey
-from cose.keys.keyops import MacCreateOp, MacVerifyOp, EncryptOp, DecryptOp, UnwrapOp, WrapOp
-from cose.keys.keyparam import KpKty, SymmetricKeyParam, SymKpK, KeyParam
-from cose.keys.keytype import KtySymmetric
+from pycose import utils
+from pycose.exceptions import CoseInvalidKey, CoseIllegalKeyType, CoseIllegalKeyOps
+from pycose.keys.cosekey import CoseKey
+from pycose.keys.keyops import MacCreateOp, MacVerifyOp, EncryptOp, DecryptOp, UnwrapOp, WrapOp
+from pycose.keys.keyparam import KpKty, SymmetricKeyParam, SymKpK, KeyParam
+from pycose.keys.keytype import KtySymmetric
 
 if TYPE_CHECKING:
-    from cose.keys.keyops import KEYOPS
+    from pycose.keys.keyops import KEYOPS
 
 
 @CoseKey.record_kty(KtySymmetric)
@@ -74,7 +74,7 @@ class SymmetricKey(CoseKey):
 
     @property
     def k(self) -> bytes:
-        """ Returns the mandatory :class:`~cose.keys.keyparam.SymKpK` attribute of the COSE Symmetric Key object. """
+        """ Returns the mandatory :class:`~pycose.keys.keyparam.SymKpK` attribute of the COSE Symmetric Key object. """
         if SymKpK in self.store:
             return self.store[SymKpK]
         else:
@@ -90,7 +90,7 @@ class SymmetricKey(CoseKey):
 
     @property
     def key_ops(self) -> List[Type['KEYOPS']]:
-        """ Returns the value of the :class:`~cose.keys.keyparam.KpKeyOps` key parameter """
+        """ Returns the value of the :class:`~pycose.keys.keyparam.KpKeyOps` key parameter """
 
         return CoseKey.key_ops.fget(self)
 
@@ -109,8 +109,8 @@ class SymmetricKey(CoseKey):
         Generate a random Symmetric COSE key object.
 
         :param key_len: Symmetric key length in bytes, must be of size 16, 24 or 32.
-        :param optional_params: Optional key attributes for the :class:`~cose.keys.symmetric.SymmetricKey` object, \
-        e.g., :class:`~cose.keys.keyparam.KpAlg` or  :class:`~cose.keys.keyparam.KpKid`.
+        :param optional_params: Optional key attributes for the :class:`~pycose.keys.symmetric.SymmetricKey` object, \
+        e.g., :class:`~pycose.keys.keyparam.KpAlg` or  :class:`~pycose.keys.keyparam.KpKid`.
 
         :raises ValueError: For invalid key lengths.
 

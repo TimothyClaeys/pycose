@@ -3,15 +3,15 @@ from typing import Optional, TypeVar, TYPE_CHECKING
 
 import cbor2
 
-from cose.exceptions import CoseInvalidKey
-from cose.keys.ec2 import EC2Key
-from cose.keys.okp import OKPKey
-from cose.keys.rsa import RSAKey
-from cose.keys.symmetric import SymmetricKey
-from cose.messages.cosebase import CoseBase
+from pycose.exceptions import CoseInvalidKey
+from pycose.keys.ec2 import EC2Key
+from pycose.keys.okp import OKPKey
+from pycose.keys.rsa import RSAKey
+from pycose.keys.symmetric import SymmetricKey
+from pycose.messages.cosebase import CoseBase
 
 if TYPE_CHECKING:
-    from cose.keys.cosekey import CK
+    from pycose.keys.cosekey import CK
 
 CBOR = bytes
 

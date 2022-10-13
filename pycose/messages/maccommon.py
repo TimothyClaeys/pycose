@@ -3,14 +3,14 @@ from typing import Optional, TYPE_CHECKING
 
 import cbor2
 
-from cose import headers
-from cose.exceptions import CoseException
-from cose.keys.keyops import MacVerifyOp, MacCreateOp
-from cose.keys.symmetric import SymmetricKey
-from cose.messages import cosemessage
+from pycose import headers
+from pycose.exceptions import CoseException
+from pycose.keys.keyops import MacVerifyOp, MacCreateOp
+from pycose.keys.symmetric import SymmetricKey
+from pycose.messages import cosemessage
 
 if TYPE_CHECKING:
-    from cose.keys.symmetric import SK
+    from pycose.keys.symmetric import SK
 
 
 class MacCommon(cosemessage.CoseMessage, metaclass=abc.ABCMeta):

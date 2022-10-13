@@ -2,13 +2,13 @@ from binascii import unhexlify
 
 import pytest
 
-from cose.algorithms import Es256
-from cose.keys.curves import P521, P384, P256
-from cose.exceptions import CoseInvalidKey, CoseIllegalKeyType, CoseException, CoseUnsupportedCurve
-from cose.keys import EC2Key, CoseKey
-from cose.keys.keyops import SignOp
-from cose.keys.keyparam import KpKty, EC2KpCurve, EC2KpX, EC2KpY, EC2KpD, KpAlg, KpKeyOps
-from cose.keys.keytype import KtyEC2, KtyOKP, KtySymmetric
+from pycose.algorithms import Es256
+from pycose.keys.curves import P521, P384, P256
+from pycose.exceptions import CoseInvalidKey, CoseIllegalKeyType, CoseException, CoseUnsupportedCurve
+from pycose.keys import EC2Key, CoseKey
+from pycose.keys.keyops import SignOp
+from pycose.keys.keyparam import KpKty, EC2KpCurve, EC2KpX, EC2KpY, EC2KpD, KpAlg, KpKeyOps
+from pycose.keys.keytype import KtyEC2, KtyOKP, KtySymmetric
 
 p256_d = unhexlify(b'57c92077664146e876760c9520d054aa93c3afb04e306705db6090308507b4d3')
 p256_x = unhexlify(b'bac5b11cad8f99f9c72b05cf4b9e26d244dc189f745228255a219a86d6a09eff')
@@ -264,7 +264,7 @@ def test_dict_invalid_deletion():
     with pytest.raises(CoseInvalidKey) as excinfo:
         del key[EC2KpD]
 
-    assert "Deleting <class 'cose.keys.keyparam.EC2KpD'> attribute would lead to an invalid COSE EC2 Key" in str(
+    assert "Deleting <class 'pycose.keys.keyparam.EC2KpD'> attribute would lead to an invalid COSE EC2 Key" in str(
         excinfo.value)
 
 
@@ -277,7 +277,7 @@ def test_set_curve_in_key():
     with pytest.raises(CoseUnsupportedCurve) as excinfo:
         _ = EC2Key(crv='Ed25519', d=p256_d)
 
-    assert "Invalid COSE curve <class 'cose.keys.curves.Ed25519'> for key type EC2Key" in str(excinfo)
+    assert "Invalid COSE curve <class 'pycose.keys.curves.Ed25519'> for key type EC2Key" in str(excinfo)
 
     key = EC2Key(crv='P_256', d=p256_d)
     assert key.crv == P256

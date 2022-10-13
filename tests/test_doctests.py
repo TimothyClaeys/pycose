@@ -1,13 +1,13 @@
 from binascii import unhexlify, hexlify
 
-from cose.keys.curves import Ed25519
-from cose.messages import Enc0Message, CoseMessage, Sign1Message, Mac0Message
-from cose.keys import CoseKey
-from cose.algorithms import A128GCM, EdDSA, HMAC256
-from cose.headers import Algorithm, KID, IV
-from cose.keys.keyparam import KpKty, SymKpK, KpKeyOps, OKPKpCurve, OKPKpD, OKPKpX
-from cose.keys.keytype import KtySymmetric, KtyOKP
-from cose.keys.keyops import EncryptOp, DecryptOp, SignOp, VerifyOp, MacCreateOp, MacVerifyOp
+from pycose.keys.curves import Ed25519
+from pycose.messages import Enc0Message, CoseMessage, Sign1Message, Mac0Message
+from pycose.keys import CoseKey
+from pycose.algorithms import A128GCM, EdDSA, HMAC256
+from pycose.headers import Algorithm, KID, IV
+from pycose.keys.keyparam import KpKty, SymKpK, KpKeyOps, OKPKpCurve, OKPKpD, OKPKpX
+from pycose.keys.keytype import KtySymmetric, KtyOKP
+from pycose.keys.keyops import EncryptOp, DecryptOp, SignOp, VerifyOp, MacCreateOp, MacVerifyOp
 
 
 def test_simple_enc0message():

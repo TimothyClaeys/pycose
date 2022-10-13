@@ -3,16 +3,16 @@ from typing import Optional, Type, Union, List, TYPE_CHECKING
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
 
-from cose import utils
-from cose.exceptions import CoseUnsupportedCurve, CoseInvalidKey, CoseIllegalKeyType, CoseIllegalKeyOps
-from cose.keys.cosekey import CoseKey
-from cose.keys.keyops import SignOp, VerifyOp, DeriveKeyOp, DeriveBitsOp
-from cose.keys.keyparam import EC2KeyParam, EC2KpCurve, EC2KpX, EC2KpY, EC2KpD, KpKty, KeyParam
-from cose.keys.keytype import KtyEC2
+from pycose import utils
+from pycose.exceptions import CoseUnsupportedCurve, CoseInvalidKey, CoseIllegalKeyType, CoseIllegalKeyOps
+from pycose.keys.cosekey import CoseKey
+from pycose.keys.keyops import SignOp, VerifyOp, DeriveKeyOp, DeriveBitsOp
+from pycose.keys.keyparam import EC2KeyParam, EC2KpCurve, EC2KpX, EC2KpY, EC2KpD, KpKty, KeyParam
+from pycose.keys.keytype import KtyEC2
 
 if TYPE_CHECKING:
-    from cose.keys.keyops import KEYOPS
-    from cose.keys.curves import CoseCurve
+    from pycose.keys.keyops import KEYOPS
+    from pycose.keys.curves import CoseCurve
 
 
 @CoseKey.record_kty(KtyEC2)
@@ -23,7 +23,7 @@ class EC2Key(CoseKey):
         """
         Returns an initialized COSE Key object of type EC2Key.
 
-        :param cose_key: Dict containing COSE Key parameters and there values.
+        :param cose_key: Dict containing COSE Key parameters and their values.
         :return: an initialized EC2Key key
         """
         _optional_params = {}
@@ -130,7 +130,7 @@ class EC2Key(CoseKey):
     @property
     def crv(self) -> Optional[Type['CoseCurve']]:
         """
-        Returns the mandatory :class:`~cose.keys.keyparam.EC2KpCurve` attribute of the COSE EC2 Key object.
+        Returns the mandatory :class:`~pycose.keys.keyparam.EC2KpCurve` attribute of the COSE EC2 Key object.
         """
 
         if EC2KpCurve in self.store:
@@ -149,7 +149,7 @@ class EC2Key(CoseKey):
     @property
     def x(self) -> bytes:
         """
-        Returns the mandatory :class:`~cose.keys.keyparam.EC2KpX` attribute of the COSE EC2 Key object.
+        Returns the mandatory :class:`~pycose.keys.keyparam.EC2KpX` attribute of the COSE EC2 Key object.
         """
 
         return self.store.get(EC2KpX, b'')
@@ -163,7 +163,7 @@ class EC2Key(CoseKey):
     @property
     def y(self) -> bytes:
         """
-        Returns the mandatory :class:`~cose.keys.keyparam.EC2KpY` attribute of the COSE EC2 Key object.
+        Returns the mandatory :class:`~pycose.keys.keyparam.EC2KpY` attribute of the COSE EC2 Key object.
         """
 
         return self.store.get(EC2KpY, b'')
@@ -177,7 +177,7 @@ class EC2Key(CoseKey):
     @property
     def d(self) -> bytes:
         """
-        Returns the mandatory :class:`~cose.keys.keyparam.EC2KpD` attribute of the COSE EC2 Key object.
+        Returns the mandatory :class:`~pycose.keys.keyparam.EC2KpD` attribute of the COSE EC2 Key object.
         """
 
         return self.store.get(EC2KpD, b'')
@@ -190,7 +190,7 @@ class EC2Key(CoseKey):
 
     @property
     def key_ops(self) -> List[Type['KEYOPS']]:
-        """ Returns the value of the :class:`~cose.keys.keyparam.KpKeyOps` key parameter """
+        """ Returns the value of the :class:`~pycose.keys.keyparam.KpKeyOps` key parameter """
 
         return CoseKey.key_ops.fget(self)
 
@@ -208,9 +208,9 @@ class EC2Key(CoseKey):
         """
         Generate a random EC2Key COSE key object.
 
-        :param crv: Specify an :class:`~cose.attributes.algorithms.CoseEllipticCurves`.
-        :param optional_params: Optional key attributes for the :class:`~cose.keys.ec2.EC2Key` object, e.g., \
-        :class:`~cose.keys.keyparam.KpAlg` or  :class:`~cose.keys.keyparam.KpKid`.
+        :param crv: Specify an :class:`~pycose.attributes.algorithms.CoseEllipticCurves`.
+        :param optional_params: Optional key attributes for the :class:`~pycose.keys.ec2.EC2Key` object, e.g., \
+        :class:`~pycose.keys.keyparam.KpAlg` or :class:`~pycose.keys.keyparam.KpKid`.
 
         :return: An COSE `EC2Key` key.
         """

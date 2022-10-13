@@ -24,7 +24,7 @@ with open(os.path.join(this_directory, 'README.md')) as file:
     LONG_DESCRIPTION = file.read()
 
 setup(
-    name='cose',
+    name='pycose',
     version='0.9.dev8',
     packages=find_packages(exclude=['tests', 'docs']),
     python_requires='>=3.6',

@@ -2,13 +2,13 @@ from typing import Optional, TYPE_CHECKING, Union, TypeVar
 
 import cbor2
 
-from cose import utils
-from cose.messages.signcommon import SignCommon
+from pycose import utils
+from pycose.messages.signcommon import SignCommon
 
 if TYPE_CHECKING:
-    from cose.keys.ec2 import EC2
-    from cose.keys.okp import OKP
-    from cose.keys.rsa import RSA
+    from pycose.keys.ec2 import EC2
+    from pycose.keys.okp import OKP
+    from pycose.keys.rsa import RSA
 
 
 class CoseSignature(SignCommon):

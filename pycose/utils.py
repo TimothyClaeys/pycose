@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Callable
 
-from cose.exceptions import CoseException
+from pycose.exceptions import CoseException
 
 
 class _CoseAttribute(ABC):

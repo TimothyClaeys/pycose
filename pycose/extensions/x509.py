@@ -3,7 +3,7 @@ from typing import List, Set, Union, Type
 import cbor2
 from certvalidator import CertificateValidator
 
-from cose.algorithms import CoseAlg, CoseAlgorithm
+from pycose.algorithms import CoseAlg, CoseAlgorithm
 
 
 class X5Bag:

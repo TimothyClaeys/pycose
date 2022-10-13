@@ -5,19 +5,19 @@ from typing import Optional, TypeVar, Type, List, Any, TYPE_CHECKING, Callable, 
 
 import cbor2
 
-from cose import utils
-from cose.algorithms import CoseAlgorithm
-from cose.exceptions import CoseException, CoseIllegalKeyType, CoseIllegalAlgorithm, CoseIllegalKeyOps
-from cose.headers import EphemeralKey, StaticKey
-from cose.keys.keyops import KeyOps
-from cose.keys.keyparam import KpKty, KpKeyOps, KpAlg, KpKid, KpBaseIV, KeyParam
+from pycose import utils
+from pycose.algorithms import CoseAlgorithm
+from pycose.exceptions import CoseException, CoseIllegalKeyType, CoseIllegalAlgorithm, CoseIllegalKeyOps
+from pycose.headers import EphemeralKey, StaticKey
+from pycose.keys.keyops import KeyOps
+from pycose.keys.keyparam import KpKty, KpKeyOps, KpAlg, KpKid, KpBaseIV, KeyParam
 
 if TYPE_CHECKING:
-    from cose.headers import CoseHeaderAttribute
-    from cose.algorithms import CoseAlg
-    from cose.keys.keytype import KTYPE
-    from cose.keys.keyops import KEYOPS
-    from cose.keys.keyparam import KP
+    from pycose.headers import CoseHeaderAttribute
+    from pycose.algorithms import CoseAlg
+    from pycose.keys.keytype import KTYPE
+    from pycose.keys.keyops import KEYOPS
+    from pycose.keys.keyparam import KP
 
 
 class CoseKey(MutableMapping, ABC):
@@ -41,7 +41,7 @@ class CoseKey(MutableMapping, ABC):
         """
         Decorator to record all the COSE key types dynamically.
 
-        :param kty: A :class:`cose.keys.keytype.KTY`
+        :param kty: A :class:`pycose.keys.keytype.KTY`
         :return: A decorator function.
         """
 
@@ -173,7 +173,7 @@ class CoseKey(MutableMapping, ABC):
 
     @property
     def kty(self) -> Optional[Type['KTYPE']]:
-        """ Returns the value of the mandatory :class:`~cose.keys.keyparam.KpKty` key parameter """
+        """ Returns the value of the mandatory :class:`~pycose.keys.keyparam.KpKty` key parameter """
 
         return self.store.get(KpKty)
 
@@ -183,7 +183,7 @@ class CoseKey(MutableMapping, ABC):
 
     @property
     def alg(self) -> Optional[Type['CoseAlg']]:
-        """ Returns the value of the :class:`~cose.keys.keyparam.KpAlg` key parameter """
+        """ Returns the value of the :class:`~pycose.keys.keyparam.KpAlg` key parameter """
 
         return self.store.get(KpAlg)
 
@@ -193,7 +193,7 @@ class CoseKey(MutableMapping, ABC):
 
     @property
     def kid(self) -> bytes:
-        """ Returns the value of the :class:`~cose.keys.keyparam.KpKid` key parameter """
+        """ Returns the value of the :class:`~pycose.keys.keyparam.KpKid` key parameter """
 
         return self.store.get(KpKid, b'')
 
@@ -205,7 +205,7 @@ class CoseKey(MutableMapping, ABC):
 
     @property
     def key_ops(self) -> List[Type['KEYOPS']]:
-        """ Returns the value of the :class:`~cose.keys.keyparam.KpKeyOps` key parameter """
+        """ Returns the value of the :class:`~pycose.keys.keyparam.KpKeyOps` key parameter """
 
         return self.store.get(KpKeyOps, [])
 
@@ -218,7 +218,7 @@ class CoseKey(MutableMapping, ABC):
 
     @property
     def base_iv(self) -> bytes:
-        """ Returns the value of the :class:`~cose.keys.keyparam.KpBaseIV` key parameter """
+        """ Returns the value of the :class:`~pycose.keys.keyparam.KpBaseIV` key parameter """
 
         return self.store.get(KpBaseIV, b'')
 

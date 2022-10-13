@@ -9,11 +9,11 @@
 
 from typing import Optional, TYPE_CHECKING
 
-from cose import utils
-from cose.messages import cosemessage, maccommon
+from pycose import utils
+from pycose.messages import cosemessage, maccommon
 
 if TYPE_CHECKING:
-    from cose.keys.symmetric import SK
+    from pycose.keys.symmetric import SK
 
 
 @cosemessage.CoseMessage.record_cbor_tag(17)

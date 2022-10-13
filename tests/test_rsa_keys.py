@@ -2,11 +2,11 @@ import os
 
 import pytest
 
-from cose.exceptions import CoseIllegalKeyType
-from cose.keys import RSAKey, CoseKey
-from cose.keys.keyops import SignOp
-from cose.keys.keyparam import KpKty, RSAKpE, RSAKpN, KpAlg, KpKeyOps, RSAKpD
-from cose.keys.keytype import KtySymmetric, KtyOKP, KtyEC2, KtyRSA
+from pycose.exceptions import CoseIllegalKeyType
+from pycose.keys import RSAKey, CoseKey
+from pycose.keys.keyops import SignOp
+from pycose.keys.keyparam import KpKty, RSAKpE, RSAKpN, KpAlg, KpKeyOps, RSAKpD
+from pycose.keys.keytype import KtySymmetric, KtyOKP, KtyEC2, KtyRSA
 
 
 @pytest.mark.parametrize('bit_length', [512, 1024, 2048, 4096])

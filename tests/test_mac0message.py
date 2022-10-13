@@ -1,10 +1,10 @@
 import cbor2
 import pytest
 
-from cose.keys.cosekey import CoseKey
-from cose.keys.keyops import MacVerifyOp, MacCreateOp
-from cose.messages.cosemessage import CoseMessage
-from cose.messages.mac0message import Mac0Message
+from pycose.keys.cosekey import CoseKey
+from pycose.keys.keyops import MacVerifyOp, MacCreateOp
+from pycose.messages.cosemessage import CoseMessage
+from pycose.messages.mac0message import Mac0Message
 
 
 def test_mac0_encoding(test_mac0):

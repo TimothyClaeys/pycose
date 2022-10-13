@@ -3,16 +3,16 @@ from typing import List, TYPE_CHECKING, Optional, Type, Union
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
 
-from cose.exceptions import CoseInvalidKey, CoseIllegalKeyType, CoseIllegalKeyOps
-from cose.keys.cosekey import CoseKey, KpKty
-from cose.keys.keyparam import (RSAKeyParam, RSAKpN, RSAKpE, RSAKpD, RSAKpP,
-                                RSAKpQ, RSAKpDP, RSAKpDQ, RSAKpQInv, RSAKpOther, RSAKpDi, RSAKpRi, RSAKpTi)
-from cose.keys.keytype import KtyRSA
-from cose.keys.keyops import SignOp, VerifyOp, DeriveKeyOp, DeriveBitsOp
+from pycose.exceptions import CoseInvalidKey, CoseIllegalKeyType, CoseIllegalKeyOps
+from pycose.keys.cosekey import CoseKey, KpKty
+from pycose.keys.keyparam import (RSAKeyParam, RSAKpN, RSAKpE, RSAKpD, RSAKpP,
+                                  RSAKpQ, RSAKpDP, RSAKpDQ, RSAKpQInv, RSAKpOther, RSAKpDi, RSAKpRi, RSAKpTi)
+from pycose.keys.keytype import KtyRSA
+from pycose.keys.keyops import SignOp, VerifyOp, DeriveKeyOp, DeriveBitsOp
 
 if TYPE_CHECKING:
-    from cose.keys.keyops import KEYOPS
-    from cose.keys.keyparam import KeyParam
+    from pycose.keys.keyops import KEYOPS
+    from pycose.keys.keyparam import KeyParam
 
 
 @CoseKey.record_kty(KtyRSA)
@@ -242,7 +242,7 @@ class RSAKey(CoseKey):
 
     @property
     def key_ops(self) -> List[Type['KEYOPS']]:
-        """ Returns the value of the :class:`~cose.keys.keyparam.KpKeyOps` key parameter """
+        """ Returns the value of the :class:`~pycose.keys.keyparam.KpKeyOps` key parameter """
 
         return CoseKey.key_ops.fget(self)
 
@@ -261,7 +261,7 @@ class RSAKey(CoseKey):
         Generate a random RSAKey COSE key object. The RSA keys have two primes (see section 4 of RFC 8230).
 
         :param key_bits: Specify the number of private key bits.
-        :param optional_params: Optional key attribute for the :class:`~cose.keys.rsa.RSAKey` object.
+        :param optional_params: Optional key attribute for the :class:`~pycose.keys.rsa.RSAKey` object.
 
         :return: An COSE `RSAKey` key.
         """

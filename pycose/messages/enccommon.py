@@ -3,14 +3,14 @@ from typing import Optional, TYPE_CHECKING
 
 import cbor2
 
-from cose import headers
-from cose.exceptions import CoseException
-from cose.keys.keyops import DecryptOp, EncryptOp
-from cose.keys.symmetric import SymmetricKey
-from cose.messages.cosemessage import CoseMessage
+from pycose import headers
+from pycose.exceptions import CoseException
+from pycose.keys.keyops import DecryptOp, EncryptOp
+from pycose.keys.symmetric import SymmetricKey
+from pycose.messages.cosemessage import CoseMessage
 
 if TYPE_CHECKING:
-    from cose.keys.symmetric import SK
+    from pycose.keys.symmetric import SK
 
 
 class EncCommon(CoseMessage, metaclass=abc.ABCMeta):

@@ -2,11 +2,11 @@ import pprint
 from abc import ABC
 from typing import TypeVar, Union, Type
 
-from cose.algorithms import CoseAlgorithm
-from cose.keys.curves import CoseCurve
-from cose.keys.keyops import KeyOps
-from cose.keys.keytype import KTY
-from cose.utils import _CoseAttribute
+from pycose.algorithms import CoseAlgorithm
+from pycose.keys.curves import CoseCurve
+from pycose.keys.keyops import KeyOps
+from pycose.keys.keytype import KTY
+from pycose.utils import _CoseAttribute
 
 
 #########################################

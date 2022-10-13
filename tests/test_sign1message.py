@@ -1,12 +1,12 @@
 import cbor2
 import pytest
 
-from cose.exceptions import CoseIllegalAlgorithm, CoseIllegalKeyOps
-from cose.keys import OKPKey, EC2Key
-from cose.keys.cosekey import CoseKey
-from cose.keys.keyops import SignOp, VerifyOp
-from cose.messages.cosemessage import CoseMessage
-from cose.messages.sign1message import Sign1Message
+from pycose.exceptions import CoseIllegalAlgorithm, CoseIllegalKeyOps
+from pycose.keys import OKPKey, EC2Key
+from pycose.keys.cosekey import CoseKey
+from pycose.keys.keyops import SignOp, VerifyOp
+from pycose.messages.cosemessage import CoseMessage
+from pycose.messages.sign1message import Sign1Message
 
 
 def test_sign1_encoding(test_sign1):

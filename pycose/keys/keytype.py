@@ -1,7 +1,7 @@
 from abc import ABC
 from typing import TypeVar
 
-from cose.utils import _CoseAttribute
+from pycose.utils import _CoseAttribute
 
 
 class KTY(_CoseAttribute, ABC):

@@ -3,16 +3,16 @@ from typing import Optional, Type, Union, List, TYPE_CHECKING
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.serialization import PrivateFormat, PublicFormat, Encoding
 
-from cose import utils
-from cose.exceptions import CoseUnsupportedCurve, CoseInvalidKey, CoseIllegalKeyType, CoseIllegalKeyOps
-from cose.keys.cosekey import CoseKey, KpKty
-from cose.keys.keyops import KEYOPS, SignOp, VerifyOp, DeriveBitsOp, DeriveKeyOp
-from cose.keys.keyparam import OKPKeyParam, OKPKpCurve, OKPKpX, OKPKpD, KeyParam
-from cose.keys.keytype import KtyOKP
+from pycose import utils
+from pycose.exceptions import CoseUnsupportedCurve, CoseInvalidKey, CoseIllegalKeyType, CoseIllegalKeyOps
+from pycose.keys.cosekey import CoseKey, KpKty
+from pycose.keys.keyops import KEYOPS, SignOp, VerifyOp, DeriveBitsOp, DeriveKeyOp
+from pycose.keys.keyparam import OKPKeyParam, OKPKpCurve, OKPKpX, OKPKpD, KeyParam
+from pycose.keys.keytype import KtyOKP
 
 if TYPE_CHECKING:
-    from cose.keys.keyops import KEYOPS
-    from cose.keys.curves import CoseCurve
+    from pycose.keys.keyops import KEYOPS
+    from pycose.keys.curves import CoseCurve
 
 
 @CoseKey.record_kty(KtyOKP)
@@ -99,7 +99,7 @@ class OKPKey(CoseKey):
     @property
     def crv(self) -> Optional[Type['CoseCurve']]:
         """
-        Returns the mandatory :class:`~cose.keys.keyparam.OKPKpCurve` attribute of the COSE OKP Key object.
+        Returns the mandatory :class:`~pycose.keys.keyparam.OKPKpCurve` attribute of the COSE OKP Key object.
         """
 
         if OKPKpCurve in self.store:
@@ -118,7 +118,7 @@ class OKPKey(CoseKey):
     @property
     def x(self) -> bytes:
         """
-        Returns the mandatory :class:`~cose.keys.keyparam.OKPKpX` attribute of the COSE OKP Key object.
+        Returns the mandatory :class:`~pycose.keys.keyparam.OKPKpX` attribute of the COSE OKP Key object.
         """
 
         return self.store.get(OKPKpX, b'')
@@ -132,7 +132,7 @@ class OKPKey(CoseKey):
     @property
     def d(self) -> bytes:
         """
-        Returns the mandatory :class:`~cose.keys.keyparam.OKPKpD` attribute of the COSE OKP Key object.
+        Returns the mandatory :class:`~pycose.keys.keyparam.OKPKpD` attribute of the COSE OKP Key object.
         """
 
         return self.store.get(OKPKpD, b'')
@@ -145,7 +145,7 @@ class OKPKey(CoseKey):
 
     @property
     def key_ops(self) -> List[Type['KEYOPS']]:
-        """ Returns the value of the :class:`~cose.keys.keyparam.KpKeyOps` key parameter """
+        """ Returns the value of the :class:`~pycose.keys.keyparam.KpKeyOps` key parameter """
 
         return CoseKey.key_ops.fget(self)
 
@@ -164,8 +164,8 @@ class OKPKey(CoseKey):
         Generate a random OKPKey COSE key object.
 
         :param crv: Specify an elliptic curve.
-        :param optional_params: Optional key attributes for the :class:`~cose.keys.okp.OKPKey` object, e.g., \
-        :class:`~cose.keys.keyparam.KpAlg` or  :class:`~cose.keys.keyparam.KpKid`.
+        :param optional_params: Optional key attributes for the :class:`~pycose.keys.okp.OKPKey` object, e.g., \
+        :class:`~pycose.keys.keyparam.KpAlg` or  :class:`~pycose.keys.keyparam.KpKid`.
 
         :returns: A COSE `OKPKey` key.
         """

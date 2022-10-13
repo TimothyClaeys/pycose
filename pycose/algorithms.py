@@ -20,17 +20,17 @@ from ecdsa.curves import Curve, NIST521p, NIST384p, NIST256p
 from ecdsa.ellipticcurve import Point
 from ecdsa.keys import SigningKey, VerifyingKey, BadSignatureError
 
-from cose.exceptions import CoseException
-from cose.headers import Algorithm
-from cose.utils import _CoseAttribute
+from pycose.exceptions import CoseException
+from pycose.headers import Algorithm
+from pycose.utils import _CoseAttribute
 
 if TYPE_CHECKING:
-    from cose.keys.symmetric import SK
-    from cose.keys.ec2 import EC2
-    from cose.keys.okp import OKP
-    from cose.keys.rsa import RSA
-    from cose.keys.curves import CoseCurve
-    from cose.messages.context import CoseKDFContext
+    from pycose.keys.symmetric import SK
+    from pycose.keys.ec2 import EC2
+    from pycose.keys.okp import OKP
+    from pycose.keys.rsa import RSA
+    from pycose.keys.curves import CoseCurve
+    from pycose.messages.context import CoseKDFContext
 
 
 class CoseAlgorithm(_CoseAttribute, ABC):

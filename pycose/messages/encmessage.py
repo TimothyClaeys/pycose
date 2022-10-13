@@ -1,18 +1,18 @@
 import os
 from typing import List, Optional, TYPE_CHECKING
 
-from cose import utils, headers
-from cose.exceptions import CoseException
-from cose.keys.keyops import EncryptOp
-from cose.keys.keyparam import KpAlg, KpKeyOps
-from cose.keys.symmetric import SymmetricKey
-from cose.messages import enccommon, cosemessage
-from cose.messages.recipient import DirectEncryption, DirectKeyAgreement, KeyWrap, KeyAgreementWithKeyWrap, \
+from pycose import utils, headers
+from pycose.exceptions import CoseException
+from pycose.keys.keyops import EncryptOp
+from pycose.keys.keyparam import KpAlg, KpKeyOps
+from pycose.keys.symmetric import SymmetricKey
+from pycose.messages import enccommon, cosemessage
+from pycose.messages.recipient import DirectEncryption, DirectKeyAgreement, KeyWrap, KeyAgreementWithKeyWrap, \
     CoseRecipient
 
 if TYPE_CHECKING:
-    from cose.keys.symmetric import SK
-    from cose.messages.recipient import Recipient
+    from pycose.keys.symmetric import SK
+    from pycose.messages.recipient import Recipient
 
 CBOR = bytes
 
@@ -49,7 +49,7 @@ class EncMessage(enccommon.EncCommon):
         :param uhdr: Unprotected header.
         :param payload: The payload of the COSE_Encrypt message.
         :param external_aad: External additional data (is authenticated by not included in the final message)
-        :param recipients: An optional list of :class:`~cose.messages.recipient.CoseRecipient` objects.
+        :param recipients: An optional list of :class:`~pycose.messages.recipient.CoseRecipient` objects.
         """
 
         if phdr is None:

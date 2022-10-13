@@ -4,12 +4,12 @@ from typing import Optional, Any, Dict, Type, Tuple
 
 import cbor2
 
-from cose import utils
-from cose.algorithms import CoseAlgorithm
-from cose.exceptions import CoseException
-from cose.headers import CoseHeaderAttribute, Algorithm
-from cose.keys.cosekey import CoseKey
-from cose.keys.cosekey import KpKeyOps
+from pycose import utils
+from pycose.algorithms import CoseAlgorithm
+from pycose.exceptions import CoseException
+from pycose.headers import CoseHeaderAttribute, Algorithm
+from pycose.keys.cosekey import CoseKey
+from pycose.keys.cosekey import KpKeyOps
 
 CBOR = bytes
 

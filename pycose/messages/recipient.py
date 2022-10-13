@@ -4,8 +4,8 @@ from typing import Optional, TYPE_CHECKING, List, Type, TypeVar
 
 import cbor2
 
-from cose import headers, utils
-from cose.algorithms import \
+from pycose import headers, utils
+from pycose.algorithms import \
     CoseAlgorithm, \
     Direct, \
     RsaesOaepSha512, \
@@ -26,18 +26,18 @@ from cose.algorithms import \
     EcdhSsA128KW, \
     EcdhSsA192KW, \
     EcdhSsA256KW
-from cose.exceptions import CoseException, CoseMalformedMessage, CoseIllegalAlgorithm
-from cose.keys.ec2 import EC2Key, EC2KpD
-from cose.keys.keyops import DeriveKeyOp, EncryptOp, DecryptOp, WrapOp, UnwrapOp, DeriveBitsOp
-from cose.keys.keyparam import KpAlg, KpKeyOps
-from cose.keys.rsa import RSAKey
-from cose.keys.symmetric import SymmetricKey
-from cose.messages.context import CoseKDFContext, PartyInfo, SuppPubInfo
-from cose.messages.cosemessage import CoseMessage
+from pycose.exceptions import CoseException, CoseMalformedMessage, CoseIllegalAlgorithm
+from pycose.keys.ec2 import EC2Key, EC2KpD
+from pycose.keys.keyops import DeriveKeyOp, EncryptOp, DecryptOp, WrapOp, UnwrapOp, DeriveBitsOp
+from pycose.keys.keyparam import KpAlg, KpKeyOps
+from pycose.keys.rsa import RSAKey
+from pycose.keys.symmetric import SymmetricKey
+from pycose.messages.context import CoseKDFContext, PartyInfo, SuppPubInfo
+from pycose.messages.cosemessage import CoseMessage
 
 if TYPE_CHECKING:
-    from cose.keys.symmetric import SK
-    from cose.algorithms import _EncAlg
+    from pycose.keys.symmetric import SK
+    from pycose.algorithms import _EncAlg
 
 CBOR = bytes
 
@@ -119,7 +119,7 @@ class CoseRecipient(CoseMessage, metaclass=abc.ABCMeta):
         :param uhdr: Unprotected header.
         :param payload: The payload of the COSE_Encrypt message.
         :param external_aad: External additional data (is authenticated by not included in the final message)
-        :param recipients: An optional list of :class:`~cose.messages.recipient.CoseRecipient` objects.
+        :param recipients: An optional list of :class:`~pycose.messages.recipient.CoseRecipient` objects.
         """
 
         if phdr is None:

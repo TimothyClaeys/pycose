@@ -1,9 +1,9 @@
 import cbor2
 
-from cose.messages.enc0message import Enc0Message
-from cose.keys.cosekey import CoseKey
-from cose.keys.keyops import EncryptOp, DecryptOp
-from cose.messages.cosemessage import CoseMessage
+from pycose.messages.enc0message import Enc0Message
+from pycose.keys.cosekey import CoseKey
+from pycose.keys.keyops import EncryptOp, DecryptOp
+from pycose.messages.cosemessage import CoseMessage
 
 
 def test_encrypt0_encoding(test_encrypt0):

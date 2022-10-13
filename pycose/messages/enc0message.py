@@ -9,11 +9,11 @@ COSE_Encrypt0 = [
 
 from typing import Optional, TYPE_CHECKING
 
-from cose import utils
-from cose.messages import enccommon, cosemessage
+from pycose import utils
+from pycose.messages import enccommon, cosemessage
 
 if TYPE_CHECKING:
-    from cose.keys.symmetric import SK
+    from pycose.keys.symmetric import SK
 
 CBOR = bytes
 

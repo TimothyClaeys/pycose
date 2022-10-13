@@ -12,15 +12,15 @@ COSE_Mac = [
 import os
 from typing import Optional, List, TYPE_CHECKING
 
-from cose import utils, headers
-from cose.exceptions import CoseException
-from cose.keys.keyops import MacCreateOp
-from cose.messages import cosemessage, maccommon
-from cose.messages.recipient import CoseRecipient, DirectEncryption, DirectKeyAgreement, KeyWrap, \
+from pycose import utils, headers
+from pycose.exceptions import CoseException
+from pycose.keys.keyops import MacCreateOp
+from pycose.messages import cosemessage, maccommon
+from pycose.messages.recipient import CoseRecipient, DirectEncryption, DirectKeyAgreement, KeyWrap, \
     KeyAgreementWithKeyWrap
 
 if TYPE_CHECKING:
-    from cose.keys.symmetric import SK, SymmetricKey
+    from pycose.keys.symmetric import SK, SymmetricKey
 
 CBOR = bytes
 

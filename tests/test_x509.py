@@ -1,7 +1,7 @@
 from binascii import unhexlify
-from cose import algorithms
-from cose.algorithms import Sha256Trunc64
-from cose.extensions.x509 import X5T
+from pycose import algorithms
+from pycose.algorithms import Sha256Trunc64
+from pycose.extensions.x509 import X5T
 
 
 def test_x5t():

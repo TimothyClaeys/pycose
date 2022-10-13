@@ -4,7 +4,7 @@ import attr
 import cbor2
 
 if TYPE_CHECKING:
-    from cose.algorithms import _EncAlg
+    from pycose.algorithms import _EncAlg
 
 CBOR = bytes
 

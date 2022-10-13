@@ -3,14 +3,14 @@ from os import urandom
 
 import pytest
 
-from cose.algorithms import CoseAlgorithm, Direct, A128GCM, AESCCM1664128, HMAC256, Es256
-from cose.exceptions import CoseException
-from cose.headers import Algorithm, KID, IV, CoseHeaderAttribute, Critical, ContentType
-from cose.keys import SymmetricKey, EC2Key
-from cose.keys.curves import P256
-from cose.messages import Enc0Message, EncMessage, Mac0Message, MacMessage, SignMessage, Sign1Message, CoseMessage
-from cose.messages.recipient import DirectEncryption
-from cose.messages.signer import CoseSignature
+from pycose.algorithms import CoseAlgorithm, Direct, A128GCM, AESCCM1664128, HMAC256, Es256
+from pycose.exceptions import CoseException
+from pycose.headers import Algorithm, KID, IV, CoseHeaderAttribute, Critical, ContentType
+from pycose.keys import SymmetricKey, EC2Key
+from pycose.keys.curves import P256
+from pycose.messages import Enc0Message, EncMessage, Mac0Message, MacMessage, SignMessage, Sign1Message, CoseMessage
+from pycose.messages.recipient import DirectEncryption
+from pycose.messages.signer import CoseSignature
 
 
 def test_cose_header_attribute_properties():

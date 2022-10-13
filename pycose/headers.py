@@ -1,7 +1,7 @@
 from abc import ABC
 from typing import Any
 
-from cose.utils import _CoseAttribute
+from pycose.utils import _CoseAttribute
 
 
 class CoseHeaderAttribute(_CoseAttribute, ABC):

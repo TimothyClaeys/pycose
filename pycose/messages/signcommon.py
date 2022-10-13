@@ -1,17 +1,17 @@
 import abc
 from typing import Type, TYPE_CHECKING
 
-from cose import headers
-from cose.keys.okp import OKPKey
-from cose.exceptions import CoseException
-from cose.keys.ec2 import EC2Key
-from cose.keys.rsa import RSAKey
-from cose.keys.keyops import VerifyOp, SignOp
-from cose.messages.cosemessage import CoseMessage
+from pycose import headers
+from pycose.keys.okp import OKPKey
+from pycose.exceptions import CoseException
+from pycose.keys.ec2 import EC2Key
+from pycose.keys.rsa import RSAKey
+from pycose.keys.keyops import VerifyOp, SignOp
+from pycose.messages.cosemessage import CoseMessage
 
 if TYPE_CHECKING:
-    from cose.keys.keyops import KEYOPS
-    from cose.algorithms import CoseAlg
+    from pycose.keys.keyops import KEYOPS
+    from pycose.algorithms import CoseAlg
 
 
 class SignCommon(CoseMessage, metaclass=abc.ABCMeta):

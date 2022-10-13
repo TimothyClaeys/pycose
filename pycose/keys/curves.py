@@ -4,8 +4,8 @@ from typing import Union
 from cryptography.hazmat.primitives.asymmetric import ed25519, ed448, x25519, x448
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurve, SECP256K1, SECP256R1, SECP384R1, SECP521R1
 
-from cose.keys.keytype import KtyEC2, KtyOKP
-from cose.utils import _CoseAttribute
+from pycose.keys.keytype import KtyEC2, KtyOKP
+from pycose.utils import _CoseAttribute
 
 EdwardsCurve = Union[ed25519.Ed25519PrivateKey, ed448.Ed448PrivateKey, x25519.X25519PrivateKey, x448.X448PrivateKey]
 
