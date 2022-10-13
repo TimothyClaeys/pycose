@@ -8,10 +8,8 @@ This project is a Python implementation of the IETF CBOR Encoded Message Syntax 
 ## Installation
 
 ```bash
-$ pip install cose
+$ pip install pycose
 ```
-
-:warning:**WARNING**:warning:: There is package on [PyPI](https://pypi.org/) called `pycose` which contains old code from this repository. Since I am not the maintainer I cannot update that package or remove it.
 
 ## What is COSE ?
 CBOR Encoded Message Syntax (COSE) is a data format for concise representation of small messages [RFC 8152](https://tools.ietf.org/html/rfc8152). COSE is optimized for low power devices. The messages can be encrypted, MAC'ed and signed. There are 6 different types of COSE messages:
@@ -40,8 +38,8 @@ Additionally, based on the message type, other message fields can be added:
 
 ```python
 from binascii import unhexlify
-from cose.messages import Enc0Message
-from cose.keys import SymmetricKey
+from pycose.messages import Enc0Message
+from pycose.keys import SymmetricKey
 
 # Create a COSE Encrypt0 Message
 msg = Enc0Message(
@@ -62,8 +60,8 @@ b'\xd0\x83U\xa2\x01\x01\x05P\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01
 ### Decoding
 ```python
 from binascii import unhexlify
-from cose.messages import CoseMessage
-from cose.keys import SymmetricKey
+from pycose.messages import CoseMessage
+from pycose.keys import SymmetricKey
 
 # message bytes (CBOR encoded)
 msg =  b'\xd0\x83U\xa2\x01\x01\x05P\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\xa1\x04X$meriadoc.brandybuck@buckland.exampleX \xc4\xaf\x85\xacJQ4\x93\x19\x93\xec\n\x18c\xa6\xe8\xc6n\xf4\xc9\xac\x161^\xe6\xfe\xcd\x9b.\x1cy\xa1'

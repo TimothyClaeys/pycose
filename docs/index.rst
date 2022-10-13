@@ -3,9 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-**********************************************************************
-``cose`` a Python implementation of CBOR Object Signing and Encryption
-**********************************************************************
+*************************************************************************
+``pycose`` a Python implementation of CBOR Object Signing and Encryption
+*************************************************************************
 
 What is COSE?
 -------------
@@ -48,11 +48,11 @@ Table of Contents
 
 .. toctree::
    :maxdepth: 2
-   :caption: The cose package (API)
+   :caption: The pycose package (API)
 
-   cose/messages/index.rst
-   cose/keys/index.rst
-   cose/algorithms.rst
+   pycose/messages/index.rst
+   pycose/keys/index.rst
+   pycose/algorithms.rst
 
 .. toctree::
    :maxdepth: 2

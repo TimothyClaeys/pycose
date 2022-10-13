@@ -1,9 +1,9 @@
 import cbor2
 
-from cose.keys.cosekey import CoseKey
-from cose.keys.keyops import MacCreateOp, MacVerifyOp
-from cose.messages.cosemessage import CoseMessage
-from cose.messages.macmessage import MacMessage
+from pycose.keys.cosekey import CoseKey
+from pycose.keys.keyops import MacCreateOp, MacVerifyOp
+from pycose.messages.cosemessage import CoseMessage
+from pycose.messages.macmessage import MacMessage
 from tests.conftest import _setup_direct_encryption_recipients
 
 

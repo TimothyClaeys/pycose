@@ -3,8 +3,8 @@ from binascii import hexlify, unhexlify
 import cbor2
 import pytest
 
-from cose.messages.cosemessage import CoseMessage
-from cose.messages.signmessage import SignMessage
+from pycose.messages.cosemessage import CoseMessage
+from pycose.messages.signmessage import SignMessage
 from tests.conftest import _setup_signers
 
 

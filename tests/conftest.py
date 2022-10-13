@@ -7,15 +7,15 @@ from typing import List
 
 import cbor2
 
-from cose.keys import cosekey
-from cose.algorithms import CoseAlgorithm
-from cose.keys.curves import CoseCurve
-from cose.headers import CoseHeaderAttribute, IV, EphemeralKey, Algorithm, KID, PartyUNonce, StaticKey, ContentType
-from cose.keys.keyparam import KpKty, SymKpK, OKPKpCurve, EC2KpCurve, KpKid, KpAlg, OKPKpD, EC2KpY, OKPKpX, EC2KpX, \
+from pycose.keys import cosekey
+from pycose.algorithms import CoseAlgorithm
+from pycose.keys.curves import CoseCurve
+from pycose.headers import CoseHeaderAttribute, IV, EphemeralKey, Algorithm, KID, PartyUNonce, StaticKey, ContentType
+from pycose.keys.keyparam import KpKty, SymKpK, OKPKpCurve, EC2KpCurve, KpKid, KpAlg, OKPKpD, EC2KpY, OKPKpX, EC2KpX, \
     EC2KpD, RSAKpE, RSAKpN, RSAKpD, RSAKpP, RSAKpQ, RSAKpDP, RSAKpDQ, RSAKpQInv
-from cose.keys.keytype import KTY
-from cose.messages.recipient import DirectEncryption, DirectKeyAgreement, KeyWrap, KeyAgreementWithKeyWrap
-from cose.messages.signer import CoseSignature
+from pycose.keys.keytype import KTY
+from pycose.messages.recipient import DirectEncryption, DirectKeyAgreement, KeyWrap, KeyAgreementWithKeyWrap
+from pycose.messages.signer import CoseSignature
 
 p_tests = join(pathlib.Path(__file__).parent.absolute(), 'vectors')
 

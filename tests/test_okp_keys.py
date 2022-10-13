@@ -3,16 +3,16 @@ from binascii import unhexlify
 
 import pytest
 
-from cose.algorithms import EdDSA
-from cose.exceptions import CoseInvalidKey, CoseIllegalKeyType, CoseUnsupportedCurve, CoseIllegalKeyOps
-from cose.keys import OKPKey, CoseKey
-from cose.keys.curves import Ed448, Ed25519, X448, X25519
-from cose.keys.keyops import SignOp, MacVerifyOp
-from cose.keys.keyparam import KpKty, OKPKpCurve, OKPKpX, OKPKpD, KpAlg, KpKeyOps
+from pycose.algorithms import EdDSA
+from pycose.exceptions import CoseInvalidKey, CoseIllegalKeyType, CoseUnsupportedCurve, CoseIllegalKeyOps
+from pycose.keys import OKPKey, CoseKey
+from pycose.keys.curves import Ed448, Ed25519, X448, X25519
+from pycose.keys.keyops import SignOp, MacVerifyOp
+from pycose.keys.keyparam import KpKty, OKPKpCurve, OKPKpX, OKPKpD, KpAlg, KpKeyOps
 ###############################################################
 # OKP key checks
 ###############################################################
-from cose.keys.keytype import KtyOKP, KtyEC2, KtySymmetric
+from pycose.keys.keytype import KtyOKP, KtyEC2, KtySymmetric
 
 
 def _is_valid_okp_key(key: OKPKey):

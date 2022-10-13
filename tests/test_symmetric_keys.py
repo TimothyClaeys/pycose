@@ -2,12 +2,12 @@ import os
 
 import pytest
 
-from cose.algorithms import A128GCM
-from cose.exceptions import CoseIllegalKeyType, CoseInvalidKey
-from cose.keys import SymmetricKey, CoseKey
-from cose.keys.keyops import EncryptOp
-from cose.keys.keyparam import KpKty, SymKpK, KpAlg, KpKeyOps
-from cose.keys.keytype import KtySymmetric
+from pycose.algorithms import A128GCM
+from pycose.exceptions import CoseIllegalKeyType, CoseInvalidKey
+from pycose.keys import SymmetricKey, CoseKey
+from pycose.keys.keyops import EncryptOp
+from pycose.keys.keyparam import KpKty, SymKpK, KpAlg, KpKeyOps
+from pycose.keys.keytype import KtySymmetric
 
 
 ###############################################################

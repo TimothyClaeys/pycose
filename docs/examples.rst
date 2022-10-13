@@ -1,7 +1,7 @@
 Examples
 ========
 
-This page provides some examples on how to use the API to create different types of ``cose`` messages.
+This page provides some examples on how to use the API to create different types of ``pycose`` messages.
 
 COSE Encrypt0
 -------------
@@ -13,13 +13,13 @@ The example creates a COSE Encrypt0 message. The message is encrypted with AES-G
 
     >>> from binascii import unhexlify, hexlify
 
-    >>> from cose.messages import Enc0Message, CoseMessage
-    >>> from cose.keys import CoseKey
-    >>> from cose.algorithms import A128GCM
-    >>> from cose.headers import Algorithm, KID, IV
-    >>> from cose.keys.keyparam import KpKty, SymKpK, KpKeyOps
-    >>> from cose.keys.keytype import KtySymmetric
-    >>> from cose.keys.keyops import EncryptOp, DecryptOp
+    >>> from pycose.messages import Enc0Message, CoseMessage
+    >>> from pycose.keys import CoseKey
+    >>> from pycose.algorithms import A128GCM
+    >>> from pycose.headers import Algorithm, KID, IV
+    >>> from pycose.keys.keyparam import KpKty, SymKpK, KpKeyOps
+    >>> from pycose.keys.keytype import KtySymmetric
+    >>> from pycose.keys.keyops import EncryptOp, DecryptOp
 
     >>> msg = Enc0Message(
     ...     phdr = {Algorithm: A128GCM, IV: b'000102030405060708090a0b0c'},
@@ -67,14 +67,14 @@ The example creates a COSE Sign1 message. The message is signed with EdDSA.
 
     >>> from binascii import unhexlify, hexlify
 
-    >>> from cose.messages import Sign1Message, CoseMessage
-    >>> from cose.keys import CoseKey
-    >>> from cose.headers import Algorithm, KID
-    >>> from cose.algorithms import EdDSA
-    >>> from cose.keys.curves import Ed25519
-    >>> from cose.keys.keyparam import KpKty, OKPKpD, OKPKpX, KpKeyOps, OKPKpCurve
-    >>> from cose.keys.keytype import KtyOKP
-    >>> from cose.keys.keyops import SignOp, VerifyOp
+    >>> from pycose.messages import Sign1Message, CoseMessage
+    >>> from pycose.keys import CoseKey
+    >>> from pycose.headers import Algorithm, KID
+    >>> from pycose.algorithms import EdDSA
+    >>> from pycose.keys.curves import Ed25519
+    >>> from pycose.keys.keyparam import KpKty, OKPKpD, OKPKpX, KpKeyOps, OKPKpCurve
+    >>> from pycose.keys.keytype import KtyOKP
+    >>> from pycose.keys.keyops import SignOp, VerifyOp
 
     >>> msg = Sign1Message(
     ...     phdr = {Algorithm: EdDSA, KID: b'kid2'},
@@ -124,13 +124,13 @@ The example creates a COSE Mac0 message. The message is authenticated with HMAC-
 
     >>> from binascii import unhexlify, hexlify
 
-    >>> from cose.messages import Mac0Message, CoseMessage
-    >>> from cose.keys import CoseKey
-    >>> from cose.algorithms import HMAC256
-    >>> from cose.headers import Algorithm, KID
-    >>> from cose.keys.keyparam import KpKty, SymKpK, KpKeyOps
-    >>> from cose.keys.keytype import KtySymmetric
-    >>> from cose.keys.keyops import MacCreateOp, MacVerifyOp
+    >>> from pycose.messages import Mac0Message, CoseMessage
+    >>> from pycose.keys import CoseKey
+    >>> from pycose.algorithms import HMAC256
+    >>> from pycose.headers import Algorithm, KID
+    >>> from pycose.keys.keyparam import KpKty, SymKpK, KpKeyOps
+    >>> from pycose.keys.keytype import KtySymmetric
+    >>> from pycose.keys.keyops import MacCreateOp, MacVerifyOp
 
     >>> msg = Mac0Message(
     ...     phdr = {Algorithm: HMAC256},
@@ -182,15 +182,15 @@ direct key agreement method. The sender is using an ephemeral key.
     >>> from binascii import unhexlify, hexlify
     >>> from copy import deepcopy
 
-    >>> from cose.messages import EncMessage, CoseMessage
-    >>> from cose.keys import CoseKey
-    >>> from cose.messages.recipient import DirectKeyAgreement
-    >>> from cose.headers import Algorithm, KID, StaticKey, EphemeralKey, IV
-    >>> from cose.algorithms import EcdhEsHKDF256, A128GCM
-    >>> from cose.keys.keyparam import KpKty, EC2KpD, EC2KpX, KpKeyOps, EC2KpCurve, EC2KpY, KpKid
-    >>> from cose.keys.keytype import KtyEC2
-    >>> from cose.keys.curves import P256
-    >>> from cose.keys.keyops import DeriveKeyOp
+    >>> from pycose.messages import EncMessage, CoseMessage
+    >>> from pycose.keys import CoseKey
+    >>> from pycose.messages.recipient import DirectKeyAgreement
+    >>> from pycose.headers import Algorithm, KID, StaticKey, EphemeralKey, IV
+    >>> from pycose.algorithms import EcdhEsHKDF256, A128GCM
+    >>> from pycose.keys.keyparam import KpKty, EC2KpD, EC2KpX, KpKeyOps, EC2KpCurve, EC2KpY, KpKid
+    >>> from pycose.keys.keytype import KtyEC2
+    >>> from pycose.keys.curves import P256
+    >>> from pycose.keys.keyops import DeriveKeyOp
 
     >>> # ephemeral sender key is generated
     >>> ephemeral_sender_key = {

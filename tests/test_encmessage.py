@@ -1,11 +1,11 @@
 import cbor2
 
-from cose import headers
-from cose.keys.cosekey import CoseKey
-from cose.keys.keyops import EncryptOp, DecryptOp
-from cose.keys.rsa import RSAKey
-from cose.messages.cosemessage import CoseMessage
-from cose.messages.encmessage import EncMessage
+from pycose import headers
+from pycose.keys.cosekey import CoseKey
+from pycose.keys.keyops import EncryptOp, DecryptOp
+from pycose.keys.rsa import RSAKey
+from pycose.messages.cosemessage import CoseMessage
+from pycose.messages.encmessage import EncMessage
 from tests.conftest import _setup_direct_encryption_recipients, _setup_direct_kex_recipients, \
     _setup_key_wrap_recipients, _setup_key_agreement_key_wrap
 
