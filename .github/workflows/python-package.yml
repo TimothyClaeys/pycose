@@ -44,6 +44,7 @@ jobs:
     - name: Test with pytest
       run: |
         pip install .
+        pip show -f pycose
         mkdir tmp_for_test
         cp -r tests/ tmp_for_test/
         cd tmp_for_test
