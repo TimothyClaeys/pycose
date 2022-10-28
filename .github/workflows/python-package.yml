@@ -76,9 +76,7 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: dist
-
-    - name: List all files
-      run: ls -R
+        path: dist
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
