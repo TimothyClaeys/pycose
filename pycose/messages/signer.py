@@ -29,11 +29,6 @@ class CoseSignature(SignCommon):
                  *args,
                  **kwargs):
 
-        if phdr is None:
-            phdr = {}
-        if uhdr is None:
-            uhdr = {}
-
         super().__init__(phdr, uhdr, payload=signature, external_aad=external_aad, key=key, *args, **kwargs)
 
         self._parent = None

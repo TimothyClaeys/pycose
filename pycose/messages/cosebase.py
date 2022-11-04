@@ -19,20 +19,21 @@ class CoseBase(metaclass=abc.ABCMeta):
 
     @classmethod
     def from_cose_obj(cls, cose_obj: list, allow_unknown_attributes: bool):
-        try:
-            phdr = cls._parse_header(cbor2.loads(cose_obj.pop(0)), allow_unknown_attributes)
-        except (ValueError, EOFError):
-            phdr = {}
+        phdr_encoded = cose_obj.pop(0)
+        uhdr = cose_obj.pop(0)
 
-        try:
-            uhdr = cls._parse_header(cose_obj.pop(0), allow_unknown_attributes)
-        except ValueError:
-            uhdr = {}
+        return cls(phdr_encoded=phdr_encoded, uhdr=uhdr, allow_unknown_attributes=allow_unknown_attributes)
 
-        return cls(phdr, uhdr)
-
-    def __init__(self, phdr: Optional[dict] = None, uhdr: Optional[dict] = None, payload: bytes = b'', *args, **kwargs):
-        if phdr is None:
+    def __init__(self, phdr: Optional[dict] = None, uhdr: Optional[dict] = None, payload: bytes = b'', phdr_encoded: Optional[bytes] = None, *args, **kwargs):
+        if phdr is not None and phdr_encoded is not None:
+            raise ValueError("Cannot have both phdr and phdr_encoded")
+        
+        if phdr_encoded is not None:
+            if phdr_encoded == b"":
+                phdr = {}
+            else:
+                phdr = cbor2.loads(phdr_encoded)
+        elif phdr is None:
             phdr = {}
 
         if uhdr is None:
@@ -45,13 +46,12 @@ class CoseBase(metaclass=abc.ABCMeta):
             raise TypeError("unprotected header should be of type 'dict'")
 
         self._local_attrs = {}
-        self._phdr = {}
-        self._uhdr = {}
 
         self.alg_tstr_encoding = kwargs.get("alg_tstr_encoding", False)
 
-        CoseBase._transform_header_buckets(self._phdr, phdr, kwargs.get("allow_unknown_attributes", True))
-        CoseBase._transform_header_buckets(self._uhdr, uhdr, kwargs.get("allow_unknown_attributes", True))
+        self._phdr_encoded = phdr_encoded
+        self._phdr = CoseBase._parse_header(phdr, kwargs.get("allow_unknown_attributes", True))
+        self._uhdr = CoseBase._parse_header(uhdr, kwargs.get("allow_unknown_attributes", True))
 
         # can be plaintext or ciphertext
         if type(payload) is not bytes:
@@ -89,6 +89,7 @@ class CoseBase(metaclass=abc.ABCMeta):
         if type(new_phdr) is not dict:
             raise TypeError("protected header should be of type 'dict'")
         self._phdr = deepcopy(new_phdr)
+        self._phdr_encoded = None
 
     @property
     def uhdr(self) -> dict:
@@ -104,6 +105,7 @@ class CoseBase(metaclass=abc.ABCMeta):
         if type(phdr_params) is not dict:
             raise TypeError("protected header should be of type 'dict'")
         self._phdr.update(phdr_params)
+        self._phdr_encoded = None
 
     def uhdr_update(self, uhdr_params: dict) -> None:
         if type(uhdr_params) is not dict:
@@ -127,6 +129,8 @@ class CoseBase(metaclass=abc.ABCMeta):
         :returns: Returns the encoded protected header.
         """
 
+        if self._phdr_encoded is not None:
+            return self._phdr_encoded
         # TODO: check if not double header parameters in header buckets
         if len(self._phdr):
             return cbor2.dumps(self._phdr, default=self._custom_cbor_encoder)
@@ -154,19 +158,6 @@ class CoseBase(metaclass=abc.ABCMeta):
             encoder.encode(cose_attribute.fullname)
         else:
             encoder.encode(cose_attribute.identifier)
-
-    @staticmethod
-    def _transform_header_buckets(output_header, base_header: dict, allow_unknown_attributes: bool):
-        for _header_attribute, _value in base_header.items():
-            # translate the header attribute
-            hp = CoseHeaderAttribute.from_id(_header_attribute, allow_unknown_attributes)
-
-            # parse the value of the key attribute if possible
-            if hasattr(hp, 'value_parser') and hasattr(hp.value_parser, '__call__'):
-                _value = hp.value_parser(_value)
-
-            # store in new dict
-            output_header[hp] = _value
 
     @classmethod
     def _parse_header(cls, hdr, allow_unknown_attributes: bool) -> dict:

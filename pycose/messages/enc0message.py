@@ -48,11 +48,6 @@ class Enc0Message(enccommon.EncCommon):
         :returns: Returns a COSE Encrypt0 message object.
         """
 
-        if phdr is None:
-            phdr = {}
-        if uhdr is None:
-            uhdr = {}
-
         super().__init__(phdr, uhdr, payload, external_aad, key, *args, **kwargs)
 
     def encode(self, tag: bool = True, encrypt: bool = True, *args, **kwargs) -> CBOR:

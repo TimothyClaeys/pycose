@@ -269,3 +269,18 @@ def test_allow_unknown_header_attribute_encoding_decoding():
     msg_decoded = CoseMessage.decode(msg)
     assert "Custom-Header-Attr1" in msg_decoded.phdr
     assert "Custom-Header-Attr2" in msg_decoded.uhdr
+
+def test_no_reencoding_of_protected_header():
+    # The following protected header encodes {Alg: Es256, "foo": 1}, however,
+    # it is crafted such that it would not be emitted by cbor2.
+    # The integer 1 is encoded suboptimally using three bytes instead of one.
+    # This is a test to ensure that the protected header is not re-encoded.
+    phdr_encoded = unhexlify(b'A2012663666F6F190001')
+
+    msg = Sign1Message(phdr_encoded=phdr_encoded)
+    msg.key = EC2Key.generate_key(crv=P256)
+
+    msg = msg.encode()
+    msg_decoded = CoseMessage.decode(msg)
+    
+    assert msg_decoded.phdr_encoded == phdr_encoded
