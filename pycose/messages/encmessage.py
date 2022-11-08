@@ -52,11 +52,6 @@ class EncMessage(enccommon.EncCommon):
         :param recipients: An optional list of :class:`~pycose.messages.recipient.CoseRecipient` objects.
         """
 
-        if phdr is None:
-            phdr = {}
-        if uhdr is None:
-            uhdr = {}
-
         super().__init__(phdr, uhdr, payload, external_aad, key, *args, **kwargs)
 
         self._recipients = []

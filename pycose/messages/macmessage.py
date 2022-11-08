@@ -52,10 +52,6 @@ class MacMessage(maccommon.MacCommon):
                  recipients: Optional[List[CoseRecipient]] = None,
                  *args,
                  **kwargs):
-        if phdr is None:
-            phdr = {}
-        if uhdr is None:
-            uhdr = {}
 
         super().__init__(phdr, uhdr, payload, external_aad, key, *args, **kwargs)
 

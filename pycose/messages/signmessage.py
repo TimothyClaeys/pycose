@@ -46,11 +46,6 @@ class _SignMessage(CoseMessage, metaclass=abc.ABCMeta):
                  *args,
                  **kwargs):
 
-        if phdr is None:
-            phdr = {}
-        if uhdr is None:
-            uhdr = {}
-
         super(_SignMessage, self).__init__(phdr, uhdr, payload, external_aad=b'', key=None, *args, **kwargs)
 
         if signers is None:

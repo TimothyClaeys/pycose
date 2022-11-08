@@ -36,10 +36,6 @@ class Mac0Message(maccommon.MacCommon):
                  key: Optional['SK'] = None,
                  *args,
                  **kwargs):
-        if phdr is None:
-            phdr = {}
-        if uhdr is None:
-            uhdr = {}
 
         super().__init__(phdr, uhdr, payload, external_aad, key, *args, **kwargs)
 

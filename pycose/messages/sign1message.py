@@ -33,10 +33,6 @@ class Sign1Message(SignCommon):
                  key: Optional[Union['EC2', 'OKP', 'RSA']] = None,
                  *args,
                  **kwargs):
-        if phdr is None:
-            phdr = {}
-        if uhdr is None:
-            uhdr = {}
 
         super().__init__(phdr, uhdr, payload, external_aad, key, *args, **kwargs)
 
