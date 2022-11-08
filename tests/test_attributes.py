@@ -8,7 +8,7 @@ from pycose.exceptions import CoseException
 from pycose.headers import Algorithm, KID, IV, CoseHeaderAttribute, Critical, ContentType
 from pycose.keys import SymmetricKey, EC2Key
 from pycose.keys.curves import P256
-from pycose.messages import Enc0Message, EncMessage, Mac0Message, MacMessage, SignMessage, Sign1Message, CoseMessage
+from pycose.messages import Enc0Message, EncMessage, Mac0Message, MacMessage, SignMessage, Sign1Message
 from pycose.messages.recipient import DirectEncryption
 from pycose.messages.signer import CoseSignature
 
@@ -102,7 +102,7 @@ def test_cose_header_attribute_value_encoding():
     msg = msg.encode()
     assert b"\xa1\x01\n" in msg
 
-    decoded_msg = CoseMessage.decode(msg)
+    decoded_msg = Enc0Message.decode(msg)
     assert decoded_msg.phdr[Algorithm] == AESCCM1664128
 
     # algorithm as tstr
@@ -115,7 +115,7 @@ def test_cose_header_attribute_value_encoding():
     msg = msg.encode()
     assert b"AES_CCM_16_64_128" in msg
 
-    decoded_msg = CoseMessage.decode(msg)
+    decoded_msg = Enc0Message.decode(msg)
     assert decoded_msg.phdr[Algorithm] == AESCCM1664128
 
     # critical
@@ -127,7 +127,7 @@ def test_cose_header_attribute_value_encoding():
     msg = msg.encode()
     assert b"\x82\x01\x02" in msg
 
-    decoded_msg = CoseMessage.decode(msg)
+    decoded_msg = Enc0Message.decode(msg)
     assert decoded_msg.uhdr[Critical] == [1, 2]
 
     # content type as uint
@@ -139,7 +139,7 @@ def test_cose_header_attribute_value_encoding():
     msg = msg.encode()
     assert b"\x03\x18" in msg
 
-    decoded_msg = CoseMessage.decode(msg)
+    decoded_msg = Enc0Message.decode(msg)
     assert decoded_msg.uhdr[ContentType] == 60
 
     # content type as tstr
@@ -151,7 +151,7 @@ def test_cose_header_attribute_value_encoding():
     msg = msg.encode()
     assert b"application/cbor" in msg
 
-    decoded_msg = CoseMessage.decode(msg)
+    decoded_msg = Enc0Message.decode(msg)
     assert decoded_msg.uhdr[ContentType] == "application/cbor"
 
     # kid as bstr
@@ -163,7 +163,7 @@ def test_cose_header_attribute_value_encoding():
     msg = msg.encode()
     assert b"foo" in msg
 
-    decoded_msg = CoseMessage.decode(msg)
+    decoded_msg = Enc0Message.decode(msg)
     assert decoded_msg.uhdr[KID] == b"foo"
 
 
@@ -191,7 +191,7 @@ def test_allow_unknown_header_attribute_encoding_decoding():
 
     msg = msg.encode()
 
-    msg_decoded = CoseMessage.decode(msg)
+    msg_decoded = Enc0Message.decode(msg)
     assert "Custom-Header-Attr1" in msg_decoded.phdr
     assert "Custom-Header-Attr2" in msg_decoded.uhdr
 
@@ -206,7 +206,7 @@ def test_allow_unknown_header_attribute_encoding_decoding():
 
     msg = msg.encode()
 
-    msg_decoded = CoseMessage.decode(msg)
+    msg_decoded = EncMessage.decode(msg)
     assert "Custom-Header-Attr1" in msg_decoded.phdr
     assert "Custom-Header-Attr2" in msg_decoded.uhdr
     assert "Custom-Header-Attr3" in msg_decoded.recipients[0].uhdr
@@ -220,7 +220,7 @@ def test_allow_unknown_header_attribute_encoding_decoding():
 
     msg = msg.encode()
 
-    msg_decoded = CoseMessage.decode(msg)
+    msg_decoded = Mac0Message.decode(msg)
 
     assert "Custom-Header-Attr1" in msg_decoded.phdr
     assert "Custom-Header-Attr2" in msg_decoded.uhdr
@@ -236,7 +236,7 @@ def test_allow_unknown_header_attribute_encoding_decoding():
 
     msg = msg.encode()
 
-    msg_decoded = CoseMessage.decode(msg)
+    msg_decoded = MacMessage.decode(msg)
     assert "Custom-Header-Attr1" in msg_decoded.phdr
     assert "Custom-Header-Attr2" in msg_decoded.uhdr
     assert "Custom-Header-Attr3" in msg_decoded.recipients[0].uhdr
@@ -251,7 +251,7 @@ def test_allow_unknown_header_attribute_encoding_decoding():
 
     msg = msg.encode()
 
-    msg_decoded = CoseMessage.decode(msg)
+    msg_decoded = SignMessage.decode(msg)
 
     assert "Custom-Header-Attr1" in msg_decoded.phdr
     assert "Custom-Header-Attr2" in msg_decoded.uhdr
@@ -266,7 +266,7 @@ def test_allow_unknown_header_attribute_encoding_decoding():
 
     msg = msg.encode()
 
-    msg_decoded = CoseMessage.decode(msg)
+    msg_decoded = Sign1Message.decode(msg)
     assert "Custom-Header-Attr1" in msg_decoded.phdr
     assert "Custom-Header-Attr2" in msg_decoded.uhdr
 

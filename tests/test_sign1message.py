@@ -5,7 +5,6 @@ from pycose.exceptions import CoseIllegalAlgorithm, CoseIllegalKeyOps
 from pycose.keys import OKPKey, EC2Key
 from pycose.keys.cosekey import CoseKey
 from pycose.keys.keyops import SignOp, VerifyOp
-from pycose.messages.cosemessage import CoseMessage
 from pycose.messages.sign1message import Sign1Message
 
 
@@ -32,12 +31,14 @@ def test_sign1_encoding(test_sign1):
     assert cbor2.loads(msg.encode(tag=test_sign1['cbor_tag'])) == test_output['result']
 
 
-@pytest.mark.xfail(reason="Message not tagged", raises=AttributeError)
 def test_sign1_decoding(test_sign1):
+    if not test_sign1['cbor_tag']:
+        pytest.skip("Missing CBOR tag")
+
     test_input = test_sign1['input']
     test_output = test_sign1['output']
 
-    msg = CoseMessage.decode(cbor2.dumps(test_output['result']))
+    msg = Sign1Message.decode(cbor2.dumps(test_output['result']))
     msg.external_aad = test_input['external_aad']
 
     key = CoseKey.from_dict(test_sign1["cek"])
@@ -89,7 +90,7 @@ def test_fail_on_illegal_keyops_verifying(ops):
 
     msg = msg.encode()
 
-    msg = CoseMessage.decode(msg)
+    msg = Sign1Message.decode(msg)
     # set an illegal key op
     if ops in {'ENCRYPT', 'DECRYPT', 'WRAP', 'UNWRAP', 'MAC_CREATE', 'MAC_VERIFY'}:
         with pytest.raises(CoseIllegalKeyOps) as excinfo:

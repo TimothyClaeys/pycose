@@ -1,7 +1,7 @@
 from binascii import unhexlify, hexlify
 
 from pycose.keys.curves import Ed25519
-from pycose.messages import Enc0Message, CoseMessage, Sign1Message, Mac0Message
+from pycose.messages import Enc0Message, Sign1Message, Mac0Message
 from pycose.keys import CoseKey
 from pycose.algorithms import A128GCM, EdDSA, HMAC256
 from pycose.headers import Algorithm, KID, IV
@@ -36,7 +36,7 @@ def test_simple_enc0message():
                                b'4315823cca3441a2464d240e09fe9ee0ea42a7852a4f41d9945325c1f8d3b1353b8eb83e6a62f'
 
     # decode and decrypt
-    decoded = CoseMessage.decode(encoded)
+    decoded = Enc0Message.decode(encoded)
 
     decoded.key = cose_key
     assert hexlify(decoded.payload) == b'cca3441a2464d240e09fe9ee0ea42a7852a4f41d9945325c1f8d3b1353b8eb83e6a62f'
@@ -88,7 +88,7 @@ def test_simple_sign1message():
                                b'fa33d96f3b606fcedeaef839423221872d0bfa196e069a189a607c2284924c3abb80e94' \
                                b'2466cd300cc5d18fe4e5ea1f3ebdb62ef8419109447d03'
 
-    decoded = CoseMessage.decode(encoded)
+    decoded = Sign1Message.decode(encoded)
     assert str(decoded) == "<COSE_Sign1: [{'Algorithm': 'EdDSA', 'KID': b'kid2'}, {}, b'signe' ... (14 B), " \
                            "b'\\xcc\\x87f_\\xfd' ... (64 B)]>"
 
@@ -121,7 +121,7 @@ def test_simple_mac0message():
                                b'6c7d8ddfeaceea6ba4f1cafb563cbf3be157653e29f3258b2957cf23f4e17'
 
     # decode and authenticate tag
-    decoded = CoseMessage.decode(encoded)
+    decoded = Mac0Message.decode(encoded)
     assert str(decoded) == "<COSE_Mac0: [{'Algorithm': 'HMAC256'}, {'KID': b'kid3'}, b'authe' ... (21 B), " \
                            "b'\\x19\\xf6\\xc7\\xd8\\xdd' ... (32 B)]>"
 

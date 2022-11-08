@@ -3,7 +3,6 @@ from binascii import hexlify, unhexlify
 import cbor2
 import pytest
 
-from pycose.messages.cosemessage import CoseMessage
 from pycose.messages.signmessage import SignMessage
 from tests.conftest import _setup_signers
 
@@ -43,12 +42,14 @@ def test_sign_encoding(test_sign):
     assert msg_dec == test_dec
 
 
-@pytest.mark.xfail(reason="Message not tagged", raises=AttributeError)
-def test_sign1_decoding(test_sign):
+def test_sign_decoding(test_sign):
+    if not test_sign['cbor_tag']:
+        pytest.skip("Missing CBOR tag")
+
     test_input = test_sign['input']
     test_output = test_sign['output']
 
-    msg = CoseMessage.decode(cbor2.dumps(test_output['result']))
+    msg = SignMessage.decode(cbor2.dumps(test_output['result']))
 
     for s, s_input, s_output in zip(msg.signers, test_input['signers'], test_output['signers']):
         s.external_aad = unhexlify(s_input['external_aad'])

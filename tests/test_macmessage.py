@@ -2,7 +2,6 @@ import cbor2
 
 from pycose.keys.cosekey import CoseKey
 from pycose.keys.keyops import MacCreateOp, MacVerifyOp
-from pycose.messages.cosemessage import CoseMessage
 from pycose.messages.macmessage import MacMessage
 from tests.conftest import _setup_direct_encryption_recipients
 
@@ -37,7 +36,7 @@ def test_mac_direct_encryption_decoding(test_mac_direct_encryption_files):
     test_output = test_mac_direct_encryption_files['output']
     test_input = test_mac_direct_encryption_files['input']
 
-    msg = CoseMessage.decode(cbor2.dumps((test_output['result'])))
+    msg = MacMessage.decode(cbor2.dumps((test_output['result'])))
     msg.external_aad = test_input['external_aad']
 
     key = CoseKey.from_dict(test_mac_direct_encryption_files["cek"])

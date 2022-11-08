@@ -1,6 +1,6 @@
 import abc
 from copy import deepcopy
-from typing import Optional, Any, Dict, Type, Tuple
+from typing import Optional, Any, Dict, Type, Tuple, TypeVar
 
 import cbor2
 
@@ -18,7 +18,7 @@ class CoseBase(metaclass=abc.ABCMeta):
     """ Basic COSE information buckets. """
 
     @classmethod
-    def from_cose_obj(cls, cose_obj: list, allow_unknown_attributes: bool):
+    def from_cose_obj(cls: Type['CB'], cose_obj: list, allow_unknown_attributes: bool) -> 'CB':
         phdr_encoded = cose_obj.pop(0)
         uhdr = cose_obj.pop(0)
 
@@ -192,3 +192,5 @@ class CoseBase(metaclass=abc.ABCMeta):
             uhdr['PARTIAL_IV'] = utils.truncate(uhdr['PARTIAL_IV'])
 
         return phdr, uhdr
+
+CB = TypeVar('CB', bound=CoseBase)

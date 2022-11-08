@@ -4,7 +4,6 @@ from pycose import headers
 from pycose.keys.cosekey import CoseKey
 from pycose.keys.keyops import EncryptOp, DecryptOp
 from pycose.keys.rsa import RSAKey
-from pycose.messages.cosemessage import CoseMessage
 from pycose.messages.encmessage import EncMessage
 from tests.conftest import _setup_direct_encryption_recipients, _setup_direct_kex_recipients, \
     _setup_key_wrap_recipients, _setup_key_agreement_key_wrap
@@ -35,7 +34,7 @@ def test_encrypt_direct_encryption_decoding(test_encrypt_direct_encryption_files
     test_output = test_encrypt_direct_encryption_files['output']
     test_input = test_encrypt_direct_encryption_files['input']
 
-    msg = CoseMessage.decode(cbor2.dumps((test_output['result'])))
+    msg = EncMessage.decode(cbor2.dumps((test_output['result'])))
 
     key = CoseKey.from_dict(test_encrypt_direct_encryption_files["cek"])
     key.key_ops = [DecryptOp]
@@ -76,7 +75,7 @@ def test_encrypt_direct_key_agreement_decoding(test_encrypt_direct_key_agreement
     test_output = test_encrypt_direct_key_agreement_files['output']
     test_input = test_encrypt_direct_key_agreement_files['input']
 
-    msg = CoseMessage.decode(cbor2.dumps((test_output['result'])))
+    msg = EncMessage.decode(cbor2.dumps((test_output['result'])))
 
     assert msg._enc_structure == test_output['structure']
 
@@ -135,7 +134,7 @@ def test_encrypt_key_wrap_decoding(test_encrypt_key_wrap_files):
     test_input = test_encrypt_key_wrap_files['input']
     test_output = test_encrypt_key_wrap_files['output']
 
-    msg = CoseMessage.decode(cbor2.dumps((test_output['result'])))
+    msg = EncMessage.decode(cbor2.dumps((test_output['result'])))
 
     assert msg._enc_structure == test_output['structure']
 
@@ -183,7 +182,7 @@ def test_encrypt_key_agreement_key_wrap_decoding(test_encrypt_key_agreement_key_
     test_input = test_encrypt_key_agreement_key_wrap_files['input']
     test_output = test_encrypt_key_agreement_key_wrap_files['output']
 
-    msg = CoseMessage.decode(cbor2.dumps((test_output['result'])))
+    msg = EncMessage.decode(cbor2.dumps((test_output['result'])))
 
     assert msg.phdr == test_input['protected']
     assert msg.uhdr == test_input['unprotected']
