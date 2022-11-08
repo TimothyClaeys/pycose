@@ -95,7 +95,7 @@ class EC2Key(CoseKey):
 
         if d:
             public_nums = ec.derive_private_key(int.from_bytes(d, byteorder="big"),
-                                                curve=self.crv.curve_obj(),
+                                                curve=self.crv.curve_obj,
                                                 backend=default_backend()).public_key().public_numbers()
             if x:
                 assert x == public_nums.x.to_bytes(self.crv.size, 'big')
@@ -109,7 +109,7 @@ class EC2Key(CoseKey):
 
         if x and not y:
             # try to derive y from x
-            key = ec.EllipticCurvePublicKey.from_encoded_point(self.crv.curve_obj(),
+            key = ec.EllipticCurvePublicKey.from_encoded_point(self.crv.curve_obj,
                                                                # don't care which of the two possible Y values we get
                                                                b'\x03' +
                                                                x  # or [::-1]?
