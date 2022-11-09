@@ -270,3 +270,35 @@ direct key agreement method. The sender is using an ephemeral key.
     >>> decoded.recipients[0].key = static_receiver_key
     >>> decoded.decrypt(decoded.recipients[0])
     b'This is the content'
+
+Arbitrary Messages
+------------------
+
+It may sometimes be useful to decode a message of an unknown type. This can be done by calling the
+``CoseMessage.decode`` method. The type of the message will detected from the CBOR tag present at the start of its
+encoding, and an instance of the appropriate ``CoseMessage`` subclass is returned.
+
+.. doctest::
+    :pyversion: >= 3.6
+
+    >>> from binascii import unhexlify
+    >>> from pycose.algorithms import A128GCM
+    >>> from pycose.headers import Algorithm, IV
+    >>> from pycose.keys import CoseKey
+    >>> from pycose.keys.keyops import EncryptOp, DecryptOp
+    >>> from pycose.messages import CoseMessage, Enc0Message
+
+    >>> msg = Enc0Message(
+    ...     phdr = {Algorithm: A128GCM, IV: b'000102030405060708090a0b0c'},
+    ...     payload = 'some secret message'.encode('utf-8'))
+    >>> cose_key = CoseKey.from_dict({
+    ...     KpKty: KtySymmetric,
+    ...     SymKpK: unhexlify(b'000102030405060708090a0b0c0d0e0f'),
+    ...     KpKeyOps: [EncryptOp, DecryptOp]})
+    >>> msg.key = cose_key
+    >>> encoded = msg.encode()
+
+    >>> decoded = CoseMessage.decode(encoded)
+    >>> assert isinstance(decoded, Enc0Message)
+    >>> decoded
+    <COSE_Encrypt0: [{'Algorithm': 'A128GCM', 'IV': "b'00010' ... (26 B)"}, {}, b'\xcc\xa3D\x1a$' ... (35 B)]>
