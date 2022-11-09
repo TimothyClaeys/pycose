@@ -1,17 +1,24 @@
 from abc import ABC, abstractmethod
-from typing import Union
+from typing import Union, Type, ClassVar
 
-from cryptography.hazmat.primitives.asymmetric import ed25519, ed448, x25519, x448
-from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurve, SECP256K1, SECP256R1, SECP384R1, SECP521R1
+from cryptography.hazmat.primitives.asymmetric import ed25519, ed448, x25519, x448, ec
+from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurve
 
 from pycose.keys.keytype import KtyEC2, KtyOKP
 from pycose.utils import _CoseAttribute
 
-EdwardsCurve = Union[ed25519.Ed25519PrivateKey, ed448.Ed448PrivateKey, x25519.X25519PrivateKey, x448.X448PrivateKey]
+EdwardsPrivateKey = Union[ed25519.Ed25519PrivateKey, ed448.Ed448PrivateKey, x25519.X25519PrivateKey, x448.X448PrivateKey]
 
 
 class CoseCurve(_CoseAttribute, ABC):
-    """ Base class for all COSE curves. """
+    """
+    Base class for all COSE curves
+
+    Attributes:
+        curve_obj: A curve object from the cryptography package.
+        key_type: The key type associated with the curve.
+        size: The size of the coordinates over the curve.
+    """
 
     _registered_curves = {}
 
@@ -19,29 +26,9 @@ class CoseCurve(_CoseAttribute, ABC):
     def get_registered_classes(cls):
         return cls._registered_curves
 
-    @property
-    @abstractmethod
-    def curve_obj(self) -> Union[EllipticCurve, 'EdwardsCurve']:
-        """
-        Returns a curve object from the cryptography package
-        """
-        raise NotImplementedError()
-
-    @property
-    @abstractmethod
-    def key_type(self) -> Union['KtyEC2', 'KtyOKP']:
-        """
-        Returns the key type associated with the curve
-        """
-        raise NotImplementedError()
-
-    @property
-    @abstractmethod
-    def size(self) -> int:
-        """
-        Returns the size of the coordinates over the curve
-        """
-        raise NotImplementedError()
+    curve_obj: ClassVar[Union[EllipticCurve, Type[EdwardsPrivateKey], None]]
+    key_type: ClassVar[Union[Type[KtyEC2], Type[KtyOKP], None]]
+    size: ClassVar[int]
 
 
 ##################################################
@@ -92,7 +79,7 @@ class P256(CoseCurve):
 
     identifier = 1
     fullname = "P_256"
-    curve_obj = SECP256R1
+    curve_obj = ec.SECP256R1()
     key_type = KtyEC2
     size = 32
 
@@ -116,7 +103,7 @@ class P384(CoseCurve):
 
     identifier = 2
     fullname = "P_384"
-    curve_obj = SECP384R1
+    curve_obj = ec.SECP384R1()
     key_type = KtyEC2
     size = 48
 
@@ -140,7 +127,7 @@ class P521(CoseCurve):
 
     identifier = 3
     fullname = "P_521"
-    curve_obj = SECP521R1
+    curve_obj = ec.SECP521R1()
     key_type = KtyEC2
     size = 66
 
@@ -260,7 +247,7 @@ class SECP256K1(CoseCurve):
 
     identifier = 8
     fullname = "SECP256K1"
-    curve_obj = SECP256K1
+    curve_obj = ec.SECP256K1()
     key_type = KtyEC2
     size = 32
 

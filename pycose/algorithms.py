@@ -293,8 +293,8 @@ class _EcdhHkdf(CoseAlgorithm, ABC):
         x_value = int(hexlify(public_key.x), 16)
         y_value = int(hexlify(public_key.y), 16)
 
-        d = ec.derive_private_key(d_value, curve.curve_obj(), backend=default_backend())
-        p = ec.EllipticCurvePublicNumbers(x_value, y_value, curve.curve_obj())
+        d = ec.derive_private_key(d_value, curve.curve_obj, backend=default_backend())
+        p = ec.EllipticCurvePublicNumbers(x_value, y_value, curve.curve_obj)
         p = p.public_key(backend=default_backend())
 
         shared_key = d.exchange(ECDH(), p)
