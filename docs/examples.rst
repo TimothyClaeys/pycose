@@ -274,8 +274,8 @@ direct key agreement method. The sender is using an ephemeral key.
 Arbitrary Messages
 ------------------
 
-It may sometimes be useful to decode a message of an unknown type. This can be done by calling the
-``CoseMessage.decode`` method. The type of the message will detected from the CBOR tag present at the start of its
+It may sometimes be useful to decode a COSE message of an unknown type. This can be done by calling the
+``CoseMessage.decode`` method. The type of the message will be detected from the CBOR tag present at the start of its
 encoding, and an instance of the appropriate ``CoseMessage`` subclass is returned.
 
 .. doctest::
