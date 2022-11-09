@@ -281,6 +281,6 @@ def test_no_reencoding_of_protected_header():
     msg.key = EC2Key.generate_key(crv=P256)
 
     msg = msg.encode()
-    msg_decoded = CoseMessage.decode(msg)
+    msg_decoded = Sign1Message.decode(msg)
     
     assert msg_decoded.phdr_encoded == phdr_encoded
