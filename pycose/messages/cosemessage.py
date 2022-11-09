@@ -38,7 +38,7 @@ class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
         Decode received COSE message based on the CBOR tag.
 
         If called on CoseMessage, this function can decode any supported
-        message type. Otherwise, if called on a sub-class of CoseMessage, only
+        message type. Otherwise, if called on a sub-class of CoseMessage,
         only messages of that type will be allowed to be decoded.
 
         :param received: COSE messages encoded as bytes
