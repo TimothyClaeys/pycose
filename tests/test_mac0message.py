@@ -30,12 +30,14 @@ def test_mac0_encoding(test_mac0):
     assert cbor2.loads(msg.encode(tag=test_mac0['cbor_tag'])) == test_output['result']
 
 
-@pytest.mark.xfail(reason="Message not tagged", raises=AttributeError)
 def test_encrypt0_decoding(test_mac0):
+    if not test_mac0['cbor_tag']:
+        pytest.skip("Missing CBOR tag")
+
     test_input = test_mac0['input']
     test_output = test_mac0['output']
 
-    msg = CoseMessage.decode(cbor2.dumps(test_output['result']))
+    msg = Mac0Message.decode(cbor2.dumps(test_output['result']))
     msg.external_aad = test_input['external_aad']
 
     key = CoseKey.from_dict(test_mac0["cek"])

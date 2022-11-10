@@ -1,17 +1,15 @@
 import abc
-from typing import Optional, TypeVar, TYPE_CHECKING
+from typing import Optional, TypeVar, Type, TYPE_CHECKING
 
 import cbor2
 
 from pycose.exceptions import CoseInvalidKey
+from pycose.keys import CoseKey
 from pycose.keys.ec2 import EC2Key
 from pycose.keys.okp import OKPKey
 from pycose.keys.rsa import RSAKey
 from pycose.keys.symmetric import SymmetricKey
 from pycose.messages.cosebase import CoseBase
-
-if TYPE_CHECKING:
-    from pycose.keys.cosekey import CK
 
 CBOR = bytes
 
@@ -35,9 +33,13 @@ class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
         return decorator
 
     @classmethod
-    def decode(cls, received: bytes, *args, **kwargs) -> 'CM':
+    def decode(cls: Type['CM'], received: bytes, *args, **kwargs) -> 'CM':
         """
         Decode received COSE message based on the CBOR tag.
+
+        If called on CoseMessage, this function can decode any supported
+        message type. Otherwise, if called on a sub-class of CoseMessage,
+        only messages of that type will be allowed to be decoded.
 
         :param received: COSE messages encoded as bytes
 
@@ -45,6 +47,7 @@ class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
         :raises ValueError: The received parameter must be bytes
         :raises KeyError: thrown when the CBOR tag, identifying the COSE message is unrecognized
         :raises TypeError: thrown when the messages cannot be decoded properly
+        :raises TypeError: The message's tag does not match the expected type.
         :returns: An initialized CoseMessage
         """
 
@@ -59,14 +62,19 @@ class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
 
         if isinstance(cose_obj, list):
             try:
-                return cls._COSE_MSG_ID[cbor_tag].from_cose_obj(cose_obj, kwargs.get("allow_unknown_attributes", True))
+                decoded = cls._COSE_MSG_ID[cbor_tag].from_cose_obj(cose_obj, kwargs.get("allow_unknown_attributes", True))
             except KeyError as e:
                 raise KeyError("CBOR tag is not recognized", e)
+
+            if not isinstance(decoded, cls):
+                raise TypeError(f"CBOR tag {cbor_tag} does not match the expected message type {cls.__name__}.")
+
+            return decoded
         else:
             raise TypeError("Bytes cannot be decoded as COSE message")
 
     @classmethod
-    def from_cose_obj(cls, cose_obj: list, allow_unknown_attributes: bool):
+    def from_cose_obj(cls: Type['CM'], cose_obj: list, allow_unknown_attributes: bool) -> 'CM':
         """ Internal function that returns an initialized COSE message object. """
 
         msg = super().from_cose_obj(cose_obj, allow_unknown_attributes)
@@ -78,7 +86,7 @@ class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
                  uhdr: Optional[dict] = None,
                  payload: bytes = b'',
                  external_aad: bytes = b'',
-                 key: Optional['CK'] = None,
+                 key: Optional[CoseKey] = None,
                  *args,
                  **kwargs):
 
@@ -104,11 +112,11 @@ class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
         self._external_aad = new_external_aad
 
     @property
-    def key(self) -> 'CK':
+    def key(self) -> CoseKey:
         return self._key
 
     @key.setter
-    def key(self, key: Optional['CK']):
+    def key(self, key: Optional[CoseKey]):
         if not isinstance(key, SymmetricKey) and \
                 not isinstance(key, EC2Key) and \
                 not isinstance(key, OKPKey) and \

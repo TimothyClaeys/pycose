@@ -13,7 +13,7 @@ The example creates a COSE Encrypt0 message. The message is encrypted with AES-G
 
     >>> from binascii import unhexlify, hexlify
 
-    >>> from pycose.messages import Enc0Message, CoseMessage
+    >>> from pycose.messages import Enc0Message
     >>> from pycose.keys import CoseKey
     >>> from pycose.algorithms import A128GCM
     >>> from pycose.headers import Algorithm, KID, IV
@@ -45,7 +45,7 @@ The example creates a COSE Encrypt0 message. The message is encrypted with AES-G
     b'd0835820a2010105581a3030303130323033303430353036303730383039306130623063a104446b6964315823cca3441a2464d240e09fe9ee0ea42a7852a4f41d9945325c1f8d3b1353b8eb83e6a62f'
 
     >>> # decode and decrypt
-    >>> decoded = CoseMessage.decode(encoded)
+    >>> decoded = Enc0Message.decode(encoded)
     >>> decoded
     <COSE_Encrypt0: [{'Algorithm': 'A128GCM', 'IV': "b'00010' ... (26 B)"}, {'KID': b'kid1'}, b'\xcc\xa3D\x1a$' ... (35 B)]>
 
@@ -67,7 +67,7 @@ The example creates a COSE Sign1 message. The message is signed with EdDSA.
 
     >>> from binascii import unhexlify, hexlify
 
-    >>> from pycose.messages import Sign1Message, CoseMessage
+    >>> from pycose.messages import Sign1Message
     >>> from pycose.keys import CoseKey
     >>> from pycose.headers import Algorithm, KID
     >>> from pycose.algorithms import EdDSA
@@ -102,7 +102,7 @@ The example creates a COSE Sign1 message. The message is signed with EdDSA.
     b'd28449a2012704446b696432a04e7369676e6564206d6573736167655840cc87665ffd3fa33d96f3b606fcedeaef839423221872d0bfa196e069a189a607c2284924c3abb80e942466cd300cc5d18fe4e5ea1f3ebdb62ef8419109447d03'
 
     >>> # decode and verify the signature
-    >>> decoded = CoseMessage.decode(encoded)
+    >>> decoded = Sign1Message.decode(encoded)
     >>> decoded
     <COSE_Sign1: [{'Algorithm': 'EdDSA', 'KID': b'kid2'}, {}, b'signe' ... (14 B), b'\xcc\x87f_\xfd' ... (64 B)]>
 
@@ -124,7 +124,7 @@ The example creates a COSE Mac0 message. The message is authenticated with HMAC-
 
     >>> from binascii import unhexlify, hexlify
 
-    >>> from pycose.messages import Mac0Message, CoseMessage
+    >>> from pycose.messages import Mac0Message
     >>> from pycose.keys import CoseKey
     >>> from pycose.algorithms import HMAC256
     >>> from pycose.headers import Algorithm, KID
@@ -156,7 +156,7 @@ The example creates a COSE Mac0 message. The message is authenticated with HMAC-
     b'd18443a10105a104446b6964335561757468656e74696361746564206d657373616765582019f6c7d8ddfeaceea6ba4f1cafb563cbf3be157653e29f3258b2957cf23f4e17'
 
     >>> # decode and authenticate tag
-    >>> decoded = CoseMessage.decode(encoded)
+    >>> decoded = Mac0Message.decode(encoded)
     >>> decoded
     <COSE_Mac0: [{'Algorithm': 'HMAC256'}, {'KID': b'kid3'}, b'authe' ... (21 B), b'\x19\xf6\xc7\xd8\xdd' ... (32 B)]>
 
@@ -182,7 +182,7 @@ direct key agreement method. The sender is using an ephemeral key.
     >>> from binascii import unhexlify, hexlify
     >>> from copy import deepcopy
 
-    >>> from pycose.messages import EncMessage, CoseMessage
+    >>> from pycose.messages import EncMessage
     >>> from pycose.keys import CoseKey
     >>> from pycose.messages.recipient import DirectKeyAgreement
     >>> from pycose.headers import Algorithm, KID, StaticKey, EphemeralKey, IV
@@ -249,7 +249,7 @@ direct key agreement method. The sender is using an ephemeral key.
     b'd8608443a10101a1054cc9cf4df2fe6c632bf788641358237adbe2709ca818fb415f1e5df66f4e1a51053b791f61288b65d131fa62bf37731aba62818344a1013818a120a50102025821706572656772696e2e746f6f6b407475636b626f726f7567682e6578616d706c65200121582098f50a4ff6c05861c8860d13a638ea56c3f5ad7590bbfbf054e1c7b4d91d6280225820f01400b089867804b8e9fc96c3932161f1934f4223069170d924b7e03bf822bb40'
 
     >>> # decode and decrypt
-    >>> decoded = CoseMessage.decode(encoded)
+    >>> decoded = EncMessage.decode(encoded)
     >>> decoded
     <COSE_Encrypt: [{'Algorithm': 'A128GCM'}, {'IV': "b'\\xc9\\xcfM\\xf2\\xfe' ... (12 B)"}, b'z\xdb\xe2p\x9c' ... (35 B), [<COSE_Recipient: [{'Algorithm': 'EcdhEsHKDF256'}, {'EphemeralKey': <COSE_Key(EC2Key): {'EC2KpY': "b'\\xf0\\x14\\x00\\xb0\\x89' ... (32 B)", 'EC2KpX': "b'\\x98\\xf5\\nO\\xf6' ... (32 B)", 'EC2KpCurve': 'P256', 'KpKty': 'KtyEC2', 'KpKid': b'peregrin.took@tuckborough.example'}>}, b'' ... (0 B), []]>]]>
 
@@ -270,3 +270,35 @@ direct key agreement method. The sender is using an ephemeral key.
     >>> decoded.recipients[0].key = static_receiver_key
     >>> decoded.decrypt(decoded.recipients[0])
     b'This is the content'
+
+Arbitrary Messages
+------------------
+
+It may sometimes be useful to decode a COSE message of an unknown type. This can be done by calling the
+``CoseMessage.decode`` method. The type of the message will be detected from the CBOR tag present at the start of its
+encoding, and an instance of the appropriate ``CoseMessage`` subclass is returned.
+
+.. doctest::
+    :pyversion: >= 3.6
+
+    >>> from binascii import unhexlify
+    >>> from pycose.algorithms import A128GCM
+    >>> from pycose.headers import Algorithm, IV
+    >>> from pycose.keys import CoseKey
+    >>> from pycose.keys.keyops import EncryptOp, DecryptOp
+    >>> from pycose.messages import CoseMessage, Enc0Message
+
+    >>> msg = Enc0Message(
+    ...     phdr = {Algorithm: A128GCM, IV: b'000102030405060708090a0b0c'},
+    ...     payload = 'some secret message'.encode('utf-8'))
+    >>> cose_key = CoseKey.from_dict({
+    ...     KpKty: KtySymmetric,
+    ...     SymKpK: unhexlify(b'000102030405060708090a0b0c0d0e0f'),
+    ...     KpKeyOps: [EncryptOp, DecryptOp]})
+    >>> msg.key = cose_key
+    >>> encoded = msg.encode()
+
+    >>> decoded = CoseMessage.decode(encoded)
+    >>> assert isinstance(decoded, Enc0Message)
+    >>> decoded
+    <COSE_Encrypt0: [{'Algorithm': 'A128GCM', 'IV': "b'00010' ... (26 B)"}, {}, b'\xcc\xa3D\x1a$' ... (35 B)]>

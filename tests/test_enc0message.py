@@ -3,7 +3,6 @@ import cbor2
 from pycose.messages.enc0message import Enc0Message
 from pycose.keys.cosekey import CoseKey
 from pycose.keys.keyops import EncryptOp, DecryptOp
-from pycose.messages.cosemessage import CoseMessage
 
 
 def test_encrypt0_encoding(test_encrypt0):
@@ -33,7 +32,7 @@ def test_encrypt0_decoding(test_encrypt0):
     test_input = test_encrypt0['input']
     test_output = test_encrypt0['output']
 
-    msg = CoseMessage.decode(cbor2.dumps(test_output['result']))
+    msg = Enc0Message.decode(cbor2.dumps(test_output['result']))
 
     assert msg.phdr == test_input['protected']
     assert msg.uhdr == test_input['unprotected']
@@ -63,7 +62,7 @@ def test_encrypt0_round_trip(test_encrypt0):
     assert cbor2.loads(msg.encode()) == test_output['result']
 
     msg = msg.encode()
-    msg = CoseMessage.decode(msg)
+    msg = Enc0Message.decode(msg)
     msg.key = key
 
     assert msg.decrypt() == test_input['plaintext']
