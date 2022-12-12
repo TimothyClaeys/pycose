@@ -313,14 +313,14 @@ class _EcdhHkdf(CoseAlgorithm, ABC):
 class _AesGcm(_EncAlg, ABC):
 
     @classmethod
-    def encrypt(cls, key: 'SK', nonce: bytes, data: bytes, external_aad: bytes) -> bytes:
+    def encrypt(cls, key: 'SK', nonce: bytes, data: bytes, aad: bytes) -> bytes:
         cipher = AESGCM(key=key.k)
-        return cipher.encrypt(nonce=nonce, data=data, associated_data=external_aad)
+        return cipher.encrypt(nonce=nonce, data=data, associated_data=aad)
 
     @classmethod
-    def decrypt(cls, key: 'SK', nonce: bytes, ciphertext: bytes, external_aad: bytes) -> bytes:
+    def decrypt(cls, key: 'SK', nonce: bytes, ciphertext: bytes, aad: bytes) -> bytes:
         cipher = AESGCM(key=key.k)
-        return cipher.decrypt(nonce=nonce, data=ciphertext, associated_data=external_aad)
+        return cipher.decrypt(nonce=nonce, data=ciphertext, associated_data=aad)
 
 
 class _AesCcm(_EncAlg, ABC):
@@ -331,14 +331,14 @@ class _AesCcm(_EncAlg, ABC):
         raise NotImplementedError()
 
     @classmethod
-    def encrypt(cls, key: 'SK', nonce: bytes, data: bytes, external_aad: bytes) -> bytes:
+    def encrypt(cls, key: 'SK', nonce: bytes, data: bytes, aad: bytes) -> bytes:
         cipher = AESCCM(key.k, tag_length=cls.get_tag_length())
-        return cipher.encrypt(nonce, data=data, associated_data=external_aad)
+        return cipher.encrypt(nonce, data=data, associated_data=aad)
 
     @classmethod
-    def decrypt(cls, key: 'SK', nonce: bytes, ciphertext: bytes, external_aad: bytes) -> bytes:
+    def decrypt(cls, key: 'SK', nonce: bytes, ciphertext: bytes, aad: bytes) -> bytes:
         cipher = AESCCM(key=key.k, tag_length=cls.get_tag_length())
-        return cipher.decrypt(nonce, data=ciphertext, associated_data=external_aad)
+        return cipher.decrypt(nonce, data=ciphertext, associated_data=aad)
 
 
 ##################################################
