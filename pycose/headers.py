@@ -176,8 +176,8 @@ def is_bstr(value: Any):
 
 
 def crit_is_array(value: Any):
-    if not isinstance(value, list) or len(value) < 1 or not all(isinstance(x, int) for x in value):
-        raise ValueError("CRITICAL should be a list with at least one integer element")
+    if not isinstance(value, list) or len(value) < 1 or not all(isinstance(x, (int, str)) for x in value):
+        raise ValueError("CRITICAL should be a list with at least one integer or string element")
 
     return value
 
