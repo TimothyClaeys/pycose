@@ -1,4 +1,5 @@
 cryptography
 cbor2
 ecdsa
+attrs
 certvalidator
