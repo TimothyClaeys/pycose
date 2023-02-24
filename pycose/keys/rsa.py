@@ -14,6 +14,9 @@ if TYPE_CHECKING:
     from pycose.keys.keyops import KEYOPS
     from pycose.keys.keyparam import KeyParam
 
+def to_bstr(dec):
+    blen = (dec.bit_length() + 7) // 8
+    return dec.to_bytes(blen, byteorder="big")
 
 @CoseKey.record_kty(KtyRSA)
 class RSAKey(CoseKey):
@@ -70,6 +73,50 @@ class RSAKey(CoseKey):
                    t_i=t_i,
                    optional_params=_optional_params,
                    allow_unknown_key_attrs=True)
+
+    @classmethod
+    def from_cryptography_key(
+        cls,
+        ext_key: Union[rsa.RSAPrivateKey, rsa.RSAPublicKey],
+        optional_params: Optional[dict] = None
+    ) -> 'RSAKey':
+        """
+        Returns an initialized COSE Key object of type RSAKey.
+        :param ext_key: Python cryptography key.
+        :return: an initialized RSA key
+        """
+        if not cls._supports_cryptography_key_type(ext_key):
+            raise CoseIllegalKeyType(f"Unsupported key type: {type(ext_key)}")
+
+        if hasattr(ext_key, 'private_numbers'):
+            priv_nums = ext_key.private_numbers()
+            pub_nums = priv_nums.public_numbers
+        else:
+            priv_nums = None
+            pub_nums = ext_key.public_numbers()
+
+        cose_key = {}
+        if pub_nums:
+            cose_key.update({
+                RSAKpE: to_bstr(pub_nums.e),
+                RSAKpN: to_bstr(pub_nums.n),
+            })
+        if priv_nums:
+            cose_key.update({
+                RSAKpD: to_bstr(priv_nums.d),
+                RSAKpP: to_bstr(priv_nums.p),
+                RSAKpQ: to_bstr(priv_nums.q),
+                RSAKpDP: to_bstr(priv_nums.dmp1),
+                RSAKpDQ: to_bstr(priv_nums.dmq1),
+                RSAKpQInv: to_bstr(priv_nums.iqmp),
+            })
+        if optional_params:
+            cose_key.update(optional_params)
+        return cls.from_dict(cose_key)
+
+    @staticmethod
+    def _supports_cryptography_key_type(ext_key) -> bool:
+        return isinstance(ext_key, (rsa.RSAPrivateKey, rsa.RSAPublicKey))
 
     @staticmethod
     def _key_transform(key: Union[Type['RSAKeyParam'], Type['KeyParam'], str, int], allow_unknown_attrs: bool = False):
@@ -255,8 +302,8 @@ class RSAKey(CoseKey):
             else:
                 CoseKey.key_ops.fset(self, new_key_ops)
 
-    @staticmethod
-    def generate_key(key_bits: int, optional_params: dict = None) -> 'RSAKey':
+    @classmethod
+    def generate_key(cls, key_bits: int, optional_params: dict = None) -> 'RSAKey':
         """
         Generate a random RSAKey COSE key object. The RSA keys have two primes (see section 4 of RFC 8230).
 
@@ -266,22 +313,9 @@ class RSAKey(CoseKey):
         :return: An COSE `RSAKey` key.
         """
 
-        key = rsa.generate_private_key(public_exponent=65537, key_size=key_bits, backend=default_backend())
+        ext_key = rsa.generate_private_key(public_exponent=65537, key_size=key_bits, backend=default_backend())
 
-        private_numbers = key.private_numbers()
-        p = private_numbers.p.to_bytes((private_numbers.p.bit_length() + 7) // 8, byteorder='big')
-        q = private_numbers.q.to_bytes((private_numbers.q.bit_length() + 7) // 8, byteorder='big')
-        d = private_numbers.d.to_bytes((private_numbers.d.bit_length() + 7) // 8, byteorder='big')
-        dp = private_numbers.dmp1.to_bytes((private_numbers.dmp1.bit_length() + 7) // 8, byteorder='big')
-        dq = private_numbers.dmq1.to_bytes((private_numbers.dmq1.bit_length() + 7) // 8, byteorder='big')
-        qinv = private_numbers.iqmp.to_bytes((private_numbers.iqmp.bit_length() + 7) // 8, byteorder='big')
-
-        public_numbers = private_numbers.public_numbers
-
-        n = public_numbers.n.to_bytes((public_numbers.n.bit_length() + 7) // 8, byteorder='big')
-        e = public_numbers.e.to_bytes((public_numbers.e.bit_length() + 7) // 8, byteorder='big')
-
-        return RSAKey(n=n, e=e, d=d, p=p, q=q, dp=dp, dq=dq, qinv=qinv, optional_params=optional_params)
+        return cls.from_cryptography_key(ext_key, optional_params)
 
     def __repr__(self):
         hdr = f'<COSE_Key(RSAKey): {self._key_repr()}>'

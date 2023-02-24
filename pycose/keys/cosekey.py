@@ -94,6 +94,17 @@ class CoseKey(MutableMapping, ABC):
 
         return key_obj
 
+    @classmethod
+    def from_cryptography_key(
+        cls,
+        ext_key,
+        optional_params: Optional[dict] = None
+    ) -> 'CK':
+        for key_type in cls._key_types.values():
+            if key_type._supports_cryptography_key_type(ext_key):
+                return key_type.from_cryptography_key(ext_key, optional_params)
+        raise CoseIllegalKeyType(f"Unsupported key type: {type(ext_key)}")
+
     @staticmethod
     def base64decode(to_decode: str) -> bytes:
         """

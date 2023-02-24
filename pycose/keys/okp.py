@@ -1,7 +1,8 @@
 from typing import Optional, Type, Union, List, TYPE_CHECKING
 
 from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.serialization import PrivateFormat, PublicFormat, Encoding
+from cryptography.hazmat.primitives.serialization import PrivateFormat, PublicFormat, Encoding, NoEncryption
+from cryptography.hazmat.primitives.asymmetric import ed25519, ed448, x25519, x448
 
 from pycose import utils
 from pycose.exceptions import CoseUnsupportedCurve, CoseInvalidKey, CoseIllegalKeyType, CoseIllegalKeyOps
@@ -9,10 +10,11 @@ from pycose.keys.cosekey import CoseKey, KpKty
 from pycose.keys.keyops import KEYOPS, SignOp, VerifyOp, DeriveBitsOp, DeriveKeyOp
 from pycose.keys.keyparam import OKPKeyParam, OKPKpCurve, OKPKpX, OKPKpD, KeyParam
 from pycose.keys.keytype import KtyOKP
+from pycose.keys.curves import CoseCurve
+from pycose.keys import curves
 
 if TYPE_CHECKING:
     from pycose.keys.keyops import KEYOPS
-    from pycose.keys.curves import CoseCurve
 
 
 @CoseKey.record_kty(KtyOKP)
@@ -40,6 +42,77 @@ class OKPKey(CoseKey):
         CoseKey._remove_from_dict(_optional_params, OKPKpCurve)
 
         return cls(crv=curve, x=x, d=d, optional_params=_optional_params, allow_unknown_key_attrs=True)
+
+    @classmethod
+    def from_cryptography_key(
+        cls,
+        ext_key: Union[
+            ed25519.Ed25519PrivateKey, ed25519.Ed25519PublicKey,
+            ed448.Ed448PrivateKey, ed448.Ed448PublicKey,
+            x25519.X25519PrivateKey, x25519.X25519PublicKey,
+            x448.X448PrivateKey, x448.X448PublicKey
+        ],
+        optional_params: Optional[dict] = None,
+    ) -> 'OKPKey':
+        """
+        Returns an initialized COSE Key object of type OKPKey.
+        :param ext_key: Python cryptography key.
+        :return: an initialized OKP key
+        """
+
+        curve = cls._curve_from_cryptography_key(ext_key)
+
+        if hasattr(ext_key, 'private_bytes'):
+            priv_bytes = ext_key.private_bytes(
+                encoding=Encoding.Raw,
+                format=PrivateFormat.Raw,
+                encryption_algorithm=NoEncryption(),
+            )
+            pub_bytes = ext_key.public_key().public_bytes(
+                encoding=Encoding.Raw, format=PublicFormat.Raw
+            )
+        else:
+            priv_bytes = None
+            pub_bytes = ext_key.public_bytes(encoding=Encoding.Raw, format=PublicFormat.Raw)
+
+        cose_key = {}
+        cose_key.update(
+            {
+                OKPKpCurve: curve,
+                OKPKpX: pub_bytes,
+            }
+        )
+        if priv_bytes:
+            cose_key.update(
+                {
+                    OKPKpD: priv_bytes,
+                }
+            )
+        if optional_params:
+            cose_key.update(optional_params)
+        return OKPKey.from_dict(cose_key)
+
+    @staticmethod
+    def _curve_from_cryptography_key(ext_key) -> Type[CoseCurve]:
+        if isinstance(ext_key, (ed25519.Ed25519PrivateKey, ed25519.Ed25519PublicKey)):
+            curve = curves.Ed25519
+        elif isinstance(ext_key, (ed448.Ed448PrivateKey, ed448.Ed448PublicKey)):
+            curve = curves.Ed448
+        elif isinstance(ext_key, (x25519.X25519PrivateKey, x25519.X25519PublicKey)):
+            curve = curves.X25519
+        elif isinstance(ext_key, (x448.X448PrivateKey, x448.X448PublicKey)):
+            curve = curves.X448
+        else:
+            raise CoseIllegalKeyType(f"Unsupported key type: {type(ext_key)}")
+        return curve
+
+    @classmethod
+    def _supports_cryptography_key_type(cls, ext_key) -> bool:
+        try:
+            cls._curve_from_cryptography_key(ext_key)
+        except CoseIllegalKeyType:
+            return False
+        return True
 
     @staticmethod
     def _key_transform(key: Union[Type['OKPKeyParam'], Type['KeyParam'], str, int],
@@ -175,18 +248,9 @@ class OKPKey(CoseKey):
         if crv.key_type != KtyOKP:
             raise CoseUnsupportedCurve(f'Unsupported COSE curve: {crv}')
 
-        encoding = Encoding(serialization.Encoding.Raw)
-        private_format = PrivateFormat(serialization.PrivateFormat.Raw)
-        public_format = PublicFormat(serialization.PublicFormat.Raw)
-        encryption = serialization.NoEncryption()
+        ext_key = crv.curve_obj.generate()
 
-        private_key = crv.curve_obj.generate()
-
-        return OKPKey(
-            crv=crv,
-            x=private_key.public_key().public_bytes(encoding, public_format),
-            d=private_key.private_bytes(encoding, private_format, encryption),
-            optional_params=optional_params)
+        return cls.from_cryptography_key(ext_key, optional_params)
 
     def __delitem__(self, key: Union['KeyParam', str, int]):
         if self._key_transform(key) != KpKty and self._key_transform(key) != OKPKpCurve:
