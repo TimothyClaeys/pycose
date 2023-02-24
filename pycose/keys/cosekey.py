@@ -100,6 +100,14 @@ class CoseKey(MutableMapping, ABC):
         ext_key,
         optional_params: Optional[dict] = None
     ) -> 'CK':
+        """
+        Initialize a COSE key from a cryptography key.
+
+        :param ext_key: A cryptography key.
+        :param optional_params: Optional parameters to add to the key.
+        :return: An initialized COSE Key object.
+        """
+
         for key_type in cls._key_types.values():
             if key_type._supports_cryptography_key_type(ext_key):
                 return key_type.from_cryptography_key(ext_key, optional_params)
