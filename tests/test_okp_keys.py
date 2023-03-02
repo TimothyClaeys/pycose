@@ -3,6 +3,8 @@ from binascii import unhexlify
 
 import pytest
 
+from cryptography.hazmat.primitives.asymmetric import ed25519, ed448, x25519, x448
+
 from pycose.algorithms import EdDSA
 from pycose.exceptions import CoseInvalidKey, CoseIllegalKeyType, CoseUnsupportedCurve, CoseIllegalKeyOps
 from pycose.keys import OKPKey, CoseKey
@@ -60,6 +62,25 @@ def test_okp_public_keys_from_dicts(kty_attr, kty_value, crv_attr, crv_value, x_
 
     d = {kty_attr: kty_value, crv_attr: crv_value, x_attr: x_value}
     cose_key = CoseKey.from_dict(d)
+    assert _is_valid_okp_key(cose_key)
+
+
+@pytest.mark.parametrize('key_class', [
+    ed25519.Ed25519PrivateKey, ed448.Ed448PrivateKey,
+    x25519.X25519PrivateKey, x448.X448PrivateKey])
+def test_okp_private_key_from_cryptography(key_class):
+    private_key = key_class.generate()
+    cose_key = CoseKey.from_cryptography_key(private_key)
+    assert _is_valid_okp_key(cose_key)
+
+
+@pytest.mark.parametrize('key_class', [
+    ed25519.Ed25519PrivateKey, ed448.Ed448PrivateKey,
+    x25519.X25519PrivateKey, x448.X448PrivateKey])
+def test_okp_public_key_from_cryptography(key_class):
+    private_key = key_class.generate()
+    public_key = private_key.public_key()
+    cose_key = CoseKey.from_cryptography_key(public_key)
     assert _is_valid_okp_key(cose_key)
 
 
