@@ -35,6 +35,27 @@ The :class:`~pycose.keys.cosekey.CoseKey` class can be used to decode serialized
     >>> cosekey.d
     b'\x8fx\x1a\tSr\xf8[m\x9fa\t\xaeB&\x11sM}\xbf\xa0\x06\x9a-\xf2\x93[\xb2\xe0S\xbf5'
 
+Alternatively, :class:`~pycose.keys.cosekey.CoseKey` objects can be initialized from key objects of the `pyca/cryptography`_ package:
+
+.. _`pyca/cryptography`:  https://cryptography.io/
+
+.. doctest::
+    :pyversion: >= 3.6
+
+    >>> from pycose.keys import CoseKey
+    >>> from cryptography.hazmat.primitives.serialization import load_pem_public_key
+
+    >>> encoded_key = '-----BEGIN PUBLIC KEY-----\n' \
+    ...               'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEyIBhex88X7Yrh5Q4hbmsUYpcVWNj\n' \
+    ...               'mx1oE7TPomgpZJcQeNC3bX++GPsIWewWEGGFJKwHtRyfrL61DTTym3Rp8A==\n' \
+    ...               '-----END PUBLIC KEY-----\n'
+    >>> key = load_pem_public_key(encoded_key.encode("ascii"))
+    
+    >>> cosekey = CoseKey.from_cryptography_key(key)
+    >>> cosekey
+    <COSE_Key(EC2Key): {'EC2KpY': "b'\\x10x\\xd0\\xb7m' ... (32 B)", 'EC2KpX': "b'\\xc8\\x80a{\\x1f' ... (32 B)", 'EC2KpCurve': 'P256', 'KpKty': 'KtyEC2'}>
+
+
 Overview
 --------
 
