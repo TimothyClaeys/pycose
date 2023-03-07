@@ -42,8 +42,7 @@ class Sign1Message(SignCommon):
     def signature(self):
         return self._signature
 
-    @property
-    def _sig_structure(self):
+    def _create_sig_structure(self, payload: Optional[bytes] = None):
         """
         Create the sig_structure that needs to be signed
 
@@ -52,19 +51,27 @@ class Sign1Message(SignCommon):
         sig_structure = [self.context]
         sig_structure = self._base_structure(sig_structure)
 
-        sig_structure.append(self.payload)
+        if payload is None:
+            sig_structure.append(self.payload)
+        else:
+            sig_structure.append(payload)
 
         return cbor2.dumps(sig_structure)
 
-    def encode(self, tag: bool = True, sign: bool = True, *args, **kwargs) -> CBOR:
+    def encode(self, tag: bool = True, sign: bool = True, detached: bool = False, *args, **kwargs) -> CBOR:
         """ Encodes the message into a CBOR array with or without a CBOR tag. """
 
-        if sign:
-            message = [self.phdr_encoded, self.uhdr_encoded, self.payload, self.compute_signature()]
-        elif self.signature:
-            message = [self.phdr_encoded, self.uhdr_encoded, self.payload, self.signature]
+        if detached:
+            payload = None
         else:
-            message = [self.phdr_encoded, self.uhdr_encoded, self.payload]
+            payload = self.payload
+
+        if sign:
+            message = [self.phdr_encoded, self.uhdr_encoded, payload, self.compute_signature()]
+        elif self.signature:
+            message = [self.phdr_encoded, self.uhdr_encoded, payload, self.signature]
+        else:
+            message = [self.phdr_encoded, self.uhdr_encoded, payload]
 
         if tag:
             res = cbor2.dumps(cbor2.CBORTag(self.cbor_tag, message), default=self._custom_cbor_encoder)

@@ -48,15 +48,18 @@ class CoseSignature(SignCommon):
 
         self._payload = value
 
-    @property
-    def _sig_structure(self):
+    def _create_sig_structure(self, payload: Optional[bytes] = None):
         sign_structure = [self._parent.context, self._parent.phdr_encoded]
 
         if len(self.phdr):
             sign_structure.append(self.phdr_encoded)
 
         sign_structure.append(self.external_aad)
-        sign_structure.append(self._parent.payload)
+
+        if payload is None:
+            sign_structure.append(self._parent.payload)
+        else:
+            sign_structure.append(payload)
 
         aad = cbor2.dumps(sign_structure)
         return aad

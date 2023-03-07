@@ -1,5 +1,5 @@
 import abc
-from typing import Type, TYPE_CHECKING
+from typing import Optional, Type, TYPE_CHECKING
 
 from pycose import headers
 from pycose.keys.okp import OKPKey
@@ -19,8 +19,7 @@ class SignCommon(CoseMessage, metaclass=abc.ABCMeta):
     def signature(self):
         raise NotImplementedError
 
-    @property
-    def _sig_structure(self):
+    def _create_sig_structure(self, payload: Optional[bytes] = None) -> bytes:
         raise NotImplementedError
 
     def _key_verification(self, alg: Type['CoseAlg'], ops: Type['KEYOPS']):
@@ -37,7 +36,7 @@ class SignCommon(CoseMessage, metaclass=abc.ABCMeta):
         else:
             raise CoseException('Wrong key type')
 
-    def verify_signature(self, *args, **kwargs) -> bool:
+    def verify_signature(self, payload: Optional[bytes] = None, *args, **kwargs) -> bool:
         """
         Verifies the signature of a received COSE message.
 
@@ -47,7 +46,7 @@ class SignCommon(CoseMessage, metaclass=abc.ABCMeta):
 
         self._key_verification(alg, VerifyOp)
 
-        return alg.verify(key=self.key, data=self._sig_structure, signature=self.signature)
+        return alg.verify(key=self.key, data=self._create_sig_structure(payload), signature=self.signature)
 
     def compute_signature(self, *args, **kwargs) -> bytes:
         """
@@ -60,4 +59,4 @@ class SignCommon(CoseMessage, metaclass=abc.ABCMeta):
 
         self._key_verification(alg, SignOp)
 
-        return alg.sign(key=self.key, data=self._sig_structure)
+        return alg.sign(key=self.key, data=self._create_sig_structure())
