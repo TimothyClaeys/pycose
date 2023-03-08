@@ -119,7 +119,7 @@ def test_detach_payload():
     assert msg.signature == sig
 
 
-def test_fail_sign_if_missing_payload():
+def test_fail_on_missing_payload_signing():
     ec2_key = EC2Key.generate_key(crv='P_256', optional_params={'ALG': 'ES256'})
 
     msg = Sign1Message(phdr={'ALG': 'ES256'})
@@ -129,7 +129,7 @@ def test_fail_sign_if_missing_payload():
         msg.encode()
 
 
-def test_fail_verify_if_missing_payload():
+def test_fail_on_missing_payload_verification():
     ec2_key = EC2Key.generate_key(crv='P_256', optional_params={'ALG': 'ES256'})
 
     payload = "signed message".encode('utf-8')
