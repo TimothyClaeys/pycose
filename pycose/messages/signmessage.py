@@ -54,7 +54,12 @@ class _SignMessage(CoseMessage, metaclass=abc.ABCMeta):
             self.signers = signers
 
     @property
-    def signers(self):
+    def signers(self) -> List['Signer']:
+        """
+        The signers of the message.
+
+        :returns: Returns the list of signers as CoseSignature objects.
+        """
         return self._signers
 
     @signers.setter
