@@ -51,7 +51,75 @@ def test_sign1_decoding(test_sign1):
     assert msg.verify_signature()
 
 
-def test_sign1_detached_payload():
+def test_detached_payload():
+    ec2_key = EC2Key.generate_key(crv='P_256', optional_params={'ALG': 'ES256'})
+
+    payload = "signed message".encode('utf-8')
+
+    msg = Sign1Message(phdr={'ALG': 'ES256'})
+    msg.key = ec2_key
+
+    encoded = msg.encode(detached_payload=payload)
+
+    msg = Sign1Message.decode(encoded)
+    msg.key = ec2_key
+
+    assert msg.payload is None
+
+    msg.verify_signature(detached_payload=payload)
+
+
+def test_attach_payload():
+    ec2_key = EC2Key.generate_key(crv='P_256', optional_params={'ALG': 'ES256'})
+
+    payload = "signed message".encode('utf-8')
+
+    # Sign with detached payload
+    msg = Sign1Message(phdr={'ALG': 'ES256'})
+    msg.key = ec2_key
+    encoded = msg.encode(detached_payload=payload)
+
+    # Decode, attach payload, and re-encode
+    msg = Sign1Message.decode(encoded)
+    msg.payload = payload
+    sig = msg.signature
+    encoded = msg.encode(sign=False)
+
+    # Decode and verify
+    msg = Sign1Message.decode(encoded)
+    msg.key = ec2_key
+    msg.verify_signature()
+
+    # Make sure re-encoding didn't change the signature
+    assert msg.signature == sig
+
+
+def test_detach_payload():
+    ec2_key = EC2Key.generate_key(crv='P_256', optional_params={'ALG': 'ES256'})
+
+    payload = "signed message".encode('utf-8')
+
+    # Sign with attached payload
+    msg = Sign1Message(phdr={'ALG': 'ES256'}, payload=payload)
+    msg.key = ec2_key
+    encoded = msg.encode()
+
+    # Decode, detach payload, and re-encode
+    msg = Sign1Message.decode(encoded)
+    msg.payload = None
+    sig = msg.signature
+    encoded = msg.encode(sign=False)
+
+    # Decode and verify
+    msg = Sign1Message.decode(encoded)
+    msg.key = ec2_key
+    msg.verify_signature(detached_payload=payload)
+
+    # Make sure re-encoding didn't change the signature
+    assert msg.signature == sig
+
+
+def test_fail_sign_if_missing_payload():
     ec2_key = EC2Key.generate_key(crv='P_256', optional_params={'ALG': 'ES256'})
 
     msg = Sign1Message(phdr={'ALG': 'ES256'})
@@ -60,17 +128,21 @@ def test_sign1_detached_payload():
     with pytest.raises(CoseException, match="Missing payload"):
         msg.encode()
 
-    encoded = msg.encode(detached_payload="signed message".encode('utf-8'))
+
+def test_fail_verify_if_missing_payload():
+    ec2_key = EC2Key.generate_key(crv='P_256', optional_params={'ALG': 'ES256'})
+
+    payload = "signed message".encode('utf-8')
+
+    msg = Sign1Message(phdr={'ALG': 'ES256'})
+    msg.key = ec2_key
+    encoded = msg.encode(detached_payload=payload)
 
     msg = Sign1Message.decode(encoded)
     msg.key = ec2_key
 
-    assert msg.payload is None
-
     with pytest.raises(CoseException, match="Missing payload"):
         msg.verify_signature()
-
-    msg.verify_signature(detached_payload="signed message".encode('utf-8'))
 
 
 @pytest.mark.parametrize('alg', ['ES384', 'ES512'])
