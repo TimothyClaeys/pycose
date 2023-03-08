@@ -66,17 +66,12 @@ class Sign1Message(SignCommon):
     def encode(self, tag: bool = True, sign: bool = True, detached_payload: Optional[bytes] = None, *args, **kwargs) -> CBOR:
         """ Encodes the message into a CBOR array with or without a CBOR tag. """
 
-        if detached_payload is None:
-            payload = self.payload
-        else:
-            payload = None
-
         if sign:
-            message = [self.phdr_encoded, self.uhdr_encoded, payload, self.compute_signature(detached_payload)]
+            message = [self.phdr_encoded, self.uhdr_encoded, self.payload, self.compute_signature(detached_payload)]
         elif self.signature:
-            message = [self.phdr_encoded, self.uhdr_encoded, payload, self.signature]
+            message = [self.phdr_encoded, self.uhdr_encoded, self.payload, self.signature]
         else:
-            message = [self.phdr_encoded, self.uhdr_encoded, payload]
+            message = [self.phdr_encoded, self.uhdr_encoded, self.payload]
 
         if tag:
             res = cbor2.dumps(cbor2.CBORTag(self.cbor_tag, message), default=self._custom_cbor_encoder)

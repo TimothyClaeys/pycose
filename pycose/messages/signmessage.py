@@ -74,12 +74,7 @@ class _SignMessage(CoseMessage, metaclass=abc.ABCMeta):
     def encode(self, tag: bool = True, detached_payload: Optional[bytes] = None, *args, **kwargs) -> bytes:
         """ Encodes and protects the COSE_Sign message. """
 
-        if detached_payload is None:
-            payload = self.payload
-        else:
-            payload = None
-
-        message = [self.phdr_encoded, self.uhdr_encoded, payload]
+        message = [self.phdr_encoded, self.uhdr_encoded, self.payload]
 
         if len(self.signers):
             message.append([s.encode(detached_payload) for s in self.signers])
