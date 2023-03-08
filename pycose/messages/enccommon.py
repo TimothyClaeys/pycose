@@ -47,7 +47,7 @@ class EncCommon(CoseMessage, metaclass=abc.ABCMeta):
 
         self.key.verify(SymmetricKey, alg, [DecryptOp])
 
-        return alg.decrypt(key=self.key, ciphertext=self.payload, external_aad=self._enc_structure, nonce=nonce)
+        return alg.decrypt(key=self.key, ciphertext=self.payload, aad=self._enc_structure, nonce=nonce)
 
     def encrypt(self, *args, **kwargs) -> bytes:
         """
@@ -66,7 +66,7 @@ class EncCommon(CoseMessage, metaclass=abc.ABCMeta):
 
         self.key.verify(SymmetricKey, alg, [EncryptOp])
 
-        return alg.encrypt(key=self.key, data=self.payload, external_aad=self._enc_structure, nonce=nonce)
+        return alg.encrypt(key=self.key, data=self.payload, aad=self._enc_structure, nonce=nonce)
 
     @property
     def _enc_structure(self) -> bytes:
