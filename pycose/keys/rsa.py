@@ -88,19 +88,17 @@ class RSAKey(CoseKey):
         if not cls._supports_cryptography_key_type(ext_key):
             raise CoseIllegalKeyType(f"Unsupported key type: {type(ext_key)}")
 
-        if hasattr(ext_key, 'private_numbers'):
+        if isinstance(ext_key, rsa.RSAPrivateKey):
             priv_nums = ext_key.private_numbers()
             pub_nums = priv_nums.public_numbers
         else:
             priv_nums = None
             pub_nums = ext_key.public_numbers()
 
-        cose_key = {}
-        if pub_nums:
-            cose_key.update({
-                RSAKpE: to_bstr(pub_nums.e),
-                RSAKpN: to_bstr(pub_nums.n),
-            })
+        cose_key = {
+            RSAKpE: to_bstr(pub_nums.e),
+            RSAKpN: to_bstr(pub_nums.n),
+        }
         if priv_nums:
             cose_key.update({
                 RSAKpD: to_bstr(priv_nums.d),

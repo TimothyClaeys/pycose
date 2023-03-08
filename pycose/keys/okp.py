@@ -75,19 +75,12 @@ class OKPKey(CoseKey):
             priv_bytes = None
             pub_bytes = ext_key.public_bytes(encoding=Encoding.Raw, format=PublicFormat.Raw)
 
-        cose_key = {}
-        cose_key.update(
-            {
-                OKPKpCurve: curve,
-                OKPKpX: pub_bytes,
-            }
-        )
+        cose_key = {
+            OKPKpCurve: curve,
+            OKPKpX: pub_bytes,
+        }
         if priv_bytes:
-            cose_key.update(
-                {
-                    OKPKpD: priv_bytes,
-                }
-            )
+            cose_key[OKPKpD] = priv_bytes
         if optional_params:
             cose_key.update(optional_params)
         return OKPKey.from_dict(cose_key)
