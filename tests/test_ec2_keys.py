@@ -3,6 +3,7 @@ from binascii import unhexlify
 import pytest
 
 from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.serialization import Encoding, NoEncryption, PrivateFormat, PublicFormat
 
 from pycose.algorithms import Es256
 from pycose.keys.curves import P521, P384, P256
@@ -77,20 +78,22 @@ def test_ec2_public_keys_from_dicts(kty_attr, kty_value, crv_attr, crv_value, x_
     assert _is_valid_ec2_key(cose_key)
 
 
-def test_ec2_private_key_from_cryptography():
+def test_ec2_private_key_from_pem():
     from_bstr = lambda enc: int.from_bytes(enc, byteorder='big')
     pub_nums = ec.EllipticCurvePublicNumbers(from_bstr(p256_x), from_bstr(p256_y), ec.SECP256R1())
     priv_nums = ec.EllipticCurvePrivateNumbers(from_bstr(p256_d), pub_nums)
     private_key = priv_nums.private_key()
-    cose_key = CoseKey.from_cryptography_key(private_key)
+    pem = private_key.private_bytes(Encoding.PEM, PrivateFormat.PKCS8, NoEncryption()).decode()
+    cose_key = CoseKey.from_pem_private_key(pem)
     assert _is_valid_ec2_key(cose_key)
 
 
-def test_ec2_public_key_from_cryptography():
+def test_ec2_public_key_from_pem():
     from_bstr = lambda enc: int.from_bytes(enc, byteorder='big')
     pub_nums = ec.EllipticCurvePublicNumbers(from_bstr(p256_x), from_bstr(p256_y), ec.SECP256R1())
     public_key = pub_nums.public_key()
-    cose_key = CoseKey.from_cryptography_key(public_key)
+    pem = public_key.public_bytes(Encoding.PEM, PublicFormat.SubjectPublicKeyInfo).decode()
+    cose_key = CoseKey.from_pem_public_key(pem)
     assert _is_valid_ec2_key(cose_key)
 
 

@@ -42,9 +42,8 @@ class EC2Key(CoseKey):
 
         return cls(crv=curve, x=x, y=y, d=d, optional_params=_optional_params, allow_unknown_key_attrs=True)
 
-    @classmethod
-    def from_cryptography_key(
-        cls,
+    @staticmethod
+    def _from_cryptography_key(
         ext_key: Union[ec.EllipticCurvePrivateKey, ec.EllipticCurvePublicKey],
         optional_params: Optional[dict] = None
     ) -> 'EC2Key':
@@ -53,7 +52,7 @@ class EC2Key(CoseKey):
         :param ext_key: Python cryptography key.
         :return: an initialized EC key
         """
-        if not cls._supports_cryptography_key_type(ext_key):
+        if not EC2Key._supports_cryptography_key_type(ext_key):
             raise CoseIllegalKeyType(f"Unsupported key type: {type(ext_key)}")
 
         if isinstance(ext_key, ec.EllipticCurvePrivateKey):
@@ -90,7 +89,7 @@ class EC2Key(CoseKey):
             )
         if optional_params:
             cose_key.update(optional_params)
-        return cls.from_dict(cose_key)
+        return EC2Key.from_dict(cose_key)
 
     @staticmethod
     def _supports_cryptography_key_type(ext_key) -> bool:
@@ -276,7 +275,7 @@ class EC2Key(CoseKey):
 
         ext_key = ec.generate_private_key(crv.curve_obj, backend=default_backend())
         
-        return cls.from_cryptography_key(ext_key, optional_params)
+        return cls._from_cryptography_key(ext_key, optional_params)
 
     def __delitem__(self, key):
         if self._key_transform(key) != KpKty and self._key_transform(key) != EC2KpCurve:

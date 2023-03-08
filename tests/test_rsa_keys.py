@@ -3,6 +3,7 @@ import os
 import pytest
 
 from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.serialization import Encoding, NoEncryption, PrivateFormat, PublicFormat
 
 from pycose.exceptions import CoseIllegalKeyType
 from pycose.keys import RSAKey, CoseKey
@@ -51,14 +52,16 @@ def test_dict_operations_on_rsa_key():
     assert 'KEY_OPS' not in key
 
 
-def test_rsa_private_key_from_cryptography():
+def test_rsa_private_key_from_pem():
     private_key = rsa.generate_private_key(65537, 2048)
-    cose_key = CoseKey.from_cryptography_key(private_key)
+    pem = private_key.private_bytes(Encoding.PEM, PrivateFormat.PKCS8, NoEncryption()).decode()
+    cose_key = CoseKey.from_pem_private_key(pem)
     assert isinstance(cose_key, RSAKey)
 
 
-def test_rsa_public_key_from_cryptography():
+def test_rsa_public_key_from_pem():
     private_key = rsa.generate_private_key(65537, 2048)
     public_key = private_key.public_key()
-    cose_key = CoseKey.from_cryptography_key(public_key)
+    pem = public_key.public_bytes(Encoding.PEM, PublicFormat.SubjectPublicKeyInfo).decode()
+    cose_key = CoseKey.from_pem_public_key(pem)
     assert isinstance(cose_key, RSAKey)

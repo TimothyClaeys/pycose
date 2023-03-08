@@ -74,9 +74,8 @@ class RSAKey(CoseKey):
                    optional_params=_optional_params,
                    allow_unknown_key_attrs=True)
 
-    @classmethod
-    def from_cryptography_key(
-        cls,
+    @staticmethod
+    def _from_cryptography_key(
         ext_key: Union[rsa.RSAPrivateKey, rsa.RSAPublicKey],
         optional_params: Optional[dict] = None
     ) -> 'RSAKey':
@@ -85,7 +84,7 @@ class RSAKey(CoseKey):
         :param ext_key: Python cryptography key.
         :return: an initialized RSA key
         """
-        if not cls._supports_cryptography_key_type(ext_key):
+        if not RSAKey._supports_cryptography_key_type(ext_key):
             raise CoseIllegalKeyType(f"Unsupported key type: {type(ext_key)}")
 
         if isinstance(ext_key, rsa.RSAPrivateKey):
@@ -110,7 +109,7 @@ class RSAKey(CoseKey):
             })
         if optional_params:
             cose_key.update(optional_params)
-        return cls.from_dict(cose_key)
+        return RSAKey.from_dict(cose_key)
 
     @staticmethod
     def _supports_cryptography_key_type(ext_key) -> bool:
@@ -313,7 +312,7 @@ class RSAKey(CoseKey):
 
         ext_key = rsa.generate_private_key(public_exponent=65537, key_size=key_bits, backend=default_backend())
 
-        return cls.from_cryptography_key(ext_key, optional_params)
+        return cls._from_cryptography_key(ext_key, optional_params)
 
     def __repr__(self):
         hdr = f'<COSE_Key(RSAKey): {self._key_repr()}>'

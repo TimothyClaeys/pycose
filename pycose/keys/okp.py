@@ -43,9 +43,8 @@ class OKPKey(CoseKey):
 
         return cls(crv=curve, x=x, d=d, optional_params=_optional_params, allow_unknown_key_attrs=True)
 
-    @classmethod
-    def from_cryptography_key(
-        cls,
+    @staticmethod
+    def _from_cryptography_key(
         ext_key: Union[
             ed25519.Ed25519PrivateKey, ed25519.Ed25519PublicKey,
             ed448.Ed448PrivateKey, ed448.Ed448PublicKey,
@@ -60,7 +59,7 @@ class OKPKey(CoseKey):
         :return: an initialized OKP key
         """
 
-        curve = cls._curve_from_cryptography_key(ext_key)
+        curve = OKPKey._curve_from_cryptography_key(ext_key)
 
         if hasattr(ext_key, 'private_bytes'):
             priv_bytes = ext_key.private_bytes(
@@ -241,7 +240,7 @@ class OKPKey(CoseKey):
 
         ext_key = crv.curve_obj.generate()
 
-        return cls.from_cryptography_key(ext_key, optional_params)
+        return cls._from_cryptography_key(ext_key, optional_params)
 
     def __delitem__(self, key: Union['KeyParam', str, int]):
         if self._key_transform(key) != KpKty and self._key_transform(key) != OKPKpCurve:
