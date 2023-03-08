@@ -41,7 +41,7 @@ class _SignMessage(CoseMessage, metaclass=abc.ABCMeta):
     def __init__(self,
                  phdr: Optional[dict] = None,
                  uhdr: Optional[dict] = None,
-                 payload: bytes = b'',
+                 payload: Optional[bytes] = None,
                  signers: Optional[List['Signer']] = None,
                  *args,
                  **kwargs):
@@ -66,13 +66,18 @@ class _SignMessage(CoseMessage, metaclass=abc.ABCMeta):
         else:
             raise CoseException("Signers must be of type list")
 
-    def encode(self, tag: bool = True, *args, **kwargs) -> bytes:
+    def encode(self, tag: bool = True, detached_payload: Optional[bytes] = None, *args, **kwargs) -> bytes:
         """ Encodes and protects the COSE_Sign message. """
 
-        message = [self.phdr_encoded, self.uhdr_encoded, self.payload]
+        if detached_payload is None:
+            payload = self.payload
+        else:
+            payload = None
+
+        message = [self.phdr_encoded, self.uhdr_encoded, payload]
 
         if len(self.signers):
-            message.append([s.encode() for s in self.signers])
+            message.append([s.encode(detached_payload) for s in self.signers])
 
         if tag:
             message = cbor2.dumps(cbor2.CBORTag(self.cbor_tag, message), default=self._custom_cbor_encoder)

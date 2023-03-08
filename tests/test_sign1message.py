@@ -66,7 +66,7 @@ def test_detached_payload():
 
     assert msg.payload is None
 
-    msg.verify_signature(detached_payload=payload)
+    assert msg.verify_signature(detached_payload=payload)
 
 
 def test_attach_payload():
@@ -88,7 +88,7 @@ def test_attach_payload():
     # Decode and verify
     msg = Sign1Message.decode(encoded)
     msg.key = ec2_key
-    msg.verify_signature()
+    assert msg.verify_signature()
 
     # Make sure re-encoding didn't change the signature
     assert msg.signature == sig
@@ -113,7 +113,7 @@ def test_detach_payload():
     # Decode and verify
     msg = Sign1Message.decode(encoded)
     msg.key = ec2_key
-    msg.verify_signature(detached_payload=payload)
+    assert msg.verify_signature(detached_payload=payload)
 
     # Make sure re-encoding didn't change the signature
     assert msg.signature == sig

@@ -243,6 +243,7 @@ def test_allow_unknown_header_attribute_encoding_decoding():
 
     msg = SignMessage(phdr={"Custom-Header-Attr1": 7879},
                       uhdr={KID: b'foo', IV: unhexlify(b'00000000000000000000000000'), "Custom-Header-Attr2": 878},
+                      payload=b"",
                       signers=[CoseSignature(phdr={Algorithm: Es256, "Custom-Header-Attr3": 9999},
                                              key=EC2Key.generate_key(crv=P256))])
 
