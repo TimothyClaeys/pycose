@@ -56,7 +56,7 @@ class EC2Key(CoseKey):
         if not cls._supports_cryptography_key_type(ext_key):
             raise CoseIllegalKeyType(f"Unsupported key type: {type(ext_key)}")
 
-        if hasattr(ext_key, "private_numbers"):
+        if isinstance(ext_key, ec.EllipticCurvePrivateKey):
             priv_nums = ext_key.private_numbers()
             pub_nums = priv_nums.public_numbers
         else:

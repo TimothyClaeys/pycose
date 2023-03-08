@@ -88,16 +88,14 @@ class OKPKey(CoseKey):
     @staticmethod
     def _curve_from_cryptography_key(ext_key) -> Type[CoseCurve]:
         if isinstance(ext_key, (ed25519.Ed25519PrivateKey, ed25519.Ed25519PublicKey)):
-            curve = curves.Ed25519
-        elif isinstance(ext_key, (ed448.Ed448PrivateKey, ed448.Ed448PublicKey)):
-            curve = curves.Ed448
-        elif isinstance(ext_key, (x25519.X25519PrivateKey, x25519.X25519PublicKey)):
-            curve = curves.X25519
-        elif isinstance(ext_key, (x448.X448PrivateKey, x448.X448PublicKey)):
-            curve = curves.X448
-        else:
-            raise CoseIllegalKeyType(f"Unsupported key type: {type(ext_key)}")
-        return curve
+            return curves.Ed25519
+        if isinstance(ext_key, (ed448.Ed448PrivateKey, ed448.Ed448PublicKey)):
+            return curves.Ed448
+        if isinstance(ext_key, (x25519.X25519PrivateKey, x25519.X25519PublicKey)):
+            return curves.X25519
+        if isinstance(ext_key, (x448.X448PrivateKey, x448.X448PublicKey)):
+            return curves.X448
+        raise CoseIllegalKeyType(f"Unsupported key type: {type(ext_key)}")
 
     @classmethod
     def _supports_cryptography_key_type(cls, ext_key) -> bool:

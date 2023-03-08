@@ -99,7 +99,7 @@ class CoseKey(MutableMapping, ABC):
         cls,
         ext_key,
         optional_params: Optional[dict] = None
-    ) -> 'CK':
+    ) -> "CoseKey":
         """
         Initialize a COSE key from a cryptography key.
 
