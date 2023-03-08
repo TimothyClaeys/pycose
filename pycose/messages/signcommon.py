@@ -19,7 +19,7 @@ class SignCommon(CoseMessage, metaclass=abc.ABCMeta):
     def signature(self):
         raise NotImplementedError
 
-    def _create_sig_structure(self, payload: Optional[bytes] = None) -> bytes:
+    def _create_sig_structure(self, detached_payload: Optional[bytes] = None) -> bytes:
         raise NotImplementedError
 
     def _key_verification(self, alg: Type['CoseAlg'], ops: Type['KEYOPS']):
@@ -36,7 +36,7 @@ class SignCommon(CoseMessage, metaclass=abc.ABCMeta):
         else:
             raise CoseException('Wrong key type')
 
-    def verify_signature(self, payload: Optional[bytes] = None, *args, **kwargs) -> bool:
+    def verify_signature(self, detached_payload: Optional[bytes] = None, *args, **kwargs) -> bool:
         """
         Verifies the signature of a received COSE message.
 
@@ -46,9 +46,9 @@ class SignCommon(CoseMessage, metaclass=abc.ABCMeta):
 
         self._key_verification(alg, VerifyOp)
 
-        return alg.verify(key=self.key, data=self._create_sig_structure(payload), signature=self.signature)
+        return alg.verify(key=self.key, data=self._create_sig_structure(detached_payload), signature=self.signature)
 
-    def compute_signature(self, *args, **kwargs) -> bytes:
+    def compute_signature(self, detached_payload: Optional[bytes] = None, *args, **kwargs) -> bytes:
         """
         Computes the signature over a COSE message.
 
@@ -59,4 +59,4 @@ class SignCommon(CoseMessage, metaclass=abc.ABCMeta):
 
         self._key_verification(alg, SignOp)
 
-        return alg.sign(key=self.key, data=self._create_sig_structure())
+        return alg.sign(key=self.key, data=self._create_sig_structure(detached_payload))

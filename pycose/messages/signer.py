@@ -4,6 +4,7 @@ import cbor2
 
 from pycose import utils
 from pycose.messages.signcommon import SignCommon
+from pycose.exceptions import CoseException
 
 if TYPE_CHECKING:
     from pycose.keys.ec2 import EC2
@@ -48,7 +49,7 @@ class CoseSignature(SignCommon):
 
         self._payload = value
 
-    def _create_sig_structure(self, payload: Optional[bytes] = None):
+    def _create_sig_structure(self, detached_payload: Optional[bytes] = None):
         sign_structure = [self._parent.context, self._parent.phdr_encoded]
 
         if len(self.phdr):
@@ -56,16 +57,20 @@ class CoseSignature(SignCommon):
 
         sign_structure.append(self.external_aad)
 
-        if payload is None:
+        if detached_payload is None:
+            if self._parent.payload is None:
+                raise CoseException("Missing payload and no detached payload provided")
             sign_structure.append(self._parent.payload)
         else:
-            sign_structure.append(payload)
+            if self._parent.payload is not None:
+                raise CoseException("Detached payload must be None when payload is set")
+            sign_structure.append(detached_payload)
 
         aad = cbor2.dumps(sign_structure)
         return aad
 
-    def encode(self, *args, **kwargs) -> list:
-        return [self.phdr_encoded, self.uhdr_encoded, self.compute_signature()]
+    def encode(self, detached_payload: Optional[bytes] = None, *args, **kwargs) -> list:
+        return [self.phdr_encoded, self.uhdr_encoded, self.compute_signature(detached_payload)]
 
     def __repr__(self) -> str:
         return f'<COSE_Signature: [{self._phdr}, {self._uhdr}, {utils.truncate(self._payload)}]>'

@@ -23,7 +23,7 @@ def test_sign_encoding(test_sign):
     assert msg.uhdr == test_input['unprotected']
 
     for s, s_output in zip(msg.signers, test_output['signers']):
-        assert hexlify(s._sig_structure) == hexlify(s_output['structure'])
+        assert hexlify(s._create_sig_structure()) == hexlify(s_output['structure'])
         if 'signature' in s_output:
             assert s.compute_signature() == s_output['signature']
 
@@ -54,5 +54,5 @@ def test_sign_decoding(test_sign):
     for s, s_input, s_output in zip(msg.signers, test_input['signers'], test_output['signers']):
         s.external_aad = unhexlify(s_input['external_aad'])
         s.key = s_input['signing_key']
-        assert hexlify(s._sig_structure) == hexlify(s_output['structure'])
+        assert hexlify(s._create_sig_structure()) == hexlify(s_output['structure'])
         assert s.verify_signature()

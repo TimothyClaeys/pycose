@@ -8,7 +8,7 @@ from pycose.messages import CoseMessage, Enc0Message, Sign1Message
 
 @pytest.fixture
 def sign1_message():
-    msg = Sign1Message(phdr={Algorithm: Es256})
+    msg = Sign1Message(phdr={Algorithm: Es256}, payload=b"")
     msg.key = EC2Key.generate_key(crv=P256)
     return msg.encode()
 

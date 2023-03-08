@@ -1,7 +1,7 @@
 import cbor2
 import pytest
 
-from pycose.exceptions import CoseIllegalAlgorithm, CoseIllegalKeyOps
+from pycose.exceptions import CoseException, CoseIllegalAlgorithm, CoseIllegalKeyOps
 from pycose.keys import OKPKey, EC2Key
 from pycose.keys.cosekey import CoseKey
 from pycose.keys.keyops import SignOp, VerifyOp
@@ -21,7 +21,7 @@ def test_sign1_encoding(test_sign1):
     assert msg.phdr_encoded == test_output['protected']
     assert msg.uhdr_encoded == test_output['unprotected']
 
-    assert msg._sig_structure == test_output['structure']
+    assert msg._create_sig_structure() == test_output['structure']
 
     key = CoseKey.from_dict(test_sign1["cek"])
     key.key_ops = [SignOp, VerifyOp]
@@ -49,6 +49,28 @@ def test_sign1_decoding(test_sign1):
     assert msg.uhdr == test_input['unprotected']
 
     assert msg.verify_signature()
+
+
+def test_sign1_detached_payload():
+    ec2_key = EC2Key.generate_key(crv='P_256', optional_params={'ALG': 'ES256'})
+
+    msg = Sign1Message(phdr={'ALG': 'ES256'})
+    msg.key = ec2_key
+
+    with pytest.raises(CoseException, match="Missing payload"):
+        msg.encode()
+
+    encoded = msg.encode(detached_payload="signed message".encode('utf-8'))
+
+    msg = Sign1Message.decode(encoded)
+    msg.key = ec2_key
+
+    assert msg.payload is None
+
+    with pytest.raises(CoseException, match="Missing payload"):
+        msg.verify_signature()
+
+    msg.verify_signature(detached_payload="signed message".encode('utf-8'))
 
 
 @pytest.mark.parametrize('alg', ['ES384', 'ES512'])
