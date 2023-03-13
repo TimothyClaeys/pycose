@@ -84,7 +84,7 @@ class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
     def __init__(self,
                  phdr: Optional[dict] = None,
                  uhdr: Optional[dict] = None,
-                 payload: bytes = b'',
+                 payload: Optional[bytes] = None,
                  external_aad: bytes = b'',
                  key: Optional[CoseKey] = None,
                  *args,
@@ -128,12 +128,12 @@ class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
             self._key = key
 
     @property
-    def payload(self) -> bytes:
+    def payload(self) -> Optional[bytes]:
         return self._payload
 
     @payload.setter
-    def payload(self, new_payload: bytes) -> None:
-        if type(new_payload) is not bytes:
+    def payload(self, new_payload: Optional[bytes]) -> None:
+        if new_payload is not None and type(new_payload) is not bytes:
             raise TypeError("payload should be of type 'bytes' not {}".format(type(new_payload)))
         self._payload = new_payload  # can be plaintext or ciphertext
 

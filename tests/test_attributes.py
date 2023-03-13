@@ -243,6 +243,7 @@ def test_allow_unknown_header_attribute_encoding_decoding():
 
     msg = SignMessage(phdr={"Custom-Header-Attr1": 7879},
                       uhdr={KID: b'foo', IV: unhexlify(b'00000000000000000000000000'), "Custom-Header-Attr2": 878},
+                      payload=b"",
                       signers=[CoseSignature(phdr={Algorithm: Es256, "Custom-Header-Attr3": 9999},
                                              key=EC2Key.generate_key(crv=P256))])
 
@@ -258,7 +259,8 @@ def test_allow_unknown_header_attribute_encoding_decoding():
     assert "Custom-Header-Attr3" in msg_decoded.signers[0].phdr
 
     msg = Sign1Message(phdr={Algorithm: Es256, "Custom-Header-Attr1": 7879},
-                       uhdr={KID: b'foo', "Custom-Header-Attr2": 878})
+                       uhdr={KID: b'foo', "Custom-Header-Attr2": 878},
+                       payload=b"")
     msg.key = EC2Key.generate_key(crv=P256)
 
     assert "Custom-Header-Attr1" in msg.phdr
@@ -277,7 +279,7 @@ def test_no_reencoding_of_protected_header():
     # This is a test to ensure that the protected header is not re-encoded.
     phdr_encoded = unhexlify(b'A2012663666F6F190001')
 
-    msg = Sign1Message(phdr_encoded=phdr_encoded)
+    msg = Sign1Message(phdr_encoded=phdr_encoded, payload=b"")
     msg.key = EC2Key.generate_key(crv=P256)
 
     msg = msg.encode()

@@ -5,6 +5,7 @@ import cbor2
 from pycose import utils
 from pycose.messages.cosemessage import CoseMessage
 from pycose.messages.signcommon import SignCommon
+from pycose.exceptions import CoseException
 
 if TYPE_CHECKING:
     from pycose.keys.ec2 import EC2
@@ -28,7 +29,7 @@ class Sign1Message(SignCommon):
     def __init__(self,
                  phdr: Optional[dict] = None,
                  uhdr: Optional[dict] = None,
-                 payload: bytes = b'',
+                 payload: Optional[bytes] = None,
                  external_aad: bytes = b'',
                  key: Optional[Union['EC2', 'OKP', 'RSA']] = None,
                  *args,
@@ -42,8 +43,7 @@ class Sign1Message(SignCommon):
     def signature(self):
         return self._signature
 
-    @property
-    def _sig_structure(self):
+    def _create_sig_structure(self, detached_payload: Optional[bytes] = None):
         """
         Create the sig_structure that needs to be signed
 
@@ -52,15 +52,22 @@ class Sign1Message(SignCommon):
         sig_structure = [self.context]
         sig_structure = self._base_structure(sig_structure)
 
-        sig_structure.append(self.payload)
+        if detached_payload is None:
+            if self.payload is None:
+                raise CoseException("Missing payload and no detached payload provided")
+            sig_structure.append(self.payload)
+        else:
+            if self.payload is not None:
+                raise CoseException("Detached payload must be None when payload is set")
+            sig_structure.append(detached_payload)
 
         return cbor2.dumps(sig_structure)
 
-    def encode(self, tag: bool = True, sign: bool = True, *args, **kwargs) -> CBOR:
+    def encode(self, tag: bool = True, sign: bool = True, detached_payload: Optional[bytes] = None, *args, **kwargs) -> CBOR:
         """ Encodes the message into a CBOR array with or without a CBOR tag. """
 
         if sign:
-            message = [self.phdr_encoded, self.uhdr_encoded, self.payload, self.compute_signature()]
+            message = [self.phdr_encoded, self.uhdr_encoded, self.payload, self.compute_signature(detached_payload)]
         elif self.signature:
             message = [self.phdr_encoded, self.uhdr_encoded, self.payload, self.signature]
         else:

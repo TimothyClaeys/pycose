@@ -24,7 +24,7 @@ class CoseBase(metaclass=abc.ABCMeta):
 
         return cls(phdr_encoded=phdr_encoded, uhdr=uhdr, allow_unknown_attributes=allow_unknown_attributes)
 
-    def __init__(self, phdr: Optional[dict] = None, uhdr: Optional[dict] = None, payload: bytes = b'', phdr_encoded: Optional[bytes] = None, *args, **kwargs):
+    def __init__(self, phdr: Optional[dict] = None, uhdr: Optional[dict] = None, payload: Optional[bytes] = None, phdr_encoded: Optional[bytes] = None, *args, **kwargs):
         if phdr is not None and phdr_encoded is not None:
             raise ValueError("Cannot have both phdr and phdr_encoded")
         
@@ -54,7 +54,7 @@ class CoseBase(metaclass=abc.ABCMeta):
         self._uhdr = CoseBase._parse_header(uhdr, kwargs.get("allow_unknown_attributes", True))
 
         # can be plaintext or ciphertext
-        if type(payload) is not bytes:
+        if payload is not None and type(payload) is not bytes:
             raise TypeError("payload should be of type 'bytes'")
         self._payload = payload
 
