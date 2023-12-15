@@ -9,10 +9,10 @@ from pycose.keys.cosekey import CoseKey
 from pycose.keys.keyops import SignOp, VerifyOp, DeriveKeyOp, DeriveBitsOp
 from pycose.keys.keyparam import EC2KeyParam, EC2KpCurve, EC2KpX, EC2KpY, EC2KpD, KpKty, KeyParam
 from pycose.keys.keytype import KtyEC2
+from pycose.keys.curves import CoseCurve
 
 if TYPE_CHECKING:
     from pycose.keys.keyops import KEYOPS
-    from pycose.keys.curves import CoseCurve
 
 
 @CoseKey.record_kty(KtyEC2)
@@ -41,6 +41,59 @@ class EC2Key(CoseKey):
         CoseKey._remove_from_dict(_optional_params, EC2KpCurve)
 
         return cls(crv=curve, x=x, y=y, d=d, optional_params=_optional_params, allow_unknown_key_attrs=True)
+
+    @staticmethod
+    def _from_cryptography_key(
+        ext_key: Union[ec.EllipticCurvePrivateKey, ec.EllipticCurvePublicKey],
+        optional_params: Optional[dict] = None
+    ) -> 'EC2Key':
+        """
+        Returns an initialized COSE Key object of type EC2Key.
+        :param ext_key: Python cryptography key.
+        :return: an initialized EC key
+        """
+        if not EC2Key._supports_cryptography_key_type(ext_key):
+            raise CoseIllegalKeyType(f"Unsupported key type: {type(ext_key)}")
+
+        if isinstance(ext_key, ec.EllipticCurvePrivateKey):
+            priv_nums = ext_key.private_numbers()
+            pub_nums = priv_nums.public_numbers
+        else:
+            priv_nums = None
+            pub_nums = ext_key.public_numbers()
+
+        curves = {
+            type(curve_cls.curve_obj): curve_cls
+            for curve_cls in CoseCurve.get_registered_classes().values()
+            if curve_cls.key_type == KtyEC2
+        }
+
+        if type(pub_nums.curve) not in curves:
+            raise CoseUnsupportedCurve(f"Unsupported EC Curve: {type(pub_nums.curve)}")
+        curve = curves[type(pub_nums.curve)]
+
+        cose_key = {}
+        if pub_nums:
+            cose_key.update(
+                {
+                    EC2KpCurve: curve,
+                    EC2KpX: pub_nums.x.to_bytes(curve.size, "big"),
+                    EC2KpY: pub_nums.y.to_bytes(curve.size, "big"),
+                }
+            )
+        if priv_nums:
+            cose_key.update(
+                {
+                    EC2KpD: priv_nums.private_value.to_bytes(curve.size, "big"),
+                }
+            )
+        if optional_params:
+            cose_key.update(optional_params)
+        return EC2Key.from_dict(cose_key)
+
+    @staticmethod
+    def _supports_cryptography_key_type(ext_key) -> bool:
+        return isinstance(ext_key, (ec.EllipticCurvePrivateKey, ec.EllipticCurvePublicKey))
 
     @staticmethod
     def _key_transform(key: Union[Type['EC2KeyParam'], Type['KeyParam'], str, int], allow_unknown_attrs: bool = False):
@@ -220,16 +273,9 @@ class EC2Key(CoseKey):
         if crv.key_type != KtyEC2:
             raise CoseUnsupportedCurve(f'Unsupported COSE curve: {crv}')
 
-        private_key = ec.generate_private_key(crv.curve_obj, backend=default_backend())
-        d_value = private_key.private_numbers().private_value
-        x_coor = private_key.public_key().public_numbers().x
-        y_coor = private_key.public_key().public_numbers().y
-
-        return EC2Key(crv=crv,
-                      d=d_value.to_bytes(crv.size, "big"),
-                      x=x_coor.to_bytes(crv.size, "big"),
-                      y=y_coor.to_bytes(crv.size, "big"),
-                      optional_params=optional_params)
+        ext_key = ec.generate_private_key(crv.curve_obj, backend=default_backend())
+        
+        return cls._from_cryptography_key(ext_key, optional_params)
 
     def __delitem__(self, key):
         if self._key_transform(key) != KpKty and self._key_transform(key) != EC2KpCurve:

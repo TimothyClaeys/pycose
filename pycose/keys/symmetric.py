@@ -34,6 +34,10 @@ class SymmetricKey(CoseKey):
         return cls(k=k, optional_params=_optional_params, allow_unknown_key_attrs=True)
 
     @staticmethod
+    def _supports_cryptography_key_type(ext_key) -> bool:
+        return False
+
+    @staticmethod
     def _key_transform(key: Union[Type['SymmetricKeyParam'], Type['KeyParam'], str, int],
                        allow_unknown_attrs: bool = False):
         return SymmetricKeyParam.from_id(key, allow_unknown_attrs)
