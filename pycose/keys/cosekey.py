@@ -107,6 +107,7 @@ class CoseKey(MutableMapping, ABC):
 
         :param pem: PEM-encoded private key.
         :param password: Password to decrypt the key.
+        :param optional_params: Optional parameters to add to the key.
         :return: an initialized CoseKey object.
         """
         ext_key = load_pem_private_key(pem.encode(), password)
@@ -121,6 +122,7 @@ class CoseKey(MutableMapping, ABC):
         Initialize a COSE key from a PEM-encoded public key.
 
         :param pem: PEM-encoded public key.
+        :param optional_params: Optional parameters to add to the key.
         :return: an initialized CoseKey object.
         """
         ext_key = load_pem_public_key(pem.encode())
