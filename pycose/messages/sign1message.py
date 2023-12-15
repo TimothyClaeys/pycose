@@ -42,6 +42,13 @@ class Sign1Message(SignCommon):
     @property
     def signature(self):
         return self._signature
+    
+    @signature.setter
+    def signature(self, value):
+        if not isinstance(value, bytes):
+            raise TypeError("Signature must be of type 'bytes'")
+
+        self._signature = value
 
     def _create_sig_structure(self, detached_payload: Optional[bytes] = None):
         """
