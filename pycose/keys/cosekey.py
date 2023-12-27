@@ -5,6 +5,8 @@ from typing import Optional, TypeVar, Type, List, Any, TYPE_CHECKING, Callable, 
 
 import cbor2
 
+from cryptography.hazmat.primitives.serialization import NoEncryption, load_pem_private_key, load_pem_public_key
+
 from pycose import utils
 from pycose.algorithms import CoseAlgorithm
 from pycose.exceptions import CoseException, CoseIllegalKeyType, CoseIllegalAlgorithm, CoseIllegalKeyOps
@@ -93,6 +95,56 @@ class CoseKey(MutableMapping, ABC):
             raise CoseIllegalKeyType("Could not decode CoseKey type, KpKty not set or unknown.")
 
         return key_obj
+
+    @staticmethod
+    def from_pem_private_key(
+        pem: str,
+        password: Optional[bytes] = None,
+        optional_params: Optional[dict] = None
+    ) -> "CoseKey":
+        """
+        Initialize a COSE key from a PEM-encoded private key.
+
+        :param pem: PEM-encoded private key.
+        :param password: Password to decrypt the key.
+        :param optional_params: Optional parameters to add to the key.
+        :return: an initialized CoseKey object.
+        """
+        ext_key = load_pem_private_key(pem.encode(), password)
+        return CoseKey._from_cryptography_key(ext_key, optional_params)
+
+    @staticmethod
+    def from_pem_public_key(
+        pem: str,
+        optional_params: Optional[dict] = None
+    ) -> "CoseKey":
+        """
+        Initialize a COSE key from a PEM-encoded public key.
+
+        :param pem: PEM-encoded public key.
+        :param optional_params: Optional parameters to add to the key.
+        :return: an initialized CoseKey object.
+        """
+        ext_key = load_pem_public_key(pem.encode())
+        return CoseKey._from_cryptography_key(ext_key, optional_params)
+
+    @staticmethod
+    def _from_cryptography_key(
+        ext_key,
+        optional_params: Optional[dict] = None
+    ) -> "CoseKey":
+        """
+        Initialize a COSE key from a cryptography key.
+
+        :param ext_key: A cryptography key.
+        :param optional_params: Optional parameters to add to the key.
+        :return: An initialized COSE Key object.
+        """
+
+        for key_type in CoseKey._key_types.values():
+            if key_type._supports_cryptography_key_type(ext_key):
+                return key_type._from_cryptography_key(ext_key, optional_params)
+        raise CoseIllegalKeyType(f"Unsupported key type: {type(ext_key)}")
 
     @staticmethod
     def base64decode(to_decode: str) -> bytes:

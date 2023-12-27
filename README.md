@@ -1,4 +1,4 @@
-# pycose:snake:  --- CBOR Object Signing and Encryption
+# pycose --- CBOR Object Signing and Encryption
 [![Python package](https://github.com/TimothyClaeys/pycose/actions/workflows/python-package.yml/badge.svg)](https://github.com/TimothyClaeys/pycose/actions/workflows/python-package.yml)
 [![Documentation Status](https://readthedocs.org/projects/pycose/badge/?version=latest)](https://pycose.readthedocs.io/en/latest/?badge=latest)
 
