@@ -70,7 +70,9 @@ class CoseSignature(SignCommon):
         return aad
 
     def encode(self, detached_payload: Optional[bytes] = None, *args, **kwargs) -> list:
-        return [self.phdr_encoded, self.uhdr_encoded, self.compute_signature(detached_payload)]
+        if self._payload == b'' or detached_payload is not None:
+            return [self.phdr_encoded, self.uhdr_encoded, self.compute_signature(detached_payload)]
+        return [self.phdr_encoded, self.uhdr_encoded, self._payload]
 
     def __repr__(self) -> str:
         return f'<COSE_Signature: [{self._phdr}, {self._uhdr}, {utils.truncate(self._payload)}]>'
