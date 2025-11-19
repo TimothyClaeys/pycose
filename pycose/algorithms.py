@@ -169,6 +169,7 @@ class _RsaPkcs1(_Rsa, ABC):
 
 
 class _Ecdsa(CoseAlgorithm, ABC):
+    """ Polymorphic ECDSA family. """
     @classmethod
     @abstractmethod
     def get_curve(cls):
@@ -187,6 +188,46 @@ class _Ecdsa(CoseAlgorithm, ABC):
 
     @classmethod
     def verify(cls, key: 'EC2', data: bytes, signature: bytes) -> bool:
+        p = Point(curve=cls.get_curve().curve, x=int(hexlify(key.x), 16), y=int(hexlify(key.y), 16))
+
+        vk = VerifyingKey.from_public_point(p, cls.get_curve(), cls.get_hash_func(), validate_point=True)
+
+        try:
+            return vk.verify(signature=signature, data=data, hashfunc=cls.get_hash_func())
+        except BadSignatureError:
+            return False
+
+class _Espdsa(CoseAlgorithm, ABC):
+    """ Fully-specified ECDSA family. """
+    @classmethod
+    @abstractmethod
+    def get_cose_curve_fullname(cls) -> str:
+        raise NotImplementedError()
+
+    @classmethod
+    @abstractmethod
+    def get_curve(cls):
+        raise NotImplementedError()
+
+    @classmethod
+    @abstractmethod
+    def get_hash_func(cls):
+        raise NotImplementedError()
+
+    @classmethod
+    def sign(cls, key: 'EC2', data: bytes) -> bytes:
+        if key.crv.fullname != cls.get_cose_curve_fullname():
+            raise CoseException(f"Illegal curve for signing: {key.crv}")
+
+        sk = SigningKey.from_secret_exponent(int(hexlify(key.d), 16), curve=cls.get_curve())
+
+        return sk.sign_deterministic(data, hashfunc=cls.get_hash_func())
+
+    @classmethod
+    def verify(cls, key: 'EC2', data: bytes, signature: bytes) -> bool:
+        if key.crv.fullname != cls.get_cose_curve_fullname():
+            raise CoseException(f"Illegal curve for signing: {key.crv}")
+
         p = Point(curve=cls.get_curve().curve, x=int(hexlify(key.x), 16), y=int(hexlify(key.y), 16))
 
         vk = VerifyingKey.from_public_point(p, cls.get_curve(), cls.get_hash_func(), validate_point=True)
@@ -418,6 +459,105 @@ class RsaPkcs1Sha256(_RsaPkcs1):
     @classmethod
     def get_hash_func(cls):
         return SHA256
+
+
+@CoseAlgorithm.register_attribute()
+class Ed448(CoseAlgorithm):
+    """
+    Ed448
+
+    Attributes:
+        identifier     -53
+
+        fullname       ED448
+    """
+
+    identifier = -53
+    fullname = "ED448"
+
+    @classmethod
+    def sign(cls, key: 'OKP', data: bytes) -> bytes:
+        if key.crv.fullname == 'ED448':
+            sk = Ed448PrivateKey.from_private_bytes(key.d)
+        else:
+            raise CoseException(f"Illegal curve for signing: {key.crv}")
+
+        return sk.sign(data)
+
+    @classmethod
+    def verify(cls, key: 'OKP', data: bytes, signature: bytes) -> bool:
+        if key.crv.fullname == 'ED448':
+            vk = Ed448PublicKey.from_public_bytes(key.x)
+        else:
+            raise CoseException(f"Illegal curve for signing: {key.crv}")
+
+        try:
+            vk.verify(signature, data)
+            return True
+        except InvalidSignature:
+            return False
+
+
+@CoseAlgorithm.register_attribute()
+class Esp512(_Espdsa):
+    """
+    ECDSA using P-521 curve and SHA-512
+
+    Attributes:
+        identifier     -52
+
+        fullname       ESP512
+
+    """
+
+    identifier = -52
+    fullname = "ESP512"
+
+    @classmethod
+    def get_cose_curve_fullname(cls) -> str:
+        """ Returns a curve object used with this algorithm """
+        return 'P_521'
+
+    @classmethod
+    def get_hash_func(cls):
+        """ Returns a hash function used with this algorithm """
+        return sha512
+
+    @classmethod
+    def get_curve(cls) -> Curve:
+        """ Returns a curve object used with this algorithm """
+        return NIST521p
+
+
+@CoseAlgorithm.register_attribute()
+class Esp384(_Espdsa):
+    """
+    ECDSA using P-384 curve and SHA-384
+
+    Attributes:
+        identifier     -51
+
+        fullname       ESP384
+
+    """
+
+    identifier = -51
+    fullname = "ESP384"
+
+    @classmethod
+    def get_cose_curve_fullname(cls) -> str:
+        """ Returns a curve object used with this algorithm """
+        return 'P_384'
+
+    @classmethod
+    def get_hash_func(cls):
+        """ Returns a hash function used with this algorithm """
+        return sha384
+
+    @classmethod
+    def get_curve(cls) -> Curve:
+        """ Returns a curve object used with this algorithm """
+        return NIST384p
 
 
 @CoseAlgorithm.register_attribute()
@@ -861,6 +1001,43 @@ class EcdhEsHKDF256(_EcdhHkdf):
 
 
 @CoseAlgorithm.register_attribute()
+class Ed25519(CoseAlgorithm):
+    """
+    Ed25519
+
+    Attributes:
+        identifier     -9
+
+        fullname       ED25519
+    """
+
+    identifier = -9
+    fullname = "ED25519"
+
+    @classmethod
+    def sign(cls, key: 'OKP', data: bytes) -> bytes:
+        if key.crv.fullname == 'ED25519':
+            sk = Ed25519PrivateKey.from_private_bytes(key.d)
+        else:
+            raise CoseException(f"Illegal curve for signing: {key.crv}")
+
+        return sk.sign(data)
+
+    @classmethod
+    def verify(cls, key: 'OKP', data: bytes, signature: bytes) -> bool:
+        if key.crv.fullname == 'ED25519':
+            vk = Ed25519PublicKey.from_public_bytes(key.x)
+        else:
+            raise CoseException(f"Illegal curve for signing: {key.crv}")
+
+        try:
+            vk.verify(signature, data)
+            return True
+        except InvalidSignature:
+            return False
+
+
+@CoseAlgorithm.register_attribute()
 class Shake128(_HashAlg):
     """
     SHAKE-128 256-bit Hash Value
@@ -1002,6 +1179,37 @@ class DirectHKDFSHA256(CoseAlgorithm):
 
 
 @CoseAlgorithm.register_attribute()
+class Esp256(_Espdsa):
+    """
+    ECDSA using P-256 curve and SHA-256
+
+    Attributes:
+        identifier     -9
+
+        fullname       ESP256
+
+    """
+
+    identifier = -9
+    fullname = "ESP256"
+
+    @classmethod
+    def get_cose_curve_fullname(cls) -> str:
+        """ Returns a curve object used with this algorithm """
+        return 'P_256'
+
+    @classmethod
+    def get_hash_func(cls):
+        """ Returns a hash function used with this algorithm """
+        return sha256
+
+    @classmethod
+    def get_curve(cls) -> Curve:
+        """ Returns a curve object used with this algorithm """
+        return NIST256p
+
+
+@CoseAlgorithm.register_attribute()
 class EdDSA(CoseAlgorithm):
     """
     EdDSA
@@ -1022,7 +1230,7 @@ class EdDSA(CoseAlgorithm):
         elif key.crv.fullname == 'ED448':
             sk = Ed448PrivateKey.from_private_bytes(key.d)
         else:
-            raise CoseException(f"Illegal curve for OKP singing: {key.crv}")
+            raise CoseException(f"Illegal curve for OKP signing: {key.crv}")
 
         return sk.sign(data)
 
@@ -1033,7 +1241,7 @@ class EdDSA(CoseAlgorithm):
         elif key.crv.fullname == 'ED448':
             vk = Ed448PublicKey.from_public_bytes(key.x)
         else:
-            raise CoseException(f"Illegal curve for OKP singing: {key.crv}")
+            raise CoseException(f"Illegal curve for OKP signing: {key.crv}")
 
         try:
             vk.verify(signature, data)

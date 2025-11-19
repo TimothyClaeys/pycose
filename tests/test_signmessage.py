@@ -3,7 +3,7 @@ from binascii import hexlify, unhexlify
 import cbor2
 import pytest
 
-from pycose.keys import EC2Key
+from pycose.keys import EC2Key, OKPKey
 from pycose.messages.signmessage import SignMessage
 from pycose.messages.signer import CoseSignature
 from pycose.exceptions import CoseException
@@ -114,3 +114,53 @@ def test_fail_on_missing_payload_verification():
 
     with pytest.raises(CoseException, match="Missing payload"):
         signer.verify_signature()
+
+
+def test_ecdsa_allow_key_curve_mismatch():
+    key = EC2Key.generate_key(crv='P_256')
+
+    signer = CoseSignature(phdr={'ALG': 'ES384'})
+    signer.key = key
+
+    msg = SignMessage(phdr={}, signers=[signer])
+
+    payload = "signed message".encode('utf-8')
+    msg.encode(detached_payload=payload)
+
+
+def test_espdsa_success():
+    key = EC2Key.generate_key(crv='P_384')
+
+    signer = CoseSignature(phdr={'ALG': 'ESP384'})
+    signer.key = key
+
+    msg = SignMessage(phdr={}, signers=[signer])
+
+    payload = "signed message".encode('utf-8')
+    msg.encode(detached_payload=payload)
+
+
+def test_espdsa_fail_on_key_curve_mismatch():
+    key = EC2Key.generate_key(crv='P_256')
+
+    signer = CoseSignature(phdr={'ALG': 'ESP384'})
+    signer.key = key
+
+    msg = SignMessage(phdr={}, signers=[signer])
+
+    payload = "signed message".encode('utf-8')
+    with pytest.raises(CoseException, match="Illegal curve for signing: .*"):
+        msg.encode(detached_payload=payload)
+
+
+def test_edpdsa_fail_on_key_curve_mismatch():
+    key = OKPKey.generate_key(crv='ED25519')
+
+    signer = CoseSignature(phdr={'ALG': 'ED448'})
+    signer.key = key
+
+    msg = SignMessage(phdr={}, signers=[signer])
+
+    payload = "signed message".encode('utf-8')
+    with pytest.raises(CoseException, match="Illegal curve for signing: .*"):
+        msg.encode(detached_payload=payload)
