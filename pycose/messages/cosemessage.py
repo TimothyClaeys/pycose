@@ -33,7 +33,7 @@ class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
         return decorator
 
     @classmethod
-    def decode(cls: Type['CM'], received: bytes, *args, **kwargs) -> 'CM':
+    def decode(cls: Type['CM'], received: bytes | bytearray | memoryview, *args, **kwargs) -> 'CM':
         """
         Decode received COSE message based on the CBOR tag.
 
