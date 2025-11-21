@@ -3,6 +3,7 @@ from typing import Optional, Union, TYPE_CHECKING
 import cbor2
 
 from pycose import utils
+from pycose.headers import Algorithm
 from pycose.messages.cosemessage import CoseMessage
 from pycose.messages.signcommon import SignCommon
 from pycose.exceptions import CoseException
@@ -72,6 +73,11 @@ class Sign1Message(SignCommon):
 
     def encode(self, tag: bool = True, sign: bool = True, detached_payload: Optional[bytes] = None, *args, **kwargs) -> CBOR:
         """ Encodes the message into a CBOR array with or without a CBOR tag. """
+
+
+        if Algorithm in self.uhdr:
+            raise ValueError("Signing Algorithems are not supposed to be placed in the unprotected header.")
+
 
         if sign:
             message = [self.phdr_encoded, self.uhdr_encoded, self.payload, self.compute_signature(detached_payload)]

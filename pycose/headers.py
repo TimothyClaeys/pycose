@@ -182,11 +182,18 @@ def crit_is_array(value: Any):
     return value
 
 
-def content_type_is_uint_or_tstr(value: Any):
-    if (not isinstance(value, int) and not isinstance(value, str)) or (
-            True if isinstance(value, int) and value < 0 else False):
-        raise ValueError("CONTENT TYPE should be an unsigned integer or string")
-
+def content_type_is_uint_or_tstr(value):
+    if isinstance(value, int):
+        if value < 0:
+            raise ValueError("CONTENT TYPE must be a non-negative integer or a string")
+    elif isinstance(value, str):
+        if value != value.strip():
+            raise ValueError("CONTENT TYPE string must not have leading or trailing whitespace")
+        parts = value.split('/')
+        if len(parts) != 2 or not parts[0] or not parts[1]:
+            raise ValueError("CONTENT TYPE string must follow 'type/subtype' format")
+    else:
+        raise ValueError("CONTENT TYPE must be a non-negative integer or a string")
     return value
 
 

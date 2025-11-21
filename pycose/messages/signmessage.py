@@ -11,6 +11,7 @@ import cbor2
 
 from pycose import utils
 from pycose.exceptions import CoseException
+from pycose.headers import Algorithm
 from pycose.messages.cosemessage import CoseMessage
 from pycose.messages.signer import CoseSignature
 
@@ -73,6 +74,9 @@ class _SignMessage(CoseMessage, metaclass=abc.ABCMeta):
 
     def encode(self, tag: bool = True, detached_payload: Optional[bytes] = None, *args, **kwargs) -> bytes:
         """ Encodes and protects the COSE_Sign message. """
+
+        if Algorithm in self.uhdr:
+            raise ValueError("Signing Algorithems are not supposed to be placed in the unprotected header.")
 
         message = [self.phdr_encoded, self.uhdr_encoded, self.payload]
 

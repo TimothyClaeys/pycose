@@ -2,8 +2,7 @@
 [![Python package](https://github.com/TimothyClaeys/pycose/actions/workflows/python-package.yml/badge.svg)](https://github.com/TimothyClaeys/pycose/actions/workflows/python-package.yml)
 [![Documentation Status](https://readthedocs.org/projects/pycose/badge/?version=latest)](https://pycose.readthedocs.io/en/latest/?badge=latest)
 
-This project is a Python implementation of the IETF CBOR Encoded Message Syntax (COSE). COSE has reached RFC status and is now available at RFC 8152.
-
+This project is a Python implementation of the IETF CBOR Encoded Message Syntax (COSE). COSE has reached RFC status and is now specified in RFC 9052 and RFC 9053.
 
 ## Installation
 
@@ -12,7 +11,7 @@ $ pip install pycose
 ```
 
 ## What is COSE ?
-CBOR Encoded Message Syntax (COSE) is a data format for concise representation of small messages [RFC 8152](https://tools.ietf.org/html/rfc8152). COSE is optimized for low power devices. The messages can be encrypted, MAC'ed and signed. There are 6 different types of COSE messages:
+CBOR Encoded Message Syntax (COSE) is a data format for concise representation of small messages [RFC 9052](https://datatracker.ietf.org/doc/rfc9052/). COSE is optimized for low power devices. The messages can be encrypted, MAC'ed and signed. There are 6 different types of COSE messages:
 
 - **Encrypt0**: An encrypted COSE message with a single recipient. The payload and AAD are protected by a shared CEK (Content Encryption Keys)
 - **Encrypt**: An encrypted COSE message can have multiple recipients. For each recipient the CEK is encrypted with a KEK (Key Encryption Key) - using AES key wrap - and added to the message.

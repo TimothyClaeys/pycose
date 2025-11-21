@@ -10,6 +10,7 @@
 from typing import Optional, TYPE_CHECKING
 
 from pycose import utils
+from pycose.headers import Algorithm
 from pycose.messages import cosemessage, maccommon
 
 if TYPE_CHECKING:
@@ -41,6 +42,9 @@ class Mac0Message(maccommon.MacCommon):
 
     def encode(self, tag: bool = True, mac: bool = True, *args, **kwargs) -> bytes:
         """ Encode and protect the COSE_Mac0 message. """
+
+        if Algorithm in self.uhdr:
+            raise ValueError("MAC-Algorithems are not supposed to be placed in the unprotected header.")
 
         if mac:
             message = [self.phdr_encoded, self.uhdr_encoded, self.payload, self.compute_tag()]

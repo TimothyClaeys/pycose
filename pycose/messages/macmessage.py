@@ -61,6 +61,9 @@ class MacMessage(maccommon.MacCommon):
     def encode(self, tag: bool = True, mac: bool = True, *args, **kwargs) -> CBOR:
         """ Encodes and protects the COSE_Mac message. """
 
+        if headers.Algorithm in self.uhdr:
+            raise ValueError("MAC-Algorithems are not supposed to be placed in the unprotected header.")
+
         if mac:
             message = [self.phdr_encoded, self.uhdr_encoded, self.payload, self.compute_tag()]
         else:

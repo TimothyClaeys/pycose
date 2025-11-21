@@ -314,11 +314,19 @@ class _AesGcm(_EncAlg, ABC):
 
     @classmethod
     def encrypt(cls, key: 'SK', nonce: bytes, data: bytes, aad: bytes) -> bytes:
+        if len(key.k) != cls.get_key_length():
+            raise ValueError("Key has the wrong length")
+        if len(nonce) != cls.get_nonce_length():
+            raise ValueError("Nonce has the wrong length")
         cipher = AESGCM(key=key.k)
         return cipher.encrypt(nonce=nonce, data=data, associated_data=aad)
 
     @classmethod
     def decrypt(cls, key: 'SK', nonce: bytes, ciphertext: bytes, aad: bytes) -> bytes:
+        if len(key.k) != cls.get_key_length():
+            raise ValueError("Key has the wrong length")
+        if len(nonce) != cls.get_nonce_length():
+            raise ValueError("Nonce has the wrong length")
         cipher = AESGCM(key=key.k)
         return cipher.decrypt(nonce=nonce, data=ciphertext, associated_data=aad)
 
@@ -332,11 +340,19 @@ class _AesCcm(_EncAlg, ABC):
 
     @classmethod
     def encrypt(cls, key: 'SK', nonce: bytes, data: bytes, aad: bytes) -> bytes:
+        if len(key.k) != cls.get_key_length():
+            raise ValueError("Key has the wrong length")
+        if len(nonce) != cls.get_nonce_length():
+            raise ValueError("Nonce has the wrong length")
         cipher = AESCCM(key.k, tag_length=cls.get_tag_length())
         return cipher.encrypt(nonce, data=data, associated_data=aad)
 
     @classmethod
     def decrypt(cls, key: 'SK', nonce: bytes, ciphertext: bytes, aad: bytes) -> bytes:
+        if len(key.k) != cls.get_key_length():
+            raise ValueError("Key has the wrong length")
+        if len(nonce) != cls.get_nonce_length():
+            raise ValueError("Nonce has the wrong length")
         cipher = AESCCM(key=key.k, tag_length=cls.get_tag_length())
         return cipher.decrypt(nonce, data=ciphertext, associated_data=aad)
 
@@ -478,6 +494,10 @@ class RsaesOaepSha512(_RsaOaep):
     def get_hash_func(cls):
         return SHA512
 
+    @classmethod
+    def has_authentication(cls) -> bool:
+        return False
+
 
 @CoseAlgorithm.register_attribute()
 class RsaesOaepSha256(_RsaOaep):
@@ -488,6 +508,9 @@ class RsaesOaepSha256(_RsaOaep):
     def get_hash_func(cls):
         return SHA256
 
+    @classmethod
+    def has_authentication(cls) -> bool:
+        return False
 
 @CoseAlgorithm.register_attribute()
 class RsaesOaepSha1(_RsaOaep):
@@ -497,6 +520,10 @@ class RsaesOaepSha1(_RsaOaep):
     @classmethod
     def get_hash_func(cls):
         return SHA1
+
+    @classmethod
+    def has_authentication(cls) -> bool:
+        return False
 
 
 @CoseAlgorithm.register_attribute()
@@ -956,6 +983,9 @@ class DirectHKDFAES256(CoseAlgorithm):
     identifier = - 13
     fullname = "DIRECT_HKDF_AES_256"
 
+    @classmethod
+    def has_authentication(cls) -> bool:
+        return True
 
 @CoseAlgorithm.register_attribute()
 class DirectHKDFAES128(CoseAlgorithm):
@@ -969,7 +999,10 @@ class DirectHKDFAES128(CoseAlgorithm):
     """
     identifier = - 12
     fullname = "DIRECT_HKDF_AES_128"
-
+    
+    @classmethod
+    def has_authentication(cls) -> bool:
+        return True
 
 @CoseAlgorithm.register_attribute()
 class DirecHKDFSHA512(CoseAlgorithm):
@@ -1079,6 +1112,9 @@ class Direct(CoseAlgorithm):
     identifier = -6
     fullname = "DIRECT"
 
+    @classmethod
+    def has_authentication(cls) -> bool:
+        return False
 
 @CoseAlgorithm.register_attribute()
 class A256KW(_AesKw):
@@ -1098,6 +1134,9 @@ class A256KW(_AesKw):
     def get_key_length(cls) -> int:
         return 32
 
+    @classmethod
+    def has_authentication(cls) -> bool:
+        return False
 
 @CoseAlgorithm.register_attribute()
 class A192KW(_AesKw):
@@ -1117,6 +1156,9 @@ class A192KW(_AesKw):
     def get_key_length(cls) -> int:
         return 24
 
+    @classmethod
+    def has_authentication(cls) -> bool:
+        return False
 
 @CoseAlgorithm.register_attribute()
 class A128KW(_AesKw):
@@ -1136,6 +1178,9 @@ class A128KW(_AesKw):
     def get_key_length(cls) -> int:
         return 16
 
+    @classmethod
+    def has_authentication(cls) -> bool:
+        return False
 
 @CoseAlgorithm.register_attribute()
 class A128GCM(_AesGcm):
@@ -1155,6 +1200,13 @@ class A128GCM(_AesGcm):
     def get_key_length(cls) -> int:
         return 16
 
+    @classmethod
+    def get_nonce_length(cls) -> int:
+        return 12
+
+    @classmethod
+    def has_authentication(cls) -> bool:
+        return True
 
 @CoseAlgorithm.register_attribute()
 class A192GCM(_AesGcm):
@@ -1173,7 +1225,14 @@ class A192GCM(_AesGcm):
     @classmethod
     def get_key_length(cls) -> int:
         return 24
+    
+    @classmethod
+    def get_nonce_length(cls) -> int:
+        return 12
 
+    @classmethod
+    def has_authentication(cls) -> bool:
+        return True
 
 @CoseAlgorithm.register_attribute()
 class A256GCM(_AesGcm):
@@ -1193,6 +1252,13 @@ class A256GCM(_AesGcm):
     def get_key_length(cls) -> int:
         return 32
 
+    @classmethod
+    def get_nonce_length(cls) -> int:
+        return 12
+
+    @classmethod
+    def has_authentication(cls) -> bool:
+        return True
 
 @CoseAlgorithm.register_attribute()
 class HMAC25664(_HMAC):
@@ -1262,7 +1328,14 @@ class AESCCM1664128(_AesCcm):
     @classmethod
     def get_key_length(cls) -> int:
         return 16
+    
+    @classmethod
+    def get_nonce_length(cls) -> int:
+        return 13
 
+    @classmethod
+    def has_authentication(cls) -> bool:
+        return True
 
 @CoseAlgorithm.register_attribute()
 class AESCCM1664256(_AesCcm):
@@ -1276,6 +1349,14 @@ class AESCCM1664256(_AesCcm):
     @classmethod
     def get_key_length(cls) -> int:
         return 32
+     
+    @classmethod
+    def get_nonce_length(cls) -> int:
+        return 13
+
+    @classmethod
+    def has_authentication(cls) -> bool:
+        return True
 
 
 @CoseAlgorithm.register_attribute()
@@ -1291,6 +1372,14 @@ class AESCCM6464128(_AesCcm):
     def get_key_length(cls) -> int:
         return 16
 
+    @classmethod
+    def get_nonce_length(cls) -> int:
+        return 7
+
+    @classmethod
+    def has_authentication(cls) -> bool:
+        return True
+
 
 @CoseAlgorithm.register_attribute()
 class AESCCM6464256(_AesCcm):
@@ -1305,6 +1394,13 @@ class AESCCM6464256(_AesCcm):
     def get_tag_length(cls) -> int:
         return 8
 
+    @classmethod
+    def get_nonce_length(cls) -> int:
+        return 7
+
+    @classmethod
+    def has_authentication(cls) -> bool:
+        return True
 
 @CoseAlgorithm.register_attribute()
 class AESMAC12864(_AesMac):
@@ -1319,6 +1415,9 @@ class AESMAC12864(_AesMac):
     def get_key_length(cls) -> int:
         return 16
 
+    @classmethod
+    def has_authentication(cls) -> bool:
+        return True
 
 @CoseAlgorithm.register_attribute()
 class AESMAC25664(_AesMac):
@@ -1333,6 +1432,9 @@ class AESMAC25664(_AesMac):
     def get_key_length(cls) -> int:
         return 32
 
+    @classmethod
+    def has_authentication(cls) -> bool:
+        return True
 
 @CoseAlgorithm.register_attribute()
 class AESMAC128128(_AesMac):
@@ -1347,6 +1449,9 @@ class AESMAC128128(_AesMac):
     def get_key_length(cls) -> int:
         return 16
 
+    @classmethod
+    def has_authentication(cls) -> bool:
+        return True
 
 @CoseAlgorithm.register_attribute()
 class AESMAC256128(_AesMac):
@@ -1361,6 +1466,9 @@ class AESMAC256128(_AesMac):
     def get_key_length(cls) -> int:
         return 32
 
+    @classmethod
+    def has_authentication(cls) -> bool:
+        return True
 
 @CoseAlgorithm.register_attribute()
 class AESCCM16128128(_AesCcm):
@@ -1376,6 +1484,9 @@ class AESCCM16128128(_AesCcm):
     def get_key_length(cls) -> int:
         return 16
 
+    @classmethod
+    def has_authentication(cls) -> bool:
+        return True
 
 @CoseAlgorithm.register_attribute()
 class AESCCM16128256(_AesCcm):
@@ -1390,6 +1501,9 @@ class AESCCM16128256(_AesCcm):
     def get_key_length(cls) -> int:
         return 32
 
+    @classmethod
+    def has_authentication(cls) -> bool:
+        return True
 
 @CoseAlgorithm.register_attribute()
 class AESCCM64128128(_AesCcm):
@@ -1404,6 +1518,9 @@ class AESCCM64128128(_AesCcm):
     def get_key_length(cls) -> int:
         return 16
 
+    @classmethod
+    def has_authentication(cls) -> bool:
+        return True
 
 @CoseAlgorithm.register_attribute()
 class AESCCM64128256(_AesCcm):
@@ -1418,6 +1535,9 @@ class AESCCM64128256(_AesCcm):
     def get_key_length(cls) -> int:
         return 32
 
+    @classmethod
+    def has_authentication(cls) -> bool:
+        return True
 
 # set parser
 Algorithm.value_parser = CoseAlgorithm.from_id

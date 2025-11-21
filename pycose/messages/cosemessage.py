@@ -4,6 +4,7 @@ from typing import Optional, TypeVar, Type, TYPE_CHECKING
 import cbor2
 
 from pycose.exceptions import CoseInvalidKey
+from pycose.headers import Algorithm, Critical
 from pycose.keys import CoseKey
 from pycose.keys.ec2 import EC2Key
 from pycose.keys.okp import OKPKey
@@ -139,6 +140,10 @@ class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def encode(self, message: list, tag: bool = True, *args, **kwargs) -> CBOR:
+        if Critical in self.uhdr:
+            raise ValueError("The crit parameter must be set in the protected header.")
+        if Algorithm in self.uhdr:
+            raise ValueError("The alg parameter must also be in the protected header.")
         if tag:
             message = cbor2.dumps(cbor2.CBORTag(self.cbor_tag, message), default=self._custom_cbor_encoder)
         else:
