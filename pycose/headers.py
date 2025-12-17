@@ -2,6 +2,7 @@ from abc import ABC
 from typing import Any
 
 from pycose.utils import _CoseAttribute
+from pycose.exceptions import CoseException
 
 
 class CoseHeaderAttribute(_CoseAttribute, ABC):
@@ -179,7 +180,17 @@ def crit_is_array(value: Any):
     if not isinstance(value, list) or len(value) < 1 or not all(isinstance(x, (int, str)) for x in value):
         raise ValueError("CRITICAL should be a list with at least one integer or string element")
 
-    return value
+    translated_list = []
+    non_registered = set()
+    for label in value:
+        try:
+            translated_list.append(CoseHeaderAttribute.from_id(label))
+        except CoseException:
+            non_registered.add(label)
+    if non_registered:
+        raise ValueError(f"CRITICAL references unregistered header labels: {non_registered}")
+
+    return translated_list
 
 
 def content_type_is_uint_or_tstr(value: Any):

@@ -119,16 +119,16 @@ def test_cose_header_attribute_value_encoding():
     assert decoded_msg.phdr[Algorithm] == AESCCM1664128
 
     # critical
-    msg = Enc0Message(phdr={Algorithm: AESCCM1664128, "A": 42, Critical: [1, "A"]},
+    msg = Enc0Message(phdr={Algorithm: AESCCM1664128, "A": 42, Critical: [1]},
                       uhdr={IV: urandom(13)},
                       payload=b'this is the payload',
                       key=SymmetricKey.generate_key(16))
 
     msg = msg.encode()
-    assert b"\x82\x01\x61\x41" in msg
+    assert b"\x02\x81\x01" in msg
 
     decoded_msg = Enc0Message.decode(msg)
-    assert decoded_msg.phdr[Critical] == [1, "A"]
+    assert decoded_msg.phdr[Critical] == [Algorithm]
 
     # content type as uint
     msg = Enc0Message(phdr={Algorithm: AESCCM1664128},
@@ -272,6 +272,7 @@ def test_allow_unknown_header_attribute_encoding_decoding():
     assert "Custom-Header-Attr1" in msg_decoded.phdr
     assert "Custom-Header-Attr2" in msg_decoded.uhdr
 
+
 def test_no_reencoding_of_protected_header():
     # The following protected header encodes {Alg: Es256, "foo": 1}, however,
     # it is crafted such that it would not be emitted by cbor2.
@@ -284,5 +285,5 @@ def test_no_reencoding_of_protected_header():
 
     msg = msg.encode()
     msg_decoded = Sign1Message.decode(msg)
-    
+
     assert msg_decoded.phdr_encoded == phdr_encoded
