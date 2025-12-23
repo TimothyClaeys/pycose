@@ -42,6 +42,12 @@ class CoseAlgorithm(_CoseAttribute, ABC):
     def get_registered_classes(cls):
         return cls._registered_algorithms
 
+    @staticmethod
+    def _check_key_len(need: int, have: int):
+        ''' Common function to check needed key length '''
+        if have != need:
+            raise CoseException(f'Invalid key length, need {need} have {have}')
+
 
 class _HashAlg(CoseAlgorithm, ABC):
     #: Set in derived class to hash constructor
@@ -205,6 +211,7 @@ class _AesMac(CoseAlgorithm, ABC):
 
     @classmethod
     def compute_tag(cls, key: 'SK', data: bytes):
+        cls._check_key_len(cls.get_key_length(), len(key.k))
         encryptor = Cipher(AES(key.k),
                            modes.CBC(unhexlify(b''.join([b'00'] * 16))),
                            backend=default_backend()).encryptor()
@@ -314,11 +321,13 @@ class _AesGcm(_EncAlg, ABC):
 
     @classmethod
     def encrypt(cls, key: 'SK', nonce: bytes, data: bytes, aad: bytes) -> bytes:
+        cls._check_key_len(cls.get_key_length(), len(key.k))
         cipher = AESGCM(key=key.k)
         return cipher.encrypt(nonce=nonce, data=data, associated_data=aad)
 
     @classmethod
     def decrypt(cls, key: 'SK', nonce: bytes, ciphertext: bytes, aad: bytes) -> bytes:
+        cls._check_key_len(cls.get_key_length(), len(key.k))
         cipher = AESGCM(key=key.k)
         return cipher.decrypt(nonce=nonce, data=ciphertext, associated_data=aad)
 
@@ -332,11 +341,13 @@ class _AesCcm(_EncAlg, ABC):
 
     @classmethod
     def encrypt(cls, key: 'SK', nonce: bytes, data: bytes, aad: bytes) -> bytes:
+        cls._check_key_len(cls.get_key_length(), len(key.k))
         cipher = AESCCM(key.k, tag_length=cls.get_tag_length())
         return cipher.encrypt(nonce, data=data, associated_data=aad)
 
     @classmethod
     def decrypt(cls, key: 'SK', nonce: bytes, ciphertext: bytes, aad: bytes) -> bytes:
+        cls._check_key_len(cls.get_key_length(), len(key.k))
         cipher = AESCCM(key=key.k, tag_length=cls.get_tag_length())
         return cipher.decrypt(nonce, data=ciphertext, associated_data=aad)
 

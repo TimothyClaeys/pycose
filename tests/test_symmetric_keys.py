@@ -86,17 +86,17 @@ def test_fail_on_missing_symmetric_kty(length):
 
 
 def test_fail_on_invalid_symmetric_key_length():
-    cose_key = {KpKty: KtySymmetric, SymKpK: os.urandom(17)}
+    cose_key = {KpKty: KtySymmetric, SymKpK: b''}
 
     with pytest.raises(CoseInvalidKey) as excinfo:
         CoseKey.from_dict(cose_key)
 
-    assert "Key length should be either 16, 24, or 32 bytes" in str(excinfo.value)
+    assert "SymKpK parameter must be non-empty" in str(excinfo.value)
 
     with pytest.raises(CoseInvalidKey) as excinfo:
-        _ = SymmetricKey(k=os.urandom(17))
+        _ = SymmetricKey(k=b'')
 
-    assert "Key length should be either 16, 24, or 32 bytes" in str(excinfo.value)
+    assert "SymKpK parameter must be non-empty" in str(excinfo.value)
 
 
 def test_fail_on_missing_symkpk():
@@ -105,7 +105,7 @@ def test_fail_on_missing_symkpk():
     with pytest.raises(CoseInvalidKey) as excinfo:
         CoseKey.from_dict(cose_key)
 
-    assert "SymKpK parameter cannot be None" in str(excinfo.value)
+    assert "SymKpK parameter must be non-empty" in str(excinfo.value)
 
 
 def test_remove_empty_keyops_list():
