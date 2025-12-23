@@ -3,7 +3,7 @@ from typing import List, Optional, TYPE_CHECKING
 
 from pycose import utils, headers
 from pycose.exceptions import CoseException
-from pycose.keys.keyops import EncryptOp
+from pycose.keys.keyops import EncryptOp, DecryptOp
 from pycose.keys.keyparam import KpAlg, KpKeyOps
 from pycose.keys.symmetric import SymmetricKey
 from pycose.messages import enccommon, cosemessage
@@ -78,12 +78,10 @@ class EncMessage(enccommon.EncCommon):
         r_types = CoseRecipient.verify_recipients(self.recipients)
 
         if DirectEncryption in r_types:
-            # key should already be known
-            payload = super(EncMessage, self).encrypt()
+            self.key = self.recipients[0].compute_cek(target_algorithm)
 
         elif DirectKeyAgreement in r_types:
-            self.key = self.recipients[0].compute_cek(target_algorithm, "encrypt")
-            payload = super(EncMessage, self).encrypt()
+            self.key = self.recipients[0].compute_cek(target_algorithm, EncryptOp)
 
         elif KeyWrap in r_types or KeyAgreementWithKeyWrap in r_types:
             key_bytes = os.urandom(self.get_attr(headers.Algorithm).get_key_length())
@@ -94,10 +92,11 @@ class EncMessage(enccommon.EncCommon):
                     key_bytes = r.payload
                 r.encrypt(target_algorithm)
             self.key = SymmetricKey(k=key_bytes, optional_params={KpAlg: target_algorithm, KpKeyOps: [EncryptOp]})
-            payload = super(EncMessage, self).encrypt()
 
         else:
-            raise CoseException('Unsupported COSE recipient class')
+            raise CoseException(f'Unsupported COSE recipient class: {r_types}')
+
+        payload = super(EncMessage, self).encrypt()
 
         return payload
 
@@ -108,17 +107,18 @@ class EncMessage(enccommon.EncCommon):
         if not CoseRecipient.has_recipient(recipient, self.recipients):
             raise CoseException(f"Cannot find recipient: {recipient}")
 
-        r_types = CoseRecipient.verify_recipients(self.recipients)
+        CoseRecipient.verify_recipients(self.recipients)
 
-        if DirectEncryption in r_types:
-            # key should already be known
-            payload = super(EncMessage, self).decrypt()
+        if isinstance(recipient, DirectEncryption):
+            self.key = recipient.compute_cek(target_algorithm)
 
-        elif DirectKeyAgreement in r_types or KeyWrap in r_types or KeyAgreementWithKeyWrap in r_types:
-            self.key = recipient.compute_cek(target_algorithm, "decrypt")
-            payload = super(EncMessage, self).decrypt()
+        elif isinstance(recipient, (DirectKeyAgreement, KeyWrap, KeyAgreementWithKeyWrap)):
+            self.key = recipient.compute_cek(target_algorithm, DecryptOp)
+
         else:
-            raise CoseException('Unsupported COSE recipient class')
+            raise CoseException(f'Unsupported COSE recipient class: {recipient}')
+
+        payload = super(EncMessage, self).decrypt()
 
         return payload
 

@@ -14,13 +14,16 @@ from typing import Optional, List, TYPE_CHECKING
 
 from pycose import utils, headers
 from pycose.exceptions import CoseException
-from pycose.keys.keyops import MacCreateOp
+from pycose.keys.keyops import MacCreateOp, MacVerifyOp
+from pycose.keys.symmetric import SymmetricKey
+from pycose.keys.keyparam import KpAlg, KpKeyOps
 from pycose.messages import cosemessage, maccommon
 from pycose.messages.recipient import CoseRecipient, DirectEncryption, DirectKeyAgreement, KeyWrap, \
     KeyAgreementWithKeyWrap
 
 if TYPE_CHECKING:
-    from pycose.keys.symmetric import SK, SymmetricKey
+    from pycose.keys.symmetric import SK
+    from pycose.messages.recipient import Recipient
 
 CBOR = bytes
 
@@ -72,18 +75,36 @@ class MacMessage(maccommon.MacCommon):
         res = super(MacMessage, self).encode(message, tag)
         return res
 
+    def verify_tag(self, recipient: 'Recipient', *args, **kwargs) -> bool:
+        target_algorithm = self.get_attr(headers.Algorithm)
+
+        # check if recipient exists
+        if not CoseRecipient.has_recipient(recipient, self.recipients):
+            raise CoseException(f"Cannot find recipient: {recipient}")
+
+        CoseRecipient.verify_recipients(self.recipients)
+
+        if isinstance(recipient, DirectEncryption):
+            self.key = recipient.compute_cek(target_algorithm)
+
+        elif isinstance(recipient, (DirectKeyAgreement, KeyWrap, KeyAgreementWithKeyWrap)):
+            self.key = recipient.compute_cek(target_algorithm, MacVerifyOp)
+
+        else:
+            raise CoseException(f'Unsupported COSE recipient class: {type(recipient)}')
+
+        return super(MacMessage, self).verify_tag()
+
     def compute_tag(self, *args, **kwargs) -> bytes:
         target_algorithm = self.get_attr(headers.Algorithm)
 
         r_types = CoseRecipient.verify_recipients(self.recipients)
 
         if DirectEncryption in r_types:
-            # key should already be known
-            payload = super(MacMessage, self).compute_tag()
+            self.key = self.recipients[0].compute_cek(target_algorithm)
 
         elif DirectKeyAgreement in r_types:
-            self.key = self.recipients[0].compute_cek(target_algorithm, "encrypt")
-            payload = super(MacMessage, self).compute_tag()
+            self.key = self.recipients[0].compute_cek(target_algorithm, MacCreateOp)
 
         elif KeyWrap in r_types or KeyAgreementWithKeyWrap in r_types:
             key_bytes = os.urandom(self.get_attr(headers.Algorithm).get_key_length())
@@ -94,11 +115,12 @@ class MacMessage(maccommon.MacCommon):
                 else:
                     key_bytes = r.payload
                 r.encrypt(target_algorithm)
-            self.key = SymmetricKey(k=key_bytes, alg=target_algorithm, key_ops=[MacCreateOp])
-            payload = super(MacMessage, self).compute_tag()
+            self.key = SymmetricKey(k=key_bytes, optional_params={KpAlg: target_algorithm, KpKeyOps: [MacCreateOp]})
 
         else:
-            raise CoseException('Unsupported COSE recipient class')
+            raise CoseException(f'Unsupported COSE recipient class: {r_types}')
+
+        payload = super(MacMessage, self).compute_tag()
 
         return payload
 

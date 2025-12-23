@@ -21,8 +21,8 @@ def test_mac_direct_encryption_encoding(test_mac_direct_encryption_files):
 
     key = CoseKey.from_dict(test_mac_direct_encryption_files["cek"])
     key.key_ops = [MacCreateOp]
-
-    msg.key = key
+    # first recipient is arbitrary choice
+    msg.recipients[0].key = key
 
     assert msg.phdr_encoded == test_output['protected']
     assert msg.uhdr_encoded == test_output['unprotected']
@@ -41,8 +41,8 @@ def test_mac_direct_encryption_decoding(test_mac_direct_encryption_files):
 
     key = CoseKey.from_dict(test_mac_direct_encryption_files["cek"])
     key.key_ops = [MacVerifyOp]
-
-    msg.key = key
+    # first recipient is arbitrary choice
+    msg.recipients[0].key = key
 
     assert msg.phdr == test_input['protected']
     assert msg.uhdr == test_input['unprotected']

@@ -198,7 +198,7 @@ def test_allow_unknown_header_attribute_encoding_decoding():
     msg = EncMessage(phdr={Algorithm: AESCCM1664128, "Custom-Header-Attr1": 7879},
                      uhdr={KID: b'foo', IV: unhexlify(b'00000000000000000000000000'), "Custom-Header-Attr2": 878},
                      recipients=[DirectEncryption(uhdr={Algorithm: Direct, "Custom-Header-Attr3": 9999})])
-    msg.key = SymmetricKey.generate_key(key_len=16)
+    msg.recipients[0].key = SymmetricKey.generate_key(key_len=16)
 
     assert "Custom-Header-Attr1" in msg.phdr
     assert "Custom-Header-Attr2" in msg.uhdr
@@ -228,7 +228,7 @@ def test_allow_unknown_header_attribute_encoding_decoding():
     msg = MacMessage(phdr={Algorithm: HMAC256, "Custom-Header-Attr1": 7879},
                      uhdr={KID: b'foo', IV: unhexlify(b'00000000000000000000000000'), "Custom-Header-Attr2": 878},
                      recipients=[DirectEncryption(uhdr={Algorithm: Direct, "Custom-Header-Attr3": 9999})])
-    msg.key = SymmetricKey.generate_key(key_len=16)
+    msg.recipients[0].key = SymmetricKey.generate_key(key_len=16)
 
     assert "Custom-Header-Attr1" in msg.phdr
     assert "Custom-Header-Attr2" in msg.uhdr
@@ -272,6 +272,7 @@ def test_allow_unknown_header_attribute_encoding_decoding():
     assert "Custom-Header-Attr1" in msg_decoded.phdr
     assert "Custom-Header-Attr2" in msg_decoded.uhdr
 
+
 def test_no_reencoding_of_protected_header():
     # The following protected header encodes {Alg: Es256, "foo": 1}, however,
     # it is crafted such that it would not be emitted by cbor2.
@@ -284,5 +285,5 @@ def test_no_reencoding_of_protected_header():
 
     msg = msg.encode()
     msg_decoded = Sign1Message.decode(msg)
-    
+
     assert msg_decoded.phdr_encoded == phdr_encoded

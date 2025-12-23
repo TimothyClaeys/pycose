@@ -19,8 +19,8 @@ def test_encrypt_direct_encryption_encoding(test_encrypt_direct_encryption_files
 
     key = CoseKey.from_dict(test_encrypt_direct_encryption_files["cek"])
     key.key_ops = [EncryptOp]
-
-    msg.key = key
+    # first recipient is arbitrary choice
+    msg.recipients[0].key = key
 
     assert msg.phdr_encoded == test_output['protected']
     assert msg.uhdr_encoded == test_output['unprotected']
@@ -38,8 +38,8 @@ def test_encrypt_direct_encryption_decoding(test_encrypt_direct_encryption_files
 
     key = CoseKey.from_dict(test_encrypt_direct_encryption_files["cek"])
     key.key_ops = [DecryptOp]
-
-    msg.key = key
+    # first recipient is arbitrary choice
+    msg.recipients[0].key = key
 
     assert msg.phdr == test_input['protected']
     assert msg.uhdr == test_input['unprotected']
@@ -167,7 +167,7 @@ def test_encrypt_key_agreement_key_wrap_encoding(test_encrypt_key_agreement_key_
     assert msg.phdr == test_input['protected']
     assert msg.uhdr == test_input['unprotected']
 
-    for i, (r, r_output) in enumerate(zip(msg.recipients, test_output['recipients'])):
+    for _i, (r, r_output) in enumerate(zip(msg.recipients, test_output['recipients'])):
         r.payload = test_encrypt_key_agreement_key_wrap_files['random_key'].k
         assert r.phdr_encoded == r_output['protected']
         assert r.uhdr_encoded == r_output['unprotected']
@@ -198,7 +198,7 @@ def test_encrypt_key_agreement_key_wrap_decoding(test_encrypt_key_agreement_key_
         assert r.payload == r_output['ciphertext']
         assert r.get_kdf_context((r.get_attr(headers.Algorithm)).get_key_wrap_func()).encode() == r_output['context']
         assert r.decrypt((r.get_attr(headers.Algorithm)).get_key_wrap_func()) == \
-               test_encrypt_key_agreement_key_wrap_files['random_key'].k
+            test_encrypt_key_agreement_key_wrap_files['random_key'].k
 
     for r in msg.recipients:
         assert msg.decrypt(r) == test_input['plaintext']

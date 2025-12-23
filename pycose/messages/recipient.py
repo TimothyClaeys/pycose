@@ -14,8 +14,10 @@ from pycose.algorithms import \
     A128KW, \
     A192KW, \
     A256KW, \
+    DirectHKDFAES128, \
     DirectHKDFAES256, \
     DirectHKDFSHA256, \
+    DirectHKDFSHA512, \
     EcdhEsHKDF256, \
     EcdhEsHKDF512, \
     EcdhEsA128KW, \
@@ -28,7 +30,8 @@ from pycose.algorithms import \
     EcdhSsA256KW
 from pycose.exceptions import CoseException, CoseMalformedMessage, CoseIllegalAlgorithm
 from pycose.keys.ec2 import EC2Key, EC2KpD
-from pycose.keys.keyops import DeriveKeyOp, EncryptOp, DecryptOp, WrapOp, UnwrapOp, DeriveBitsOp
+from pycose.keys.keyops import KeyOps, DeriveKeyOp, EncryptOp, DecryptOp, \
+    WrapOp, UnwrapOp, DeriveBitsOp, MacCreateOp, MacVerifyOp
 from pycose.keys.keyparam import KpAlg, KpKeyOps
 from pycose.keys.rsa import RSAKey
 from pycose.keys.symmetric import SymmetricKey
@@ -185,7 +188,7 @@ class CoseRecipient(CoseMessage, metaclass=abc.ABCMeta):
             self.uhdr_update({headers.EphemeralKey: ephemeral_public_key})
 
 
-@CoseRecipient.record_rc([Direct, DirectHKDFSHA256, DirectHKDFAES256])
+@CoseRecipient.record_rc([Direct, DirectHKDFSHA256, DirectHKDFSHA512, DirectHKDFAES128, DirectHKDFAES256])
 class DirectEncryption(CoseRecipient):
 
     @classmethod
@@ -229,14 +232,20 @@ class DirectEncryption(CoseRecipient):
 
         return recipient
 
-    def compute_cek(self, target_alg: 'CoseAlgorithm') -> Optional['SK']:
+    def compute_cek(self, target_alg: '_EncAlg') -> 'SK':
         alg = self.get_attr(headers.Algorithm)
         if alg == Direct:
-            return None
-        else:
+            return self.key
+        elif alg in {DirectHKDFSHA256, DirectHKDFSHA512}:
             self.key.verify(SymmetricKey, algorithm=alg, key_ops=[DeriveKeyOp, DeriveBitsOp])
-            _ = target_alg
+
+            salt = self.get_attr(headers.Salt)
+            keybytes = alg.derive_cek(shared_key=self.key, salt=salt, context=self.get_kdf_context(target_alg))
+            return SymmetricKey(k=keybytes)
+        elif alg in {DirectHKDFAES128, DirectHKDFAES256}:
             raise NotImplementedError()
+        else:
+            raise ValueError(f"Inappropriate alg value: {alg}")
 
     def __repr__(self) -> str:
         phdr, uhdr = self._hdr_repr()
@@ -315,15 +324,17 @@ class KeyWrap(CoseRecipient):
 
         return self.key.k
 
-    def compute_cek(self, target_alg: '_EncAlg', ops: str) -> Optional['SK']:
-        if ops == "encrypt":
+    def compute_cek(self, target_alg: '_EncAlg', key_op: KeyOps) -> Optional['SK']:
+        if key_op in {EncryptOp, MacCreateOp}:
             if self.payload == b'':
                 return None
             else:
-                return SymmetricKey(k=self.payload, optional_params={KpAlg: target_alg, KpKeyOps: [EncryptOp]})
-        else:
+                return SymmetricKey(k=self.payload, optional_params={KpAlg: target_alg, KpKeyOps: [key_op]})
+        elif key_op in {DecryptOp, MacVerifyOp}:
             return SymmetricKey(k=self.decrypt(target_alg),
-                                optional_params={KpAlg: target_alg, KpKeyOps: [DecryptOp]})
+                                optional_params={KpAlg: target_alg, KpKeyOps: [key_op]})
+        else:
+            raise CoseException(f"Invalid compute_cek op: {key_op}")
 
     def encrypt(self, target_alg: '_EncAlg') -> bytes:
         alg = self.get_attr(headers.Algorithm)
@@ -432,20 +443,22 @@ class DirectKeyAgreement(CoseRecipient):
         return recipient
 
     def _compute_kek(self, target_alg: '_EncAlg', peer_key: 'EC2Key', local_key: 'EC2Key', kex_alg) -> bytes:
+        salt = self.get_attr(headers.Salt)
+        return kex_alg.derive_kek(peer_key.crv, local_key, peer_key, salt, self.get_kdf_context(target_alg))
 
-        return kex_alg.derive_kek(peer_key.crv, local_key, peer_key, self.get_kdf_context(target_alg))
-
-    def compute_cek(self, target_alg: '_EncAlg', ops: str) -> 'SK':
+    def compute_cek(self, target_alg: '_EncAlg', key_op: KeyOps) -> 'SK':
         alg = self.get_attr(headers.Algorithm)
 
         if alg in {EcdhSsHKDF256, EcdhSsHKDF512, EcdhEsHKDF256, EcdhEsHKDF512}:
-            if ops == "encrypt":
+            if key_op in {EncryptOp, MacCreateOp}:
                 peer_key = self.local_attrs.get(headers.StaticKey)
-            else:
+            elif key_op in {DecryptOp, MacVerifyOp}:
                 if alg in {EcdhSsHKDF256, EcdhSsHKDF512}:
                     peer_key = self.get_attr(headers.StaticKey)
                 else:
                     peer_key = self.get_attr(headers.EphemeralKey)
+            else:
+                raise CoseException(f"Invalid compute_cek op: {key_op}")
         else:
             raise CoseIllegalAlgorithm(f"Algorithm {alg} unsupported for {self.__name__}")
 
@@ -494,15 +507,17 @@ class KeyAgreementWithKeyWrap(CoseRecipient):
     def context(self, context: str):
         self._context = context
 
-    def compute_cek(self, target_alg: '_EncAlg', ops: str) -> Optional['SK']:
-        if ops == "encrypt":
+    def compute_cek(self, target_alg: '_EncAlg', key_op: KeyOps) -> Optional['SK']:
+        if key_op in {EncryptOp, MacCreateOp}:
             if self.payload == b'':
                 return None
             else:
                 return SymmetricKey(k=self.payload, optional_params={KpAlg: target_alg, KpKeyOps: [EncryptOp]})
-        else:
+        elif key_op in {DecryptOp, MacVerifyOp}:
             return SymmetricKey(k=self.decrypt(target_alg),
                                 optional_params={KpAlg: target_alg, KpKeyOps: [DecryptOp]})
+        else:
+            raise CoseException(f"Invalid compute_cek op: {key_op}")
 
     def encode(self, *args, **kwargs) -> list:
 
@@ -515,8 +530,8 @@ class KeyAgreementWithKeyWrap(CoseRecipient):
         return recipient
 
     def _compute_kek(self, target_alg: '_EncAlg', peer_key: 'EC2Key', local_key: 'EC2Key', kex_alg) -> bytes:
-
-        key_bytes = kex_alg.derive_kek(peer_key.crv, local_key, peer_key, self.get_kdf_context(target_alg))
+        salt = self.get_attr(headers.Salt)
+        key_bytes = kex_alg.derive_kek(peer_key.crv, local_key, peer_key, salt, self.get_kdf_context(target_alg))
         return key_bytes
 
     def encrypt(self, target_alg) -> bytes:
