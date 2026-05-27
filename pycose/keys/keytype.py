@@ -42,6 +42,12 @@ class KtySymmetric(KTY):
     fullname = 'SYMMETRIC'
 
 
+@KTY.register_attribute()
+class KtyAKP(KTY):
+    identifier = 7
+    fullname = 'AKP'
+
+
 KTYPE = TypeVar('KTYPE', bound=KTY)
 
 if __name__ == '__main__':

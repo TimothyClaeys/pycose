@@ -7,6 +7,7 @@ from pycose.exceptions import CoseInvalidKey
 from pycose.keys import CoseKey
 from pycose.keys.ec2 import EC2Key
 from pycose.keys.okp import OKPKey
+from pycose.keys.akp import AKPKey
 from pycose.keys.rsa import RSAKey
 from pycose.keys.symmetric import SymmetricKey
 from pycose.messages.cosebase import CoseBase
@@ -120,6 +121,7 @@ class CoseMessage(CoseBase, metaclass=abc.ABCMeta):
         if not isinstance(key, SymmetricKey) and \
                 not isinstance(key, EC2Key) and \
                 not isinstance(key, OKPKey) and \
+                not isinstance(key, AKPKey) and \
                 not isinstance(key, RSAKey) and \
                 key is not None:
 

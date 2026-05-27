@@ -9,6 +9,11 @@ from cryptography.hazmat.primitives.asymmetric import ec, padding, rsa
 from cryptography.hazmat.primitives.asymmetric.ec import ECDH
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
 from cryptography.hazmat.primitives.asymmetric.ed448 import Ed448PrivateKey, Ed448PublicKey
+from cryptography.hazmat.primitives.asymmetric.mldsa import (
+    MLDSA44PrivateKey, MLDSA44PublicKey,
+    MLDSA65PrivateKey, MLDSA65PublicKey,
+    MLDSA87PrivateKey, MLDSA87PublicKey
+)
 from cryptography.hazmat.primitives.ciphers import modes, Cipher
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM, AESCCM
 from cryptography.hazmat.primitives.ciphers.algorithms import AES
@@ -28,6 +33,7 @@ if TYPE_CHECKING:
     from pycose.keys.symmetric import SK
     from pycose.keys.ec2 import EC2
     from pycose.keys.okp import OKP
+    from pycose.keys.akp import AKP
     from pycose.keys.rsa import RSA
     from pycose.keys.curves import CoseCurve
     from pycose.messages.context import CoseKDFContext
@@ -418,6 +424,94 @@ class RsaPkcs1Sha256(_RsaPkcs1):
     @classmethod
     def get_hash_func(cls):
         return SHA256
+
+
+class _Mldsa(CoseAlgorithm, ABC):
+    """ Fully-specified ML-DSA family. """
+
+    private_key_cls = None
+    ''' Override in derived class '''
+    public_key_cls = None
+    ''' Override in derived class '''
+
+    @classmethod
+    def sign(cls, key: 'AKP', data: bytes) -> bytes:
+
+        pkey = cls.private_key_cls.from_seed_bytes(key.priv)
+
+        return pkey.sign(data=data, context=None)
+
+    @classmethod
+    def verify(cls, key: 'AKP', data: bytes, signature: bytes) -> bool:
+
+        vkey = cls.public_key_cls.from_public_bytes(key.pub)
+
+        try:
+            vkey.verify(signature=signature, data=data, context=None)
+            return True
+        except InvalidSignature:
+            return False
+
+
+@CoseAlgorithm.register_attribute()
+class MlDsa87(_Mldsa):
+    """
+    ML-DSA-87
+
+    Attributes:
+        identifier     -50
+        fullname       MLDSA87
+
+    """
+
+    identifier = -50
+    fullname = "MLDSA87"
+
+    private_key_cls = MLDSA87PrivateKey
+    """ Key class for this algorithm """
+    public_key_cls = MLDSA87PublicKey
+    """ Key class for this algorithm """
+
+
+@CoseAlgorithm.register_attribute()
+class MlDsa65(_Mldsa):
+    """
+    ML-DSA-65
+
+    Attributes:
+        identifier     -49
+        fullname       MLDSA65
+
+    """
+
+    identifier = -49
+    fullname = "MLDSA65"
+
+    private_key_cls = MLDSA65PrivateKey
+    """ Key class for this algorithm """
+    public_key_cls = MLDSA65PublicKey
+    """ Key class for this algorithm """
+
+
+@CoseAlgorithm.register_attribute()
+class MlDsa44(_Mldsa):
+    """
+    ML-DSA-44
+
+    Attributes:
+        identifier     -48
+        fullname       MLDSA44
+
+    """
+
+    identifier = -48
+    fullname = "MLDSA44"
+
+    private_key_cls = MLDSA44PrivateKey
+    """ Key class for this algorithm """
+    public_key_cls = MLDSA44PublicKey
+    """ Key class for this algorithm """
+
 
 
 @CoseAlgorithm.register_attribute()

@@ -205,6 +205,31 @@ class RSAKpTi(RSAKeyParam):
 
 
 #########################################
+# AKP Key Parameters
+#########################################
+
+class AKPKeyParam(_CoseAttribute, ABC):
+    _registered_algorithms = {}
+    _registered_algorithms.update(KeyParam.get_registered_classes())
+
+    @classmethod
+    def get_registered_classes(cls):
+        return cls._registered_algorithms
+
+
+@AKPKeyParam.register_attribute()
+class AKPKpPub(AKPKeyParam):
+    identifier = -1
+    fullname = "PUB"
+
+
+@AKPKeyParam.register_attribute()
+class AKPKpPriv(AKPKeyParam):
+    identifier = -2
+    fullname = "PRIV"
+
+
+#########################################
 # Symmetric Key Parameters
 #########################################
 
@@ -234,6 +259,7 @@ EC2KP = TypeVar('EC2KP', bound=EC2KeyParam)
 OKPKP = TypeVar('OKPKP', bound=OKPKeyParam)
 SYMKP = TypeVar('SYMKP', bound=SymmetricKeyParam)
 RSAKP = TypeVar('RSAKP', bound=RSAKeyParam)
+AKPKP = TypeVar('AKPKP', bound=AKPKeyParam)
 
 KP = Union[Type['KP'], Type['OKPKP'], Type['EC2KP'], Type['SYMKP'], Type['RSAKP']]
 

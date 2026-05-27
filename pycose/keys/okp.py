@@ -246,7 +246,7 @@ class OKPKey(CoseKey):
         if self._key_transform(key) != KpKty and self._key_transform(key) != OKPKpCurve:
             if self._key_transform(key) == OKPKpD and OKPKpX not in self.store:
                 pass
-            if self._key_transform(key) == OKPKpX and OKPKpD not in self.store:
+            elif self._key_transform(key) == OKPKpX and OKPKpD not in self.store:
                 pass
             else:
                 return super(OKPKey, self).__delitem__(key)

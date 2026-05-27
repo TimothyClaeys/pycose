@@ -89,9 +89,9 @@ def test_okp_public_key_from_pem(key_class):
 
 @pytest.mark.parametrize('crv', [X25519, X448, Ed25519, Ed448, 4, 'X25519', 'X448'])
 def test_okp_key_generation_encoding_decoding(crv):
-    trails = 256
+    trials = 256
 
-    for i in range(trails):
+    for _i in range(trials):
         okp_test = OKPKey.generate_key(crv=crv)
         okp_encoded = okp_test.encode()
         okp_decoded = CoseKey.decode(okp_encoded)

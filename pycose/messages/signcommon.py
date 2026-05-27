@@ -3,6 +3,7 @@ from typing import Optional, Type, TYPE_CHECKING
 
 from pycose import headers
 from pycose.keys.okp import OKPKey
+from pycose.keys.akp import AKPKey
 from pycose.exceptions import CoseException
 from pycose.keys.ec2 import EC2Key
 from pycose.keys.rsa import RSAKey
@@ -31,6 +32,8 @@ class SignCommon(CoseMessage, metaclass=abc.ABCMeta):
             self.key.verify(EC2Key, alg, [ops])
         elif isinstance(self.key, OKPKey):
             self.key.verify(OKPKey, alg, [ops])
+        elif isinstance(self.key, AKPKey):
+            self.key.verify(AKPKey, alg, [ops])
         elif isinstance(self.key, RSAKey):
             self.key.verify(RSAKey, alg, [ops])
         else:
