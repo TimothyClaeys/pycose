@@ -1,6 +1,6 @@
 import abc
 import os
-from typing import Optional, TYPE_CHECKING, List, Type, TypeVar
+from typing import Optional, TYPE_CHECKING, List, Type, TypeVar, Union
 
 import cbor2
 
@@ -37,7 +37,7 @@ from pycose.messages.cosemessage import CoseMessage
 
 if TYPE_CHECKING:
     from pycose.keys.symmetric import SK
-    from pycose.algorithms import _EncAlg
+    from pycose.algorithms import _SymmetricAlg
 
 CBOR = bytes
 
@@ -147,7 +147,7 @@ class CoseRecipient(CoseMessage, metaclass=abc.ABCMeta):
                     raise TypeError(f"Recipient must be a subclass of {CoseRecipient}")
                 self._recipients.append(r)
 
-    def get_kdf_context(self, algorithm: '_EncAlg') -> 'CoseKDFContext':
+    def get_kdf_context(self, algorithm: 'Type[_SymmetricAlg]') -> 'CoseKDFContext':
         """
         Create a COSE KDF context for use by the key derivation algorithms.
 
@@ -229,7 +229,7 @@ class DirectEncryption(CoseRecipient):
 
         return recipient
 
-    def compute_cek(self, target_alg: 'CoseAlgorithm') -> Optional['SK']:
+    def compute_cek(self, target_alg: 'Type[_SymmetricAlg]') -> Optional['SK']:
         alg = self.get_attr(headers.Algorithm)
         if alg == Direct:
             return None
@@ -283,7 +283,7 @@ class KeyWrap(CoseRecipient):
 
         return recipient
 
-    def _compute_kek(self, target_alg: '_EncAlg', ops: 'str') -> bytes:
+    def _compute_kek(self, target_alg: 'Type[_SymmetricAlg]', ops: 'str') -> bytes:
 
         if self.key is None:
             #  try to derive from this recipients' recipient list
@@ -315,7 +315,7 @@ class KeyWrap(CoseRecipient):
 
         return self.key.k
 
-    def compute_cek(self, target_alg: '_EncAlg', ops: str) -> Optional['SK']:
+    def compute_cek(self, target_alg: 'Type[_SymmetricAlg]', ops: str) -> Optional['SK']:
         if ops == "encrypt":
             if self.payload == b'':
                 return None
@@ -325,7 +325,7 @@ class KeyWrap(CoseRecipient):
             return SymmetricKey(k=self.decrypt(target_alg),
                                 optional_params={KpAlg: target_alg, KpKeyOps: [DecryptOp]})
 
-    def encrypt(self, target_alg: '_EncAlg') -> bytes:
+    def encrypt(self, target_alg: 'Type[_SymmetricAlg]') -> bytes:
         alg = self.get_attr(headers.Algorithm)
 
         if len(self.phdr):
@@ -347,7 +347,7 @@ class KeyWrap(CoseRecipient):
 
         return alg.key_wrap(kek, self.payload)
 
-    def decrypt(self, target_alg: '_EncAlg') -> bytes:
+    def decrypt(self, target_alg: 'Type[_SymmetricAlg]') -> bytes:
         alg = self.get_attr(headers.Algorithm)
 
         key_ops = [DecryptOp, UnwrapOp]
@@ -431,11 +431,11 @@ class DirectKeyAgreement(CoseRecipient):
 
         return recipient
 
-    def _compute_kek(self, target_alg: '_EncAlg', peer_key: 'EC2Key', local_key: 'EC2Key', kex_alg) -> bytes:
+    def _compute_kek(self, target_alg: 'Type[_SymmetricAlg]', peer_key: 'EC2Key', local_key: 'EC2Key', kex_alg) -> bytes:
 
         return kex_alg.derive_kek(peer_key.crv, local_key, peer_key, self.get_kdf_context(target_alg))
 
-    def compute_cek(self, target_alg: '_EncAlg', ops: str) -> 'SK':
+    def compute_cek(self, target_alg: 'Type[_SymmetricAlg]', ops: str) -> 'SK':
         alg = self.get_attr(headers.Algorithm)
 
         if alg in {EcdhSsHKDF256, EcdhSsHKDF512, EcdhEsHKDF256, EcdhEsHKDF512}:
@@ -494,7 +494,7 @@ class KeyAgreementWithKeyWrap(CoseRecipient):
     def context(self, context: str):
         self._context = context
 
-    def compute_cek(self, target_alg: '_EncAlg', ops: str) -> Optional['SK']:
+    def compute_cek(self, target_alg: 'Type[_SymmetricAlg]', ops: str) -> Optional['SK']:
         if ops == "encrypt":
             if self.payload == b'':
                 return None
@@ -514,7 +514,7 @@ class KeyAgreementWithKeyWrap(CoseRecipient):
 
         return recipient
 
-    def _compute_kek(self, target_alg: '_EncAlg', peer_key: 'EC2Key', local_key: 'EC2Key', kex_alg) -> bytes:
+    def _compute_kek(self, target_alg: 'Type[_SymmetricAlg]', peer_key: 'EC2Key', local_key: 'EC2Key', kex_alg) -> bytes:
 
         key_bytes = kex_alg.derive_kek(peer_key.crv, local_key, peer_key, self.get_kdf_context(target_alg))
         return key_bytes
@@ -546,7 +546,7 @@ class KeyAgreementWithKeyWrap(CoseRecipient):
         return wrap_func.key_wrap(SymmetricKey(k=key_bytes, optional_params={KpAlg: alg, KpKeyOps: [DeriveKeyOp]}),
                                   self.payload)
 
-    def decrypt(self, target_alg: '_EncAlg') -> bytes:
+    def decrypt(self, target_alg: 'Type[_SymmetricAlg]') -> bytes:
         alg = self.get_attr(headers.Algorithm)
         _ = target_alg
 

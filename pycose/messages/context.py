@@ -4,7 +4,7 @@ import attr
 import cbor2
 
 if TYPE_CHECKING:
-    from pycose.algorithms import _EncAlg
+    from pycose.algorithms import _SymmetricAlg
 
 CBOR = bytes
 
@@ -62,7 +62,7 @@ class SuppPubInfo:
 
 @attr.s(slots=True)
 class CoseKDFContext:
-    algorithm: '_EncAlg' = attr.ib()
+    algorithm: '_SymmetricAlg' = attr.ib()
     supp_pub_info: SuppPubInfo = attr.ib()
     party_u_info: PartyInfo = attr.ib(default=PartyInfo())
     party_v_info: PartyInfo = attr.ib(default=PartyInfo())

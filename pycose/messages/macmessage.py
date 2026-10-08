@@ -55,8 +55,7 @@ class MacMessage(maccommon.MacCommon):
 
         super().__init__(phdr, uhdr, payload, external_aad, key, *args, **kwargs)
 
-        self._recipients = []
-        self.recipients = recipients
+        self.recipients = recipients or []
 
     def encode(self, tag: bool = True, mac: bool = True, *args, **kwargs) -> CBOR:
         """ Encodes and protects the COSE_Mac message. """

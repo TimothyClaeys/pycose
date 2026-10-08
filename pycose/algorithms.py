@@ -65,7 +65,9 @@ class _HashAlg(CoseAlgorithm, ABC):
         return digest
 
 
-class _EncAlg(CoseAlgorithm, ABC):
+class _SymmetricAlg(CoseAlgorithm, ABC):
+    """ Base class for algorithms which need symmetric keys of specific length. """
+
     @classmethod
     @abstractmethod
     def get_key_length(cls) -> int:
@@ -231,7 +233,7 @@ class _AesMac(CoseAlgorithm, ABC):
             return False
 
 
-class _HMAC(CoseAlgorithm, ABC):
+class _HMAC(_SymmetricAlg, ABC):
     @classmethod
     @abstractmethod
     def get_digest_length(cls) -> int:
@@ -261,7 +263,7 @@ class _HMAC(CoseAlgorithm, ABC):
             return False
 
 
-class _AesKw(_EncAlg, ABC):
+class _AesKw(_SymmetricAlg, ABC):
 
     @classmethod
     def key_wrap(cls, kek: 'SK', data: bytes):
@@ -310,7 +312,7 @@ class _EcdhHkdf(CoseAlgorithm, ABC):
         return kdf.derive(shared_secret)
 
 
-class _AesGcm(_EncAlg, ABC):
+class _AesGcm(_SymmetricAlg, ABC):
 
     @classmethod
     def encrypt(cls, key: 'SK', nonce: bytes, data: bytes, aad: bytes) -> bytes:
@@ -323,7 +325,7 @@ class _AesGcm(_EncAlg, ABC):
         return cipher.decrypt(nonce=nonce, data=ciphertext, associated_data=aad)
 
 
-class _AesCcm(_EncAlg, ABC):
+class _AesCcm(_SymmetricAlg, ABC):
 
     @classmethod
     @abstractmethod
